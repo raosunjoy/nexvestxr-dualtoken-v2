@@ -65,7 +65,14 @@ jobs:
           
           # Test backend startup
           cd ../backend
-          timeout 30s npm start & sleep 10 && pkill -f "npm start" || echo "Backend test completed"
+          if [ "$RUNNER_OS" == "Windows" ]; then
+            npm start &
+            BACKEND_PID=$!
+            sleep 10
+            taskkill //PID $BACKEND_PID //F 2>/dev/null || echo "Backend test completed"
+          else
+            timeout 30s npm start & sleep 10 && pkill -f "npm start" || echo "Backend test completed"
+          fi
 
       - name: Run comprehensive tests
         if: matrix.run-full-suite
