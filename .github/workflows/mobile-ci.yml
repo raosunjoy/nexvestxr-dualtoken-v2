@@ -2,7 +2,7 @@ name: 📱 Mobile CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ master, main, develop ]
     paths: 
       - 'mobile/**'
       - '.github/workflows/mobile-ci.yml'

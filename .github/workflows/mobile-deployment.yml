@@ -2,12 +2,12 @@ name: 📱 Mobile Deployment & UI Testing Pipeline
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ master, main, develop ]
     paths: 
       - 'mobile/**'
       - '.github/workflows/mobile-deployment.yml'
   pull_request:
-    branches: [ main, develop ]
+    branches: [ master, main, develop ]
     paths:
       - 'mobile/**'
   workflow_call:

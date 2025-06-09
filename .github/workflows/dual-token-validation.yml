@@ -2,7 +2,7 @@ name: 🪙 Dual Token System Validation
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ master, main, develop ]
     paths:
       - 'smart-contracts/**'
       - 'backend/src/services/DualTokenService.js'
