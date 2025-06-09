@@ -1,0 +1,77 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "IPROPXFactory",
+  "sourceName": "contracts/PROPXToken.sol",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "developers",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "address",
+              "name": "developerAddress",
+              "type": "address"
+            },
+            {
+              "internalType": "string",
+              "name": "companyName",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "brandCode",
+              "type": "string"
+            },
+            {
+              "internalType": "enum IPROPXFactory.DeveloperTier",
+              "name": "tier",
+              "type": "uint8"
+            },
+            {
+              "internalType": "uint256",
+              "name": "projectsDelivered",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "totalValueDelivered",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "reputationScore",
+              "type": "uint256"
+            },
+            {
+              "internalType": "bool",
+              "name": "isActive",
+              "type": "bool"
+            },
+            {
+              "internalType": "uint256",
+              "name": "registrationDate",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct IPROPXFactory.DeveloperProfile",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

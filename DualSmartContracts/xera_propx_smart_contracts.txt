@@ -1,0 +1,812 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.19;
+
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/security/Pausable.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+
+// ============================================================================
+// XERA PLATFORM TOKEN - For Small Developers and Landowners
+// ============================================================================
+
+contract XERAToken is ERC20, ERC20Votes, ReentrancyGuard, Pausable, AccessControl {
+    using SafeMath for uint256;
+
+    bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
+    bytes32 public constant PROPERTY_MANAGER_ROLE = keccak256("PROPERTY_MANAGER_ROLE");
+    bytes32 public constant VALUER_ROLE = keccak256("VALUER_ROLE");
+
+    struct Property {
+        uint256 id;
+        address owner;
+        string propertyAddress;
+        uint256 valuationInWei;
+        uint256 tokenAllocation;
+        uint256 lastValuationDate;
+        PropertyStatus status;
+        string ipfsDocumentHash;
+        PropertyCategory category;
+        string cityCode; // MUM, BANG, DEL, CHEN, HYD, PUN
+    }
+
+    struct DividendPeriod {
+        uint256 periodId;
+        uint256 totalDividend;
+        uint256 exDividendDate;
+        uint256 paymentDate;
+        mapping(address => bool) claimed;
+    }
+
+    enum PropertyStatus { PENDING, ACTIVE, UNDER_REVIEW, SUSPENDED, SOLD }
+    enum PropertyCategory { RESIDENTIAL, COMMERCIAL, MIXED_USE, LAND, INDUSTRIAL }
+
+    // State variables
+    uint256 public constant MAX_SUPPLY = 1_000_000_000 * 10**18; // 1 billion XERA tokens
+    uint256 public totalPropertyValue;
+    uint256 public currentPropertyCount;
+    uint256 public currentDividendPeriod;
+    uint256 public minimumPropertyValue = 5000000 * 10**18; // ₹50 lakh in wei
+    uint256 public platformFeePercentage = 250; // 2.5%
+    uint256 public reserveRatio = 1000; // 10%
+
+    // Regional pools tracking
+    mapping(string => uint256) public cityPoolValues; // MUM => total value
+    mapping(string => uint256[]) public cityProperties; // MUM => [property IDs]
+    mapping(PropertyCategory => uint256) public categoryValues;
+
+    mapping(uint256 => Property) public properties;
+    mapping(uint256 => DividendPeriod) public dividendPeriods;
+    mapping(address => uint256[]) public userProperties;
+    mapping(address => uint256) public lastClaimedDividend;
+
+    // Events
+    event PropertyAdded(
+        uint256 indexed propertyId, 
+        address indexed owner, 
+        uint256 valuation,
+        string cityCode,
+        PropertyCategory category
+    );
+    event PropertyRevalued(uint256 indexed propertyId, uint256 oldValuation, uint256 newValuation);
+    event DividendDeclared(uint256 indexed periodId, uint256 totalAmount);
+    event DividendClaimed(address indexed user, uint256 amount, uint256 periodId);
+    event PropertySold(uint256 indexed propertyId, uint256 salePrice);
+    event CityPoolUpdated(string indexed cityCode, uint256 newValue);
+
+    constructor() ERC20("XERA Real Estate India", "XERA") ERC20Permit("XERA") {
+        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _grantRole(ADMIN_ROLE, msg.sender);
+        
+        // Initial minting for liquidity and platform reserves
+        _mint(msg.sender, MAX_SUPPLY.mul(15).div(100)); // 15% for liquidity and reserves
+    }
+
+    // ============================================================================
+    // ENHANCED PROPERTY MANAGEMENT
+    // ============================================================================
+
+    function addProperty(
+        address propertyOwner,
+        string memory propertyAddress,
+        uint256 valuationInWei,
+        string memory ipfsDocumentHash,
+        PropertyCategory category,
+        string memory cityCode
+    ) external onlyRole(PROPERTY_MANAGER_ROLE) returns (uint256) {
+        require(valuationInWei >= minimumPropertyValue, "Property value below minimum");
+        require(bytes(propertyAddress).length > 0, "Property address required");
+        require(bytes(ipfsDocumentHash).length > 0, "Document hash required");
+        require(bytes(cityCode).length > 0, "City code required");
+
+        uint256 propertyId = currentPropertyCount + 1;
+        uint256 tokenAllocation = calculateTokenAllocation(valuationInWei, category, cityCode);
+
+        properties[propertyId] = Property({
+            id: propertyId,
+            owner: propertyOwner,
+            propertyAddress: propertyAddress,
+            valuationInWei: valuationInWei,
+            tokenAllocation: tokenAllocation,
+            lastValuationDate: block.timestamp,
+            status: PropertyStatus.PENDING,
+            ipfsDocumentHash: ipfsDocumentHash,
+            category: category,
+            cityCode: cityCode
+        });
+
+        userProperties[propertyOwner].push(propertyId);
+        cityProperties[cityCode].push(propertyId);
+        currentPropertyCount++;
+
+        emit PropertyAdded(propertyId, propertyOwner, valuationInWei, cityCode, category);
+        return propertyId;
+    }
+
+    function approveProperty(uint256 propertyId) external onlyRole(ADMIN_ROLE) {
+        require(properties[propertyId].id != 0, "Property does not exist");
+        require(properties[propertyId].status == PropertyStatus.PENDING, "Property not pending");
+
+        Property storage property = properties[propertyId];
+        property.status = PropertyStatus.ACTIVE;
+
+        // Mint tokens to property owner
+        _mint(property.owner, property.tokenAllocation);
+        
+        // Update tracking variables
+        totalPropertyValue = totalPropertyValue.add(property.valuationInWei);
+        cityPoolValues[property.cityCode] = cityPoolValues[property.cityCode].add(property.valuationInWei);
+        categoryValues[property.category] = categoryValues[property.category].add(property.valuationInWei);
+
+        emit CityPoolUpdated(property.cityCode, cityPoolValues[property.cityCode]);
+    }
+
+    function calculateTokenAllocation(
+        uint256 propertyValue, 
+        PropertyCategory category,
+        string memory cityCode
+    ) public view returns (uint256) {
+        uint256 baseAllocation = propertyValue.mul(10**18).div(totalPropertyValue.add(propertyValue));
+        
+        // Apply category multipliers
+        uint256 categoryMultiplier = getCategoryMultiplier(category);
+        uint256 cityMultiplier = getCityMultiplier(cityCode);
+        
+        return MAX_SUPPLY.mul(80).div(100) // 80% of tokens for properties
+            .mul(baseAllocation).div(10**18)
+            .mul(categoryMultiplier).div(100)
+            .mul(cityMultiplier).div(100);
+    }
+
+    function getCategoryMultiplier(PropertyCategory category) public pure returns (uint256) {
+        if (category == PropertyCategory.COMMERCIAL) return 120; // 20% premium
+        if (category == PropertyCategory.MIXED_USE) return 110; // 10% premium  
+        if (category == PropertyCategory.INDUSTRIAL) return 105; // 5% premium
+        return 100; // Base for residential and land
+    }
+
+    function getCityMultiplier(string memory cityCode) public pure returns (uint256) {
+        bytes32 cityHash = keccak256(abi.encodePacked(cityCode));
+        
+        if (cityHash == keccak256("MUM") || cityHash == keccak256("DEL")) return 130; // Tier 1A
+        if (cityHash == keccak256("BANG") || cityHash == keccak256("CHEN") || cityHash == keccak256("HYD")) return 120; // Tier 1B
+        if (cityHash == keccak256("PUN") || cityHash == keccak256("AHM") || cityHash == keccak256("KOL")) return 110; // Tier 1C
+        return 100; // Other cities
+    }
+
+    // ============================================================================
+    // CITY AND CATEGORY ANALYTICS
+    // ============================================================================
+
+    function getCityPortfolio(string memory cityCode) external view returns (
+        uint256 totalValue,
+        uint256 propertyCount,
+        uint256[] memory propertyIds
+    ) {
+        return (
+            cityPoolValues[cityCode],
+            cityProperties[cityCode].length,
+            cityProperties[cityCode]
+        );
+    }
+
+    function getCategoryBreakdown() external view returns (
+        uint256 residential,
+        uint256 commercial,
+        uint256 mixedUse,
+        uint256 land,
+        uint256 industrial
+    ) {
+        return (
+            categoryValues[PropertyCategory.RESIDENTIAL],
+            categoryValues[PropertyCategory.COMMERCIAL],
+            categoryValues[PropertyCategory.MIXED_USE],
+            categoryValues[PropertyCategory.LAND],
+            categoryValues[PropertyCategory.INDUSTRIAL]
+        );
+    }
+
+    function getXERAMetrics() external view returns (
+        uint256 netAssetValue,
+        uint256 totalProperties,
+        uint256 averagePropertyValue,
+        uint256 diversificationScore
+    ) {
+        netAssetValue = getNetAssetValue();
+        totalProperties = currentPropertyCount;
+        averagePropertyValue = totalProperties > 0 ? totalPropertyValue.div(totalProperties) : 0;
+        diversificationScore = calculateDiversificationScore();
+    }
+
+    function calculateDiversificationScore() public view returns (uint256) {
+        if (totalPropertyValue == 0) return 0;
+        
+        // Calculate city diversification (max 50 points)
+        uint256 cityDiversification = 0;
+        string[6] memory cities = ["MUM", "DEL", "BANG", "CHEN", "HYD", "PUN"];
+        for (uint256 i = 0; i < 6; i++) {
+            uint256 cityPercentage = cityPoolValues[cities[i]].mul(100).div(totalPropertyValue);
+            if (cityPercentage > 0 && cityPercentage <= 30) {
+                cityDiversification = cityDiversification.add(8); // 8 points per well-balanced city
+            }
+        }
+        
+        // Calculate category diversification (max 50 points)
+        uint256 categoryDiversification = 0;
+        for (uint256 i = 0; i < 5; i++) {
+            PropertyCategory category = PropertyCategory(i);
+            uint256 categoryPercentage = categoryValues[category].mul(100).div(totalPropertyValue);
+            if (categoryPercentage > 0 && categoryPercentage <= 40) {
+                categoryDiversification = categoryDiversification.add(10); // 10 points per category
+            }
+        }
+        
+        return cityDiversification.add(categoryDiversification);
+    }
+
+    // ============================================================================
+    // ENHANCED DIVIDEND MANAGEMENT
+    // ============================================================================
+
+    function declareDividend(string memory source) external payable onlyRole(ADMIN_ROLE) {
+        require(msg.value > 0, "Dividend amount must be positive");
+        
+        currentDividendPeriod++;
+        DividendPeriod storage period = dividendPeriods[currentDividendPeriod];
+        period.periodId = currentDividendPeriod;
+        period.totalDividend = msg.value;
+        period.exDividendDate = block.timestamp;
+        period.paymentDate = block.timestamp + 7 days;
+
+        emit DividendDeclared(currentDividendPeriod, msg.value);
+    }
+
+    function claimAllAvailableDividends() external nonReentrant {
+        uint256 totalClaimable = 0;
+        uint256 userBalance = balanceOf(msg.sender);
+        require(userBalance > 0, "No tokens held");
+
+        for (uint256 i = lastClaimedDividend[msg.sender] + 1; i <= currentDividendPeriod; i++) {
+            if (block.timestamp >= dividendPeriods[i].paymentDate && 
+                !dividendPeriods[i].claimed[msg.sender]) {
+                
+                uint256 totalSupplyAtPeriod = totalSupply();
+                uint256 dividendAmount = dividendPeriods[i].totalDividend
+                    .mul(userBalance)
+                    .div(totalSupplyAtPeriod);
+                
+                totalClaimable = totalClaimable.add(dividendAmount);
+                dividendPeriods[i].claimed[msg.sender] = true;
+            }
+        }
+
+        require(totalClaimable > 0, "No dividends available");
+        lastClaimedDividend[msg.sender] = currentDividendPeriod;
+
+        payable(msg.sender).transfer(totalClaimable);
+        emit DividendClaimed(msg.sender, totalClaimable, currentDividendPeriod);
+    }
+
+    // ============================================================================
+    // VIEW FUNCTIONS
+    // ============================================================================
+
+    function getNetAssetValue() public view returns (uint256) {
+        if (totalSupply() == 0) return 0;
+        return totalPropertyValue.mul(10**18).div(totalSupply());
+    }
+
+    function getProperty(uint256 propertyId) external view returns (
+        uint256 id,
+        address owner,
+        string memory propertyAddress,
+        uint256 valuationInWei,
+        uint256 tokenAllocation,
+        uint256 lastValuationDate,
+        PropertyStatus status,
+        PropertyCategory category,
+        string memory cityCode
+    ) {
+        Property storage prop = properties[propertyId];
+        return (
+            prop.id,
+            prop.owner,
+            prop.propertyAddress,
+            prop.valuationInWei,
+            prop.tokenAllocation,
+            prop.lastValuationDate,
+            prop.status,
+            prop.category,
+            prop.cityCode
+        );
+    }
+
+    // Required overrides
+    function _beforeTokenTransfer(address from, address to, uint256 amount)
+        internal whenNotPaused override {
+        super._beforeTokenTransfer(from, to, amount);
+    }
+
+    function _afterTokenTransfer(address from, address to, uint256 amount)
+        internal override(ERC20, ERC20Votes) {
+        super._afterTokenTransfer(from, to, amount);
+    }
+
+    function _mint(address to, uint256 amount) internal override(ERC20, ERC20Votes) {
+        super._mint(to, amount);
+    }
+
+    function _burn(address account, uint256 amount) internal override(ERC20, ERC20Votes) {
+        super._burn(account, amount);
+    }
+}
+
+// ============================================================================
+// PROPX TOKEN FACTORY - For Premium Developer Properties
+// ============================================================================
+
+contract PROPXTokenFactory is AccessControl, ReentrancyGuard {
+    using SafeMath for uint256;
+
+    bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
+    bytes32 public constant DEVELOPER_ROLE = keccak256("DEVELOPER_ROLE");
+
+    enum DeveloperTier { NONE, TIER2, TIER1 }
+    enum PropertyTokenStatus { PENDING, ACTIVE, FUNDED, COMPLETED, CANCELLED }
+
+    struct DeveloperProfile {
+        address developerAddress;
+        string companyName;
+        string brandCode; // GODREJ, PRESTIGE, BRIGADE, SOBHA, DLF
+        DeveloperTier tier;
+        uint256 projectsDelivered;
+        uint256 totalValueDelivered;
+        uint256 reputationScore;
+        bool isActive;
+        uint256 registrationDate;
+    }
+
+    struct PROPXTokenInfo {
+        address tokenContract;
+        address developer;
+        string propertyName;
+        string propertyAddress;
+        string projectCode; // BKC001, TECH002, etc.
+        uint256 totalTokens;
+        uint256 pricePerToken;
+        uint256 minimumRaise;
+        uint256 raisedAmount;
+        uint256 fundingDeadline;
+        PropertyTokenStatus status;
+        string ipfsDocumentHash;
+        string cityCode;
+        PropertyCategory category;
+    }
+
+    enum PropertyCategory { RESIDENTIAL, COMMERCIAL, MIXED_USE, LUXURY, INDUSTRIAL }
+
+    mapping(address => DeveloperProfile) public developers;
+    mapping(uint256 => PROPXTokenInfo) public propxTokens;
+    mapping(string => bool) public usedProjectCodes; // Prevent duplicate codes
+    mapping(string => address[]) public developersByCity; // City => developer addresses
+    
+    uint256 public propxTokenCount;
+    uint256 public tier1PlatformFee = 150; // 1.5% for Tier 1 developers
+    uint256 public tier2PlatformFee = 250; // 2.5% for Tier 2 developers
+
+    // Events
+    event DeveloperRegistered(
+        address indexed developer, 
+        string brandCode, 
+        DeveloperTier tier
+    );
+    event PROPXTokenCreated(
+        uint256 indexed tokenId, 
+        address indexed developer, 
+        address tokenContract,
+        string projectCode
+    );
+    event PROPXTokenFunded(uint256 indexed tokenId, uint256 totalRaised);
+
+    constructor() {
+        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _grantRole(ADMIN_ROLE, msg.sender);
+    }
+
+    // ============================================================================
+    // ENHANCED DEVELOPER MANAGEMENT
+    // ============================================================================
+
+    function registerDeveloper(
+        address developerAddress,
+        string memory companyName,
+        string memory brandCode,
+        DeveloperTier tier,
+        uint256 projectsDelivered,
+        uint256 totalValueDelivered,
+        string memory primaryCity,
+        bytes32[] memory verificationDocuments
+    ) external onlyRole(ADMIN_ROLE) {
+        require(developers[developerAddress].developerAddress == address(0), "Developer already registered");
+        require(bytes(companyName).length > 0, "Company name required");
+        require(bytes(brandCode).length > 0, "Brand code required");
+        require(!isDuplicateBrandCode(brandCode), "Brand code already exists");
+
+        uint256 reputationScore = calculateReputationScore(projectsDelivered, totalValueDelivered, tier);
+
+        developers[developerAddress] = DeveloperProfile({
+            developerAddress: developerAddress,
+            companyName: companyName,
+            brandCode: brandCode,
+            tier: tier,
+            projectsDelivered: projectsDelivered,
+            totalValueDelivered: totalValueDelivered,
+            reputationScore: reputationScore,
+            isActive: true,
+            registrationDate: block.timestamp
+        });
+
+        developersByCity[primaryCity].push(developerAddress);
+        _grantRole(DEVELOPER_ROLE, developerAddress);
+        
+        emit DeveloperRegistered(developerAddress, brandCode, tier);
+    }
+
+    function createPROPXToken(
+        string memory propertyName,
+        string memory propertyAddress,
+        string memory projectCode,
+        string memory cityCode,
+        PropertyCategory category,
+        uint256 totalTokens,
+        uint256 pricePerToken,
+        uint256 minimumRaise,
+        uint256 fundingPeriodDays,
+        string memory ipfsDocumentHash
+    ) external onlyRole(DEVELOPER_ROLE) returns (address) {
+        require(developers[msg.sender].isActive, "Developer not active");
+        require(bytes(propertyName).length > 0, "Property name required");
+        require(!usedProjectCodes[projectCode], "Project code already used");
+        require(totalTokens > 0 && pricePerToken > 0, "Invalid token parameters");
+
+        string memory brandCode = developers[msg.sender].brandCode;
+        string memory tokenSymbol = string(abi.encodePacked("PROPX-", brandCode, "-", projectCode));
+        string memory fullPropertyName = string(abi.encodePacked("PROPX ", brandCode, " ", propertyName));
+
+        // Deploy new PROPX token contract
+        PROPXToken newToken = new PROPXToken(
+            fullPropertyName,
+            tokenSymbol,
+            totalTokens,
+            pricePerToken,
+            msg.sender,
+            address(this),
+            cityCode,
+            category
+        );
+
+        propxTokenCount++;
+        propxTokens[propxTokenCount] = PROPXTokenInfo({
+            tokenContract: address(newToken),
+            developer: msg.sender,
+            propertyName: propertyName,
+            propertyAddress: propertyAddress,
+            projectCode: projectCode,
+            totalTokens: totalTokens,
+            pricePerToken: pricePerToken,
+            minimumRaise: minimumRaise,
+            raisedAmount: 0,
+            fundingDeadline: block.timestamp + (fundingPeriodDays * 1 days),
+            status: PropertyTokenStatus.PENDING,
+            ipfsDocumentHash: ipfsDocumentHash,
+            cityCode: cityCode,
+            category: category
+        });
+
+        usedProjectCodes[projectCode] = true;
+
+        emit PROPXTokenCreated(propxTokenCount, msg.sender, address(newToken), projectCode);
+        return address(newToken);
+    }
+
+    function isDuplicateBrandCode(string memory brandCode) internal view returns (bool) {
+        // Check against existing developers
+        // This is a simplified check - in practice, you'd maintain a mapping
+        return false; // Implement proper duplicate checking
+    }
+
+    function calculateReputationScore(
+        uint256 projectsDelivered,
+        uint256 totalValueDelivered,
+        DeveloperTier tier
+    ) public pure returns (uint256) {
+        uint256 baseScore = projectsDelivered.mul(10).add(totalValueDelivered.div(10**18));
+        uint256 tierMultiplier = tier == DeveloperTier.TIER1 ? 150 : 100;
+        return baseScore.mul(tierMultiplier).div(100);
+    }
+
+    // ============================================================================
+    // ANALYTICS AND REPORTING
+    // ============================================================================
+
+    function getDeveloperPortfolio(address developer) external view returns (
+        string memory brandCode,
+        uint256 activeProjects,
+        uint256 totalRaised,
+        uint256 averageRaise,
+        DeveloperTier tier
+    ) {
+        DeveloperProfile memory dev = developers[developer];
+        uint256 projectCount = 0;
+        uint256 totalFunding = 0;
+
+        for (uint256 i = 1; i <= propxTokenCount; i++) {
+            if (propxTokens[i].developer == developer && 
+                propxTokens[i].status == PropertyTokenStatus.ACTIVE) {
+                projectCount++;
+                totalFunding = totalFunding.add(propxTokens[i].raisedAmount);
+            }
+        }
+
+        return (
+            dev.brandCode,
+            projectCount,
+            totalFunding,
+            projectCount > 0 ? totalFunding.div(projectCount) : 0,
+            dev.tier
+        );
+    }
+
+    function getCityDevelopers(string memory cityCode) external view returns (address[] memory) {
+        return developersByCity[cityCode];
+    }
+
+    function getPROPXTokensByCategory(PropertyCategory category) external view returns (uint256[] memory) {
+        uint256[] memory tokens = new uint256[](propxTokenCount);
+        uint256 count = 0;
+
+        for (uint256 i = 1; i <= propxTokenCount; i++) {
+            if (propxTokens[i].category == category) {
+                tokens[count] = i;
+                count++;
+            }
+        }
+
+        // Resize array
+        uint256[] memory result = new uint256[](count);
+        for (uint256 i = 0; i < count; i++) {
+            result[i] = tokens[i];
+        }
+        return result;
+    }
+}
+
+// ============================================================================
+// INDIVIDUAL PROPX TOKEN CONTRACT
+// ============================================================================
+
+contract PROPXToken is ERC20, ReentrancyGuard, Pausable {
+    using SafeMath for uint256;
+
+    address public factory;
+    address public developer;
+    string public cityCode;
+    PROPXTokenFactory.PropertyCategory public category;
+    uint256 public pricePerToken;
+    uint256 public fundingGoal;
+    uint256 public fundingDeadline;
+    uint256 public totalRaised;
+    bool public isActive;
+    bool public isFunded;
+
+    struct PropertyMetrics {
+        uint256 currentValuation;
+        uint256 lastValuationDate;
+        uint256 monthlyRental;
+        uint256 occupancyRate; // Percentage * 100 (e.g., 9500 = 95%)
+        uint256 maintenanceCosts;
+        uint256 capRate; // Cap rate * 10000 (e.g., 750 = 7.5%)
+    }
+
+    struct PerformanceData {
+        uint256 totalDividendsPaid;
+        uint256 lastDividendDate;
+        uint256 averageMonthlyReturn;
+        uint256 annualizedReturn;
+        uint256 totalAppreciation;
+    }
+
+    PropertyMetrics public propertyMetrics;
+    PerformanceData public performanceData;
+    
+    mapping(address => uint256) public investments;
+    mapping(address => uint256) public dividendsClaimed;
+    
+    uint256 public constant MINIMUM_INVESTMENT = 10000 * 10**18; // ₹10,000 minimum
+    uint256 public dividendPool;
+
+    // Events
+    event TokensPurchased(address indexed investor, uint256 amount, uint256 cost);
+    event DividendDistributed(uint256 totalAmount, uint256 perTokenAmount);
+    event PropertyMetricsUpdated(uint256 newValuation, uint256 occupancyRate);
+    event PropertySold(uint256 salePrice, uint256 perTokenReturn);
+
+    modifier onlyFactory() {
+        require(msg.sender == factory, "Only factory can call");
+        _;
+    }
+
+    modifier onlyDeveloper() {
+        require(msg.sender == developer, "Only developer can call");
+        _;
+    }
+
+    modifier onlyActive() {
+        require(isActive, "Token not active");
+        _;
+    }
+
+    constructor(
+        string memory name,
+        string memory symbol,
+        uint256 _totalSupply,
+        uint256 _pricePerToken,
+        address _developer,
+        address _factory,
+        string memory _cityCode,
+        PROPXTokenFactory.PropertyCategory _category
+    ) ERC20(name, symbol) {
+        _mint(address(this), _totalSupply);
+        pricePerToken = _pricePerToken;
+        developer = _developer;
+        factory = _factory;
+        cityCode = _cityCode;
+        category = _category;
+        fundingGoal = _totalSupply.mul(_pricePerToken);
+        fundingDeadline = block.timestamp + 90 days;
+    }
+
+    function activateToken() external onlyFactory {
+        isActive = true;
+    }
+
+    // Enhanced property metrics tracking
+    function updatePropertyMetrics(
+        uint256 newValuation,
+        uint256 monthlyRental,
+        uint256 occupancyRate,
+        uint256 maintenanceCosts
+    ) external onlyDeveloper {
+        propertyMetrics.currentValuation = newValuation;
+        propertyMetrics.lastValuationDate = block.timestamp;
+        propertyMetrics.monthlyRental = monthlyRental;
+        propertyMetrics.occupancyRate = occupancyRate;
+        propertyMetrics.maintenanceCosts = maintenanceCosts;
+        
+        // Calculate cap rate (Net Operating Income / Property Value)
+        uint256 annualNOI = monthlyRental.mul(12).mul(occupancyRate).div(10000).sub(maintenanceCosts.mul(12));
+        propertyMetrics.capRate = newValuation > 0 ? annualNOI.mul(10000).div(newValuation) : 0;
+
+        emit PropertyMetricsUpdated(newValuation, occupancyRate);
+    }
+
+    function buyTokens(uint256 tokenAmount) external payable nonReentrant onlyActive {
+        require(tokenAmount >= MINIMUM_INVESTMENT.div(pricePerToken), "Below minimum investment");
+        require(msg.value == tokenAmount.mul(pricePerToken), "Incorrect payment amount");
+        require(block.timestamp <= fundingDeadline, "Funding period ended");
+        require(balanceOf(address(this)) >= tokenAmount, "Insufficient tokens available");
+
+        investments[msg.sender] = investments[msg.sender].add(msg.value);
+        totalRaised = totalRaised.add(msg.value);
+
+        _transfer(address(this), msg.sender, tokenAmount);
+        emit TokensPurchased(msg.sender, tokenAmount, msg.value);
+
+        if (totalRaised >= fundingGoal) {
+            isFunded = true;
+            // Transfer funds to developer (minus platform fee)
+            PROPXTokenFactory factoryContract = PROPXTokenFactory(factory);
+            (,,,, PROPXTokenFactory.DeveloperTier tier,,,) = factoryContract.developers(developer);
+            
+            uint256 platformFee = tier == PROPXTokenFactory.DeveloperTier.TIER1 ? 
+                totalRaised.mul(150).div(10000) : // 1.5% for Tier 1
+                totalRaised.mul(250).div(10000);   // 2.5% for Tier 2
+            
+            payable(developer).transfer(totalRaised.sub(platformFee));
+            payable(factory).transfer(platformFee);
+        }
+    }
+
+    function distributeDividends() external payable onlyDeveloper {
+        require(msg.value > 0, "No dividend to distribute");
+        require(totalSupply() > balanceOf(address(this)), "No investors");
+
+        dividendPool = dividendPool.add(msg.value);
+        uint256 circulatingSupply = totalSupply().sub(balanceOf(address(this)));
+        uint256 perTokenDividend = msg.value.div(circulatingSupply);
+
+        // Update performance metrics
+        performanceData.totalDividendsPaid = performanceData.totalDividendsPaid.add(msg.value);
+        performanceData.lastDividendDate = block.timestamp;
+        
+        // Calculate annualized return
+        if (performanceData.lastDividendDate > 0) {
+            uint256 timeElapsed = block.timestamp.sub(performanceData.lastDividendDate);
+            if (timeElapsed > 0) {
+                performanceData.averageMonthlyReturn = msg.value.mul(30 days).div(timeElapsed).div(circulatingSupply);
+                performanceData.annualizedReturn = performanceData.averageMonthlyReturn.mul(12);
+            }
+        }
+
+        emit DividendDistributed(msg.value, perTokenDividend);
+    }
+
+    function claimDividends() external nonReentrant {
+        uint256 userBalance = balanceOf(msg.sender);
+        require(userBalance > 0, "No tokens held");
+
+        uint256 circulatingSupply = totalSupply().sub(balanceOf(address(this)));
+        uint256 userShare = dividendPool.mul(userBalance).div(circulatingSupply);
+        uint256 unclaimedDividends = userShare.sub(dividendsClaimed[msg.sender]);
+
+        require(unclaimedDividends > 0, "No dividends available");
+        
+        dividendsClaimed[msg.sender] = dividendsClaimed[msg.sender].add(unclaimedDividends);
+        payable(msg.sender).transfer(unclaimedDividends);
+    }
+
+    // Enhanced analytics functions
+    function getTokenPrice() external view returns (uint256 marketPrice, uint256 navPrice) {
+        marketPrice = pricePerToken; // This would be updated from trading data
+        
+        if (propertyMetrics.currentValuation > 0) {
+            uint256 circulatingSupply = totalSupply().sub(balanceOf(address(this)));
+            navPrice = propertyMetrics.currentValuation.div(circulatingSupply);
+        } else {
+            navPrice = pricePerToken;
+        }
+    }
+
+    function getInvestmentMetrics() external view returns (
+        uint256 currentYield,
+        uint256 capRate,
+        uint256 occupancyRate,
+        uint256 totalReturn,
+        uint256 annualizedReturn
+    ) {
+        currentYield = performanceData.averageMonthlyReturn.mul(12);
+        capRate = propertyMetrics.capRate;
+        occupancyRate = propertyMetrics.occupancyRate;
+        totalReturn = performanceData.totalDividendsPaid.add(performanceData.totalAppreciation);
+        annualizedReturn = performanceData.annualizedReturn;
+    }
+
+    function getFundingStatus() external view returns (
+        uint256 raised,
+        uint256 goal,
+        uint256 deadline,
+        bool funded,
+        uint256 tokensRemaining,
+        uint256 investorCount
+    ) {
+        return (
+            totalRaised,
+            fundingGoal,
+            fundingDeadline,
+            isFunded,
+            balanceOf(address(this)),
+            getInvestorCount()
+        );
+    }
+
+    function getInvestorCount() internal view returns (uint256) {
+        // This would be maintained in a more sophisticated implementation
+        // For now, return a placeholder
+        return totalRaised > 0 ? totalRaised.div(MINIMUM_INVESTMENT) : 0;
+    }
+
+    // Required for receiving ETH
+    receive() external payable {}
+}

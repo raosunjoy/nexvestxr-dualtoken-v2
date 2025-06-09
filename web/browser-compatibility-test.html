@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexVestXR Browser Compatibility Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0a1a;
+            color: white;
+            padding: 20px;
+            margin: 0;
+        }
+        
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            background: linear-gradient(135deg, #8b45ff 0%, #3b82f6 50%, #06d6a0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        .test-section {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        
+        .test-result {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 5px;
+            margin-left: 10px;
+            font-weight: bold;
+        }
+        
+        .supported { background: #06d6a0; color: #000; }
+        .not-supported { background: #ef4444; color: #fff; }
+        .partial { background: #f59e0b; color: #000; }
+        
+        .grid-test {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin: 10px 0;
+        }
+        
+        .grid-item {
+            background: rgba(139, 69, 255, 0.2);
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .flexbox-test {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 10px 0;
+        }
+        
+        .flex-item {
+            background: rgba(59, 130, 246, 0.2);
+            padding: 10px;
+            border-radius: 8px;
+        }
+        
+        input[type="text"] {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 10px;
+            color: white;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            width: 200px;
+        }
+        
+        .browser-info {
+            background: rgba(6, 214, 160, 0.1);
+            border-left: 4px solid #06d6a0;
+            padding: 15px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🧪 NexVestXR Browser Compatibility Test</h1>
+        
+        <div class="browser-info">
+            <h3>Your Browser Information:</h3>
+            <p><strong>User Agent:</strong> <span id="userAgent"></span></p>
+            <p><strong>Browser:</strong> <span id="browserName"></span></p>
+            <p><strong>Version:</strong> <span id="browserVersion"></span></p>
+            <p><strong>Platform:</strong> <span id="platform"></span></p>
+        </div>
+        
+        <div class="test-section">
+            <h3>🎨 CSS Features Test</h3>
+            
+            <div class="test-item">
+                CSS Grid: <span id="gridTest" class="test-result">Testing...</span>
+                <div class="grid-test">
+                    <div class="grid-item">Grid Item 1</div>
+                    <div class="grid-item">Grid Item 2</div>
+                    <div class="grid-item">Grid Item 3</div>
+                </div>
+            </div>
+            
+            <div class="test-item">
+                Flexbox: <span id="flexTest" class="test-result">Testing...</span>
+                <div class="flexbox-test">
+                    <div class="flex-item">Flex Item 1</div>
+                    <div class="flex-item">Flex Item 2</div>
+                    <div class="flex-item">Flex Item 3</div>
+                </div>
+            </div>
+            
+            <div class="test-item">
+                CSS Custom Properties: <span id="customPropsTest" class="test-result">Testing...</span>
+            </div>
+            
+            <div class="test-item">
+                backdrop-filter: <span id="backdropTest" class="test-result">Testing...</span>
+            </div>
+            
+            <div class="test-item">
+                background-clip: text: <span id="bgClipTest" class="test-result">Testing...</span>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h3>💻 JavaScript Features Test</h3>
+            
+            <div class="test-item">
+                ES6 Arrow Functions: <span id="arrowTest" class="test-result">Testing...</span>
+            </div>
+            
+            <div class="test-item">
+                ES6 Template Literals: <span id="templateTest" class="test-result">Testing...</span>
+            </div>
+            
+            <div class="test-item">
+                ES6 Destructuring: <span id="destructureTest" class="test-result">Testing...</span>
+            </div>
+            
+            <div class="test-item">
+                Async/Await: <span id="asyncTest" class="test-result">Testing...</span>
+            </div>
+            
+            <div class="test-item">
+                Fetch API: <span id="fetchTest" class="test-result">Testing...</span>
+            </div>
+            
+            <div class="test-item">
+                localStorage: <span id="localStorageTest" class="test-result">Testing...</span>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h3>📱 Form Elements Test</h3>
+            <p>Test input field (should have glass effect):</p>
+            <input type="text" placeholder="Type here to test input behavior..." id="testInput">
+            <p>Input Behavior: <span id="inputTest" class="test-result">Testing...</span></p>
+        </div>
+        
+        <div class="test-section">
+            <h3>📊 Compatibility Summary</h3>
+            <div id="compatibilitySummary"></div>
+        </div>
+    </div>
+
+    <script>
+        // Browser Detection
+        function detectBrowser() {
+            const userAgent = navigator.userAgent;
+            document.getElementById('userAgent').textContent = userAgent;
+            document.getElementById('platform').textContent = navigator.platform;
+            
+            let browserName = 'Unknown';
+            let browserVersion = 'Unknown';
+            
+            if (userAgent.indexOf('Chrome') > -1 && userAgent.indexOf('Edg') === -1) {
+                browserName = 'Chrome';
+                browserVersion = userAgent.match(/Chrome\/([0-9.]+)/)[1];
+            } else if (userAgent.indexOf('Firefox') > -1) {
+                browserName = 'Firefox';
+                browserVersion = userAgent.match(/Firefox\/([0-9.]+)/)[1];
+            } else if (userAgent.indexOf('Safari') > -1 && userAgent.indexOf('Chrome') === -1) {
+                browserName = 'Safari';
+                browserVersion = userAgent.match(/Version\/([0-9.]+)/)[1];
+            } else if (userAgent.indexOf('Edg') > -1) {
+                browserName = 'Edge';
+                browserVersion = userAgent.match(/Edg\/([0-9.]+)/)[1];
+            } else if (userAgent.indexOf('MSIE') > -1 || userAgent.indexOf('Trident') > -1) {
+                browserName = 'Internet Explorer';
+                browserVersion = 'Legacy';
+            }
+            
+            document.getElementById('browserName').textContent = browserName;
+            document.getElementById('browserVersion').textContent = browserVersion;
+            
+            return { name: browserName, version: browserVersion };
+        }
+        
+        // Feature Tests
+        const tests = {
+            grid: () => CSS.supports('display', 'grid'),
+            flexbox: () => CSS.supports('display', 'flex'),
+            customProps: () => CSS.supports('color', 'var(--test)'),
+            backdropFilter: () => CSS.supports('backdrop-filter', 'blur(10px)') || CSS.supports('-webkit-backdrop-filter', 'blur(10px)'),
+            backgroundClip: () => CSS.supports('background-clip', 'text') || CSS.supports('-webkit-background-clip', 'text'),
+            arrow: () => {
+                try {
+                    eval('(() => true)()');
+                    return true;
+                } catch (e) {
+                    return false;
+                }
+            },
+            template: () => {
+                try {
+                    eval('`template ${1} test`');
+                    return true;
+                } catch (e) {
+                    return false;
+                }
+            },
+            destructuring: () => {
+                try {
+                    eval('const {a} = {a: 1}');
+                    return true;
+                } catch (e) {
+                    return false;
+                }
+            },
+            async: () => {
+                try {
+                    eval('async function test() { await Promise.resolve(); }');
+                    return true;
+                } catch (e) {
+                    return false;
+                }
+            },
+            fetch: () => typeof fetch !== 'undefined',
+            localStorage: () => {
+                try {
+                    localStorage.setItem('test', 'test');
+                    localStorage.removeItem('test');
+                    return true;
+                } catch (e) {
+                    return false;
+                }
+            }
+        };
+        
+        function runTests() {
+            const results = {};
+            
+            // CSS Tests
+            results.grid = tests.grid();
+            document.getElementById('gridTest').textContent = results.grid ? 'Supported' : 'Not Supported';
+            document.getElementById('gridTest').className = 'test-result ' + (results.grid ? 'supported' : 'not-supported');
+            
+            results.flexbox = tests.flexbox();
+            document.getElementById('flexTest').textContent = results.flexbox ? 'Supported' : 'Not Supported';
+            document.getElementById('flexTest').className = 'test-result ' + (results.flexbox ? 'supported' : 'not-supported');
+            
+            results.customProps = tests.customProps();
+            document.getElementById('customPropsTest').textContent = results.customProps ? 'Supported' : 'Not Supported';
+            document.getElementById('customPropsTest').className = 'test-result ' + (results.customProps ? 'supported' : 'not-supported');
+            
+            results.backdropFilter = tests.backdropFilter();
+            document.getElementById('backdropTest').textContent = results.backdropFilter ? 'Supported' : 'Not Supported';
+            document.getElementById('backdropTest').className = 'test-result ' + (results.backdropFilter ? 'supported' : 'not-supported');
+            
+            results.backgroundClip = tests.backgroundClip();
+            document.getElementById('bgClipTest').textContent = results.backgroundClip ? 'Supported' : 'Not Supported';
+            document.getElementById('bgClipTest').className = 'test-result ' + (results.backgroundClip ? 'supported' : 'not-supported');
+            
+            // JavaScript Tests
+            results.arrow = tests.arrow();
+            document.getElementById('arrowTest').textContent = results.arrow ? 'Supported' : 'Not Supported';
+            document.getElementById('arrowTest').className = 'test-result ' + (results.arrow ? 'supported' : 'not-supported');
+            
+            results.template = tests.template();
+            document.getElementById('templateTest').textContent = results.template ? 'Supported' : 'Not Supported';
+            document.getElementById('templateTest').className = 'test-result ' + (results.template ? 'supported' : 'not-supported');
+            
+            results.destructuring = tests.destructuring();
+            document.getElementById('destructureTest').textContent = results.destructuring ? 'Supported' : 'Not Supported';
+            document.getElementById('destructureTest').className = 'test-result ' + (results.destructuring ? 'supported' : 'not-supported');
+            
+            results.async = tests.async();
+            document.getElementById('asyncTest').textContent = results.async ? 'Supported' : 'Not Supported';
+            document.getElementById('asyncTest').className = 'test-result ' + (results.async ? 'supported' : 'not-supported');
+            
+            results.fetch = tests.fetch();
+            document.getElementById('fetchTest').textContent = results.fetch ? 'Supported' : 'Not Supported';
+            document.getElementById('fetchTest').className = 'test-result ' + (results.fetch ? 'supported' : 'not-supported');
+            
+            results.localStorage = tests.localStorage();
+            document.getElementById('localStorageTest').textContent = results.localStorage ? 'Supported' : 'Not Supported';
+            document.getElementById('localStorageTest').className = 'test-result ' + (results.localStorage ? 'supported' : 'not-supported');
+            
+            // Input Test
+            const input = document.getElementById('testInput');
+            input.addEventListener('input', () => {
+                document.getElementById('inputTest').textContent = 'Working';
+                document.getElementById('inputTest').className = 'test-result supported';
+            });
+            
+            // Generate Summary
+            generateSummary(results);
+        }
+        
+        function generateSummary(results) {
+            const total = Object.keys(results).length;
+            const supported = Object.values(results).filter(r => r).length;
+            const percentage = Math.round((supported / total) * 100);
+            
+            let recommendation = '';
+            if (percentage >= 90) {
+                recommendation = '✅ Excellent! Your browser fully supports NexVestXR.';
+            } else if (percentage >= 70) {
+                recommendation = '⚠️ Good! Your browser supports most features. Some visual effects may be limited.';
+            } else if (percentage >= 50) {
+                recommendation = '⚠️ Partial support. The application will work but with degraded experience.';
+            } else {
+                recommendation = '❌ Poor support. Please upgrade your browser for the best experience.';
+            }
+            
+            document.getElementById('compatibilitySummary').innerHTML = `
+                <h4>Overall Compatibility: ${percentage}% (${supported}/${total} features)</h4>
+                <p>${recommendation}</p>
+                <h4>Recommended Browsers:</h4>
+                <ul>
+                    <li>Chrome 80+ (recommended)</li>
+                    <li>Firefox 103+</li>
+                    <li>Safari 12+</li>
+                    <li>Edge 79+ (Chromium-based)</li>
+                </ul>
+            `;
+        }
+        
+        // Run tests when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            detectBrowser();
+            runTests();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+{
+  "name": "nexvestxr-v2-dual-token-contracts",
+  "version": "2.0.0",
+  "description": "XERA + PROPX Dual Token Smart Contracts for NexVestXR",
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "deploy": "hardhat run scripts/Deploy.js --network hardhat",
+    "deploy:dual": "hardhat run scripts/deployDualToken.js --network hardhat",
+    "deploy:flare": "hardhat run scripts/deployDualToken.js --network flare",
+    "verify": "hardhat run scripts/Verify.js --network flare",
+    "clean": "hardhat clean"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^4.9.0",
+    "dotenv": "^16.5.0",
+    "xrpl": "^4.2.5"
+  },
+  "devDependencies": {
+    "@nomiclabs/hardhat-ethers": "^2.2.3",
+    "@nomiclabs/hardhat-etherscan": "^3.1.7",
+    "@nomiclabs/hardhat-waffle": "^2.0.5",
+    "chai": "^5.2.0",
+    "ethers": "^5.7.2",
+    "hardhat": "^2.14.0",
+    "hardhat-gas-reporter": "^1.0.9",
+    "solidity-coverage": "^0.8.2"
+  }
+}

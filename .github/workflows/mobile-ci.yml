@@ -1,0 +1,360 @@
+name: 📱 Mobile CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths: 
+      - 'mobile/**'
+      - '.github/workflows/mobile-ci.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'mobile/**'
+
+env:
+  NODE_VERSION: '18'
+  JAVA_VERSION: '17'
+  RUBY_VERSION: '3.0'
+
+jobs:
+  # Mobile App Testing
+  test-mobile:
+    name: 📱 Mobile App Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./mobile
+        run: npm ci
+
+      - name: Run TypeScript checks
+        working-directory: ./mobile
+        run: npx tsc --noEmit
+
+      - name: Run ESLint
+        working-directory: ./mobile
+        run: npm run lint
+
+      - name: Run unit tests
+        working-directory: ./mobile
+        run: npm test -- --coverage --watchAll=false
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./mobile/coverage/lcov.info
+          flags: mobile
+          name: mobile-coverage
+
+  # Android Build & Test
+  test-android:
+    name: 🤖 Android Build & Test
+    runs-on: ubuntu-latest
+    needs: test-mobile
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Setup Java JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install dependencies
+        working-directory: ./mobile
+        run: npm ci
+
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            mobile/android/.gradle
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+
+      - name: Build Android (Debug)
+        working-directory: ./mobile
+        run: |
+          cd android
+          ./gradlew assembleDebug --no-daemon
+
+      - name: Run Android tests
+        working-directory: ./mobile
+        run: |
+          cd android
+          ./gradlew testDebugUnitTest --no-daemon
+
+      - name: Upload Android APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-debug-apk
+          path: mobile/android/app/build/outputs/apk/debug/app-debug.apk
+
+  # iOS Build & Test (macOS only)
+  test-ios:
+    name: 🍎 iOS Build & Test
+    runs-on: macos-latest
+    needs: test-mobile
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ env.RUBY_VERSION }}
+          bundler-cache: true
+          working-directory: mobile
+
+      - name: Install dependencies
+        working-directory: ./mobile
+        run: npm ci
+
+      - name: Install Pods
+        working-directory: ./mobile
+        run: |
+          cd ios
+          bundle exec pod install --repo-update
+
+      - name: Build iOS (Debug)
+        working-directory: ./mobile
+        run: |
+          cd ios
+          xcodebuild -workspace NexVestXRMobile.xcworkspace \
+                     -scheme NexVestXRMobile \
+                     -configuration Debug \
+                     -destination 'platform=iOS Simulator,name=iPhone 15,OS=latest' \
+                     -derivedDataPath build/ \
+                     build
+
+      - name: Run iOS tests
+        working-directory: ./mobile
+        run: |
+          cd ios
+          xcodebuild -workspace NexVestXRMobile.xcworkspace \
+                     -scheme NexVestXRMobile \
+                     -configuration Debug \
+                     -destination 'platform=iOS Simulator,name=iPhone 15,OS=latest' \
+                     -derivedDataPath build/ \
+                     test
+
+  # E2E Mobile Testing with Detox
+  e2e-mobile:
+    name: 📱 Mobile E2E Tests
+    runs-on: macos-latest
+    needs: [test-android, test-ios]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./mobile
+        run: npm ci
+
+      - name: Install global tools
+        run: |
+          npm install -g detox-cli
+          brew tap wix/brew
+          brew install applesimutils
+
+      - name: Build iOS for testing
+        working-directory: ./mobile
+        run: |
+          cd ios && bundle exec pod install
+          detox build --configuration ios.sim.debug
+
+      - name: Run E2E tests
+        working-directory: ./mobile
+        run: detox test --configuration ios.sim.debug --cleanup
+
+      - name: Upload E2E test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mobile-e2e-results
+          path: mobile/e2e/artifacts/
+
+  # Mobile Security & Performance
+  mobile-security:
+    name: 🛡️ Mobile Security & Performance
+    runs-on: ubuntu-latest
+    needs: test-mobile
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./mobile
+        run: npm ci
+
+      - name: Security audit
+        working-directory: ./mobile
+        run: npm audit --audit-level=high
+
+      - name: Check for sensitive data
+        working-directory: ./mobile
+        run: |
+          echo "🔍 Checking for sensitive data in mobile app..."
+          
+          # Check for hardcoded secrets
+          if grep -r "password\|secret\|key\|token" src/ --include="*.js" --include="*.ts" --exclude-dir=node_modules; then
+            echo "⚠️ Potential secrets found in source code"
+          fi
+          
+          # Check for debug code
+          if grep -r "console.log\|debugger" src/ --include="*.js" --include="*.ts" --exclude-dir=node_modules; then
+            echo "⚠️ Debug code found - should be removed for production"
+          fi
+
+      - name: Bundle analysis
+        working-directory: ./mobile
+        run: |
+          echo "📦 Analyzing mobile bundle..."
+          npx react-native bundle \
+            --platform android \
+            --dev false \
+            --entry-file index.js \
+            --bundle-output android-bundle.js \
+            --assets-dest android-assets
+          
+          echo "Bundle size: $(wc -c < android-bundle.js) bytes"
+          
+          # Check bundle size
+          BUNDLE_SIZE=$(wc -c < android-bundle.js)
+          if [ $BUNDLE_SIZE -gt 5000000 ]; then
+            echo "⚠️ Bundle size is large: $BUNDLE_SIZE bytes"
+          else
+            echo "✅ Bundle size is acceptable: $BUNDLE_SIZE bytes"
+          fi
+
+  # Mobile Release Build
+  mobile-release:
+    name: 🚀 Mobile Release Build
+    runs-on: macos-latest
+    needs: [test-android, test-ios, mobile-security]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Setup Java JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ env.RUBY_VERSION }}
+          bundler-cache: true
+          working-directory: mobile
+
+      - name: Install dependencies
+        working-directory: ./mobile
+        run: npm ci
+
+      - name: Build Android Release
+        working-directory: ./mobile
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          cd android
+          ./gradlew assembleRelease --no-daemon
+
+      - name: Build iOS Release
+        working-directory: ./mobile
+        run: |
+          cd ios
+          bundle exec pod install
+          xcodebuild -workspace NexVestXRMobile.xcworkspace \
+                     -scheme NexVestXRMobile \
+                     -configuration Release \
+                     -archivePath build/NexVestXRMobile.xcarchive \
+                     archive
+
+      - name: Upload Android Release APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-release-apk
+          path: mobile/android/app/build/outputs/apk/release/app-release.apk
+
+      - name: Upload iOS Archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-release-archive
+          path: mobile/ios/build/NexVestXRMobile.xcarchive
+
+      - name: Create mobile release notes
+        run: |
+          echo "📱 Mobile Release v${{ github.run_number }}" > mobile-release-notes.md
+          echo "" >> mobile-release-notes.md
+          echo "### Changes" >> mobile-release-notes.md
+          echo "${{ github.event.head_commit.message }}" >> mobile-release-notes.md
+          echo "" >> mobile-release-notes.md
+          echo "### Build Information" >> mobile-release-notes.md
+          echo "- **Commit**: ${{ github.sha }}" >> mobile-release-notes.md
+          echo "- **Branch**: ${{ github.ref_name }}" >> mobile-release-notes.md
+          echo "- **Build**: ${{ github.run_number }}" >> mobile-release-notes.md
+          echo "" >> mobile-release-notes.md
+          echo "### Artifacts" >> mobile-release-notes.md
+          echo "- ✅ Android APK Built" >> mobile-release-notes.md
+          echo "- ✅ iOS Archive Created" >> mobile-release-notes.md
+
+      - name: Upload release notes
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobile-release-notes
+          path: mobile-release-notes.md

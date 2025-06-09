@@ -1,0 +1,208 @@
+services:
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./infrastructure/nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./infrastructure/nginx/sites-available:/etc/nginx/sites-available
+      - ./infrastructure/nginx/conf.d:/etc/nginx/conf.d
+      - ./infrastructure/ssl:/etc/nginx/ssl
+      - ./logs/nginx:/var/log/nginx
+    depends_on:
+      - nexvestxr-backend
+      - nexvestxr-frontend
+    networks:
+      - nexvestxr-network
+
+  nexvestxr-backend:
+    image: nexvestxr-backend:preprod
+    pull_policy: never
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - MONGO_URI=mongodb://admin:admin123@mongo1:27017/nexvestxr?authSource=admin
+      - REDIS_URL=redis://redis:6379
+      - XRPL_SERVER=wss://s.altnet.rippletest.net:51233
+      - XUMM_API_KEY=${XUMM_API_KEY}
+      - XUMM_API_SECRET=${XUMM_API_SECRET}
+      - FLARE_RPC_URL=${FLARE_RPC_URL}
+      - FLARE_PRIVATE_KEY=${FLARE_PRIVATE_KEY}
+      - STRIPE_API_KEY=${STRIPE_API_KEY}
+      - MOONPAY_API_KEY=${MOONPAY_API_KEY}
+      - JWT_SECRET=${JWT_SECRET}
+      - AI_SERVICE_URL=http://ai-service:5000
+    volumes:
+      - ./logs/backend:/app/logs
+      - ./uploads:/app/uploads
+    depends_on:
+      - mongo1
+      - redis
+      - ai-service
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - nexvestxr-network
+
+  nexvestxr-frontend:
+    image: nexvestxr-frontend:preprod
+    pull_policy: never
+    ports:
+      - "3001:80"
+    environment:
+      - REACT_APP_API_URL=https://api.preprod.nexvestxr.com
+      - REACT_APP_XUMM_API_KEY=${XUMM_API_KEY}
+      - REACT_APP_ENVIRONMENT=pre-production
+    volumes:
+      - ./logs/frontend:/var/log/nginx
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - nexvestxr-network
+
+  ai-service:
+    image: nexvestxr-ai-service:preprod
+    pull_policy: never
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=production
+      - MODEL_PATH=/app/models
+    volumes:
+      - ./logs/ai-service:/app/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - nexvestxr-network
+
+  mongo1:
+    image: mongo:5.0
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-admin123}
+      MONGO_INITDB_DATABASE: nexvestxr
+    volumes:
+      - mongo-data:/data/db
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - nexvestxr-network
+
+  mongo2:
+    image: mongo:5.0
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-admin123}
+    volumes:
+      - mongo2-data:/data/db
+    depends_on:
+      - mongo1
+    networks:
+      - nexvestxr-network
+
+  mongo3:
+    image: mongo:5.0
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-admin123}
+    volumes:
+      - mongo3-data:/data/db
+    depends_on:
+      - mongo1
+    networks:
+      - nexvestxr-network
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - nexvestxr-network
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./infrastructure/prometheus:/etc/prometheus
+      - prometheus-data:/prometheus
+    networks:
+      - nexvestxr-network
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3002:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin123}
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./infrastructure/grafana:/etc/grafana/provisioning
+    depends_on:
+      - prometheus
+    networks:
+      - nexvestxr-network
+
+  mobile:
+    build:
+      context: ./mobile
+      dockerfile: Dockerfile
+    volumes:
+      - ./mobile:/app
+    ports:
+      - "8081:8081"  # Metro bundler port
+    environment:
+      - API_BASE_URL=http://nexvestxr-backend:3000
+    depends_on:
+      - nexvestxr-backend
+    networks:
+      - nexvestxr-network
+
+volumes:
+  mongo-data:
+  mongo2-data:
+  mongo3-data:
+  redis-data:
+  prometheus-data:
+  grafana-data:
+
+networks:
+  nexvestxr-network:
+    driver: bridge
+

@@ -1,0 +1,324 @@
+{
+  "tokens": {
+    "xera": {
+      "network": "XRPL",
+      "currency": "XERA",
+      "issuer": "rXERAIssuerAddressHere123456789",
+      "type": "platform",
+      "features": [
+        "diversified_portfolio",
+        "staking",
+        "governance",
+        "fee_discounts"
+      ],
+      "cities": [
+        "MUM",
+        "BANG",
+        "DEL",
+        "CHEN",
+        "HYD",
+        "PUN"
+      ],
+      "tiers": {
+        "bronze": {
+          "minTokens": 1000,
+          "feeDiscount": 10,
+          "stakingAPY": 6,
+          "features": [
+            "Basic staking rewards",
+            "Governance voting",
+            "Platform fee discount"
+          ]
+        },
+        "silver": {
+          "minTokens": 5000,
+          "feeDiscount": 15,
+          "stakingAPY": 8,
+          "features": [
+            "Enhanced staking rewards",
+            "Priority customer support",
+            "Early access to new pools"
+          ]
+        },
+        "gold": {
+          "minTokens": 25000,
+          "feeDiscount": 25,
+          "stakingAPY": 12,
+          "features": [
+            "Premium staking rewards",
+            "PROPX access benefits",
+            "Dedicated account manager"
+          ]
+        },
+        "platinum": {
+          "minTokens": 100000,
+          "feeDiscount": 35,
+          "stakingAPY": 15,
+          "features": [
+            "Maximum staking rewards",
+            "Institutional PROPX access",
+            "White-glove service"
+          ]
+        }
+      }
+    },
+    "propx": {
+      "network": "Flare",
+      "factory": "0xPROPXFactoryAddressHere123456789",
+      "type": "premium_properties",
+      "features": [
+        "individual_properties",
+        "dividends",
+        "oracle_pricing",
+        "institutional_access"
+      ],
+      "categories": {
+        "0": "Residential",
+        "1": "Commercial",
+        "2": "Mixed-Use",
+        "3": "Luxury",
+        "4": "Industrial"
+      },
+      "developerTiers": {
+        "TIER1": {
+          "name": "Tier 1 Developer",
+          "platformFee": "1.5%",
+          "requirements": {
+            "projectsDelivered": 10,
+            "totalValueDelivered": "₹500 Cr",
+            "reputationScore": 750
+          },
+          "benefits": [
+            "Lowest platform fees",
+            "Priority listing",
+            "Enhanced marketing support",
+            "Direct institutional access"
+          ]
+        },
+        "TIER2": {
+          "name": "Tier 2 Developer",
+          "platformFee": "2.5%",
+          "requirements": {
+            "projectsDelivered": 3,
+            "totalValueDelivered": "₹100 Cr",
+            "reputationScore": 500
+          },
+          "benefits": [
+            "Standard platform fees",
+            "Regular listing support",
+            "Basic marketing tools"
+          ]
+        }
+      },
+      "premiumBrands": [
+        {
+          "brandCode": "GODREJ",
+          "name": "Godrej Properties Limited",
+          "tier": "TIER1",
+          "specialization": ["Residential", "Commercial"],
+          "cities": ["Mumbai", "Pune", "Bangalore"]
+        },
+        {
+          "brandCode": "PRESTIGE",
+          "name": "Prestige Estates Projects",
+          "tier": "TIER1",
+          "specialization": ["Commercial", "Luxury", "Mixed-Use"],
+          "cities": ["Bangalore", "Chennai", "Hyderabad"]
+        },
+        {
+          "brandCode": "BRIGADE",
+          "name": "Brigade Enterprises",
+          "tier": "TIER1",
+          "specialization": ["Commercial", "Residential"],
+          "cities": ["Bangalore", "Chennai"]
+        }
+      ],
+      "minimumInvestments": {
+        "retail": "₹10,000",
+        "institutional": "₹10,00,000"
+      }
+    }
+  },
+  "crossChain": {
+    "bridge": {
+      "xrplToFlare": true,
+      "flareToXrpl": true,
+      "xeraXRPLIssuer": "rXERAIssuerAddressHere123456789",
+      "xeraFlareAddress": "0xXERAFlareTokenAddressHere123456789",
+      "propxFactoryAddress": "0xPROPXFactoryAddressHere123456789",
+      "bridgeFeatures": [
+        "Cross-chain XERA balance tracking",
+        "Unified premium access",
+        "Cross-chain fee discounts",
+        "Portfolio aggregation"
+      ]
+    },
+    "features": [
+      "unified_portfolio",
+      "cross_chain_benefits",
+      "aggregated_analytics"
+    ],
+    "benefits": {
+      "xeraHolders": [
+        "Fee discounts on PROPX investments",
+        "Priority access to premium properties",
+        "Enhanced dividend yields",
+        "Governance voting on cross-chain proposals"
+      ],
+      "portfolioUnification": [
+        "Real-time balance synchronization",
+        "Combined risk assessment",
+        "Unified transaction history",
+        "Cross-chain portfolio rebalancing"
+      ]
+    }
+  },
+  "networks": {
+    "xrpl": {
+      "endpoint": "wss://s.altnet.rippletest.net:51233",
+      "type": "testnet",
+      "explorer": "https://testnet.xrpl.org",
+      "features": [
+        "Native token issuance",
+        "Low transaction fees",
+        "Fast settlement",
+        "Built-in DEX"
+      ]
+    },
+    "flare": {
+      "endpoint": "https://coston2-api.flare.network/ext/bc/C/rpc",
+      "chainId": 114,
+      "type": "testnet",
+      "explorer": "https://coston2-explorer.flare.network",
+      "features": [
+        "EVM compatibility",
+        "Oracle network integration",
+        "State connector protocols",
+        "FAsset system"
+      ]
+    }
+  },
+  "ui": {
+    "theme": {
+      "primary": {
+        "xera": "#8B5CF6",
+        "propx": "#06B6D4"
+      },
+      "gradients": {
+        "xera": "from-purple-600 to-purple-700",
+        "propx": "from-cyan-600 to-cyan-700",
+        "combined": "from-purple-500 to-cyan-500"
+      }
+    },
+    "navigation": {
+      "mainTabs": [
+        {
+          "key": "portfolio",
+          "label": "Portfolio",
+          "icon": "Wallet",
+          "description": "Unified XERA & PROPX portfolio"
+        },
+        {
+          "key": "xera",
+          "label": "XERA Dashboard",
+          "icon": "Shield",
+          "description": "XRPL platform token management"
+        },
+        {
+          "key": "propx",
+          "label": "PROPX Marketplace",
+          "icon": "Building2",
+          "description": "Flare premium properties"
+        },
+        {
+          "key": "benefits",
+          "label": "Benefits & Tiers",
+          "icon": "Award",
+          "description": "Cross-chain utility benefits"
+        },
+        {
+          "key": "analytics",
+          "label": "Analytics",
+          "icon": "BarChart3",
+          "description": "Market insights & performance"
+        }
+      ]
+    },
+    "components": {
+      "dualTokenDashboard": {
+        "enabled": true,
+        "showCrossChainMetrics": true,
+        "showUnifiedPortfolio": true
+      },
+      "xeraDashboard": {
+        "enabled": true,
+        "showStaking": true,
+        "showGovernance": true,
+        "showCityPools": true
+      },
+      "propxMarketplace": {
+        "enabled": true,
+        "showFilters": true,
+        "showAnalytics": true,
+        "showDeveloperProfiles": true
+      }
+    }
+  },
+  "api": {
+    "endpoints": {
+      "dualToken": "/api/dual-token",
+      "xera": "/api/dual-token/xera",
+      "propx": "/api/dual-token/propx",
+      "crossChain": "/api/dual-token/cross-chain-benefits",
+      "analytics": "/api/dual-token/analytics"
+    },
+    "authentication": {
+      "required": true,
+      "headerName": "Authorization",
+      "tokenPrefix": "Bearer "
+    }
+  },
+  "features": {
+    "staking": {
+      "enabled": true,
+      "minStakeAmount": 100,
+      "lockupPeriods": [
+        { "duration": "3 months", "apy": 6 },
+        { "duration": "6 months", "apy": 8 },
+        { "duration": "12 months", "apy": 12 }
+      ]
+    },
+    "governance": {
+      "enabled": true,
+      "votingPowerRatio": 100,
+      "proposalThreshold": 10000
+    },
+    "marketplace": {
+      "enabled": true,
+      "categories": ["All", "Residential", "Commercial", "Mixed-Use", "Luxury", "Industrial"],
+      "cities": ["All", "Mumbai", "Bangalore", "Delhi NCR", "Chennai", "Hyderabad", "Pune"],
+      "sortOptions": ["recent", "funding", "yield", "alphabetical"]
+    },
+    "crossChainBridge": {
+      "enabled": true,
+      "syncInterval": 300000,
+      "balanceThreshold": 1000
+    }
+  },
+  "constants": {
+    "tokenDecimals": {
+      "xera": 18,
+      "propx": 18
+    },
+    "minInvestments": {
+      "xeraStaking": 100,
+      "propxRetail": 10000,
+      "propxInstitutional": 1000000
+    },
+    "platformFees": {
+      "tier1Developer": 150,
+      "tier2Developer": 250,
+      "baseFee": 200
+    }
+  }
+}

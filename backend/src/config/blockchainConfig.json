@@ -1,0 +1,31 @@
+{
+    "blockchain": {
+        "xrpl": {
+            "network": "wss://s.altnet.rippletest.net:51233",
+            "xeraIssuer": "rTestXERAIssuer123456789",
+            "walletSeed": "sTestSeed123456789"
+        },
+        "flare": {
+            "rpcUrl": "https://coston2-api.flare.network/ext/bc/C/rpc",
+            "chainId": 114,
+            "contracts": {
+                "xeraToken": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+                "propxFactory": "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512"
+            }
+        }
+    },
+    "services": {
+        "tokenization": {
+            "xeraMinValue": "5000000",
+            "propxMinValue": "50000000",
+            "platformFees": {
+                "tier1": "1.5%",
+                "tier2": "2.5%"
+            }
+        },
+        "crossChain": {
+            "syncInterval": 300,
+            "bridgeEnabled": true
+        }
+    }
+}

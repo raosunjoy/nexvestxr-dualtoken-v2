@@ -1,0 +1,14 @@
+config:
+  target: 'http://localhost:3000'
+  phases:
+    - duration: 60
+      arrivalRate: 10
+scenarios:
+  - flow:
+    - get:
+        url: "/health"
+    - post:
+        url: "/api/auth/login"
+        json:
+          email: "test@nexvestxr.com"
+          password: "password123"

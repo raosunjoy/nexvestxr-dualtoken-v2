@@ -1,0 +1,31 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'nexvestxr-backend'
+    static_configs:
+      - targets: ['nexvestxr-backend:3000']
+    metrics_path: /metrics
+
+  - job_name: 'nexvestxr-frontend'
+    static_configs:
+      - targets: ['nexvestxr-frontend:3001']
+    metrics_path: /metrics
+
+  - job_name: 'ai-service'
+    static_configs:
+      - targets: ['ai-service:5000']
+    metrics_path: /metrics
+
+  - job_name: 'support-metrics'
+    static_configs:
+      - targets: ['nexvestxr-backend:3000']
+    metrics_path: /support-metrics
+    scrape_interval: 1m
+
+  - job_name: 'user-metrics'
+    static_configs:
+      - targets: ['nexvestxr-backend:3000']
+    metrics_path: /user-metrics
+    scrape_interval: 1m
