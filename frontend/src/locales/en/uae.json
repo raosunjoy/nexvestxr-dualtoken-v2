@@ -1,0 +1,255 @@
+{
+  "platform": {
+    "name": "PropXchange UAE",
+    "tagline": "UAE's Leading Digital Real Estate Investment Platform",
+    "welcome": "Welcome to PropXchange UAE",
+    "description": "Invest in premium UAE properties with AED primary currency and comprehensive multi-currency support"
+  },
+  "uae": {
+    "cities": {
+      "dubai": "Dubai",
+      "abu_dhabi": "Abu Dhabi",
+      "sharjah": "Sharjah",
+      "ajman": "Ajman",
+      "fujairah": "Fujairah",
+      "ras_al_khaimah": "Ras Al Khaimah",
+      "umm_al_quwain": "Umm Al Quwain"
+    },
+    "zones": {
+      "downtown_dubai": "Downtown Dubai",
+      "dubai_marina": "Dubai Marina",
+      "business_bay": "Business Bay",
+      "jumeirah_lake_towers": "Jumeirah Lake Towers",
+      "difc": "DIFC",
+      "palm_jumeirah": "Palm Jumeirah",
+      "dubai_hills": "Dubai Hills",
+      "arabian_ranches": "Arabian Ranches",
+      "mirdif": "Mirdif",
+      "al_reem_island": "Al Reem Island",
+      "yas_island": "Yas Island",
+      "saadiyat_island": "Saadiyat Island"
+    }
+  },
+  "property_types": {
+    "apartment": "Apartment",
+    "villa": "Villa",
+    "townhouse": "Townhouse",
+    "penthouse": "Penthouse",
+    "office": "Office",
+    "retail": "Retail",
+    "warehouse": "Warehouse",
+    "hotel_apartment": "Hotel Apartment"
+  },
+  "categories": {
+    "residential": "Residential",
+    "commercial": "Commercial",
+    "industrial": "Industrial",
+    "hospitality": "Hospitality"
+  },
+  "developers": {
+    "emaar": "EMAAR",
+    "meraas": "MERAAS",
+    "nakheel": "NAKHEEL",
+    "damac": "DAMAC",
+    "sobha_realty": "SOBHA REALTY",
+    "majid_al_futtaim": "Majid Al Futtaim",
+    "dubai_properties": "Dubai Properties",
+    "aldar": "ALDAR"
+  },
+  "amenities": {
+    "swimming_pool": "Swimming Pool",
+    "gym": "Gym",
+    "sauna": "Sauna",
+    "steam_room": "Steam Room",
+    "jacuzzi": "Jacuzzi",
+    "children_play_area": "Children's Play Area",
+    "bbq_area": "BBQ Area",
+    "garden": "Garden",
+    "balcony": "Balcony",
+    "maid_room": "Maid Room",
+    "study_room": "Study Room",
+    "storage_room": "Storage Room",
+    "laundry_room": "Laundry Room",
+    "security": "Security",
+    "concierge": "Concierge",
+    "valet_parking": "Valet Parking",
+    "business_center": "Business Center"
+  },
+  "investment": {
+    "tiers": {
+      "retail": {
+        "name": "Retail",
+        "description": "For local investors",
+        "min_amount": "AED 25,000",
+        "max_amount": "AED 500,000",
+        "kyc_level": "Standard"
+      },
+      "premium": {
+        "name": "Premium",
+        "description": "For GCC investors",
+        "min_amount": "AED 500,000",
+        "max_amount": "AED 2,000,000",
+        "kyc_level": "Enhanced"
+      },
+      "institutional": {
+        "name": "Institutional",
+        "description": "For international investors",
+        "min_amount": "AED 2,000,000",
+        "kyc_level": "Comprehensive"
+      }
+    },
+    "features": {
+      "multi_currency": "Multi-Currency Support",
+      "real_time_trading": "Real-Time Trading",
+      "blockchain_security": "Blockchain Security",
+      "regulatory_compliance": "Regulatory Compliance",
+      "instant_settlements": "Instant Settlements",
+      "portfolio_analytics": "Portfolio Analytics"
+    },
+    "benefits": {
+      "diversification": "Portfolio Diversification",
+      "liquidity": "Enhanced Liquidity",
+      "transparency": "Complete Transparency",
+      "accessibility": "Global Accessibility",
+      "professional_management": "Professional Management",
+      "regulatory_protection": "Regulatory Protection"
+    }
+  },
+  "compliance": {
+    "regulators": {
+      "rera": "Real Estate Regulatory Agency",
+      "dld": "Dubai Land Department",
+      "adgm": "Abu Dhabi Global Market",
+      "dfsa": "Dubai Financial Services Authority"
+    },
+    "requirements": {
+      "kyc": "Know Your Customer",
+      "aml": "Anti-Money Laundering",
+      "fatf": "FATF Compliance",
+      "licensing": "Developer Licensing",
+      "registration": "Property Registration"
+    },
+    "documents": {
+      "emirates_id": "Emirates ID",
+      "passport": "Passport",
+      "visa": "Visa",
+      "salary_certificate": "Salary Certificate",
+      "bank_statement": "Bank Statement",
+      "trade_license": "Trade License",
+      "proof_of_address": "Proof of Address"
+    }
+  },
+  "trading": {
+    "features": {
+      "order_types": "Multiple Order Types",
+      "real_time_charts": "Real-Time Charts",
+      "advanced_analytics": "Advanced Analytics",
+      "portfolio_tracking": "Portfolio Tracking",
+      "risk_management": "Risk Management",
+      "mobile_trading": "Mobile Trading"
+    },
+    "order_types": {
+      "market": "Market Order",
+      "limit": "Limit Order",
+      "stop_loss": "Stop Loss",
+      "take_profit": "Take Profit",
+      "oco": "One-Cancels-Other",
+      "trailing": "Trailing Stop"
+    },
+    "timeframes": {
+      "1h": "1 Hour",
+      "4h": "4 Hours",
+      "1d": "1 Day",
+      "1w": "1 Week",
+      "1m": "1 Month",
+      "3m": "3 Months",
+      "6m": "6 Months",
+      "1y": "1 Year"
+    }
+  },
+  "currencies": {
+    "primary": "Primary Currency",
+    "supported": "Supported Currencies",
+    "gcc_currencies": "GCC Currencies",
+    "international": "International Currencies",
+    "conversion": "Currency Conversion",
+    "real_time_rates": "Real-Time Exchange Rates",
+    "aed": "UAE Dirham",
+    "sar": "Saudi Riyal",
+    "qar": "Qatari Riyal",
+    "kwd": "Kuwaiti Dinar",
+    "omr": "Omani Rial",
+    "bhd": "Bahraini Dinar",
+    "usd": "US Dollar",
+    "eur": "Euro",
+    "gbp": "British Pound",
+    "sgd": "Singapore Dollar"
+  },
+  "localization": {
+    "languages": {
+      "english": "English",
+      "arabic": "Arabic"
+    },
+    "formats": {
+      "date": "Date Format",
+      "time": "Time Format",
+      "numbers": "Number Format",
+      "currency": "Currency Format"
+    },
+    "features": {
+      "rtl_support": "RTL Support",
+      "arabic_numerals": "Arabic Numerals",
+      "cultural_adaptation": "Cultural Adaptation",
+      "local_preferences": "Local Preferences"
+    }
+  },
+  "support": {
+    "channels": {
+      "phone": "Phone Support",
+      "email": "Email Support",
+      "chat": "Live Chat",
+      "whatsapp": "WhatsApp",
+      "telegram": "Telegram"
+    },
+    "languages": {
+      "arabic": "Arabic Support",
+      "english": "English Support"
+    },
+    "hours": {
+      "business": "Business Hours",
+      "extended": "Extended Hours",
+      "24_7": "24/7 Support"
+    }
+  },
+  "legal": {
+    "terms": "Terms & Conditions",
+    "privacy": "Privacy Policy",
+    "disclaimer": "Disclaimer",
+    "risk_warning": "Risk Warning",
+    "regulatory_notice": "Regulatory Notice",
+    "licensing": "Licensing Information"
+  },
+  "marketing": {
+    "headlines": {
+      "invest_uae": "Invest in UAE's Premium Properties",
+      "digital_real_estate": "Digital Real Estate Revolution",
+      "blockchain_powered": "Blockchain-Powered Investments",
+      "regulatory_compliant": "Fully Regulatory Compliant",
+      "multi_currency": "Multi-Currency Platform"
+    },
+    "benefits": {
+      "low_minimum": "Low Minimum Investment",
+      "instant_liquidity": "Instant Liquidity",
+      "global_access": "Global Market Access",
+      "professional_grade": "Professional Grade Platform",
+      "secure_blockchain": "Secure Blockchain Technology"
+    },
+    "call_to_action": {
+      "start_investing": "Start Investing Today",
+      "join_platform": "Join the Platform",
+      "explore_properties": "Explore Properties",
+      "learn_more": "Learn More",
+      "get_started": "Get Started"
+    }
+  }
+}

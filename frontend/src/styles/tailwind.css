@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Import UAE Theme */
+@import './uae-theme.css';
+
 /* Enhanced Colors from HTML Template */
 :root {
   --primary-gradient: linear-gradient(135deg, #8b45ff 0%, #3b82f6 50%, #06d6a0 100%);
