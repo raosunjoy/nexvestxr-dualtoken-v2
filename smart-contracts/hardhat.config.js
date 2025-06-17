@@ -7,10 +7,10 @@ require("@nomiclabs/hardhat-etherscan");
 
 // UAE-specific deployment task
 task('deploy-uae', 'Deploy UAE property tokenization contracts')
-  .addParam('network', 'The network to deploy to')
+  .addOptionalParam('targetNetwork', 'The network to deploy to', 'hardhat')
   .setAction(async (taskArgs, hre) => {
-    console.log(`🚀 Deploying UAE contracts to ${taskArgs.network}...`);
-    const deployScript = require('./deploy/deploy-uae-contracts.js');
+    console.log(`🚀 Deploying UAE contracts to ${hre.network.name}...`);
+    const deployScript = require('./scripts/deploy-uae-enhanced.js');
     await deployScript();
   });
 

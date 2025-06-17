@@ -1,0 +1,409 @@
+{
+  "network": "hardhat",
+  "chainId": 31337,
+  "timestamp": "2025-06-17T12:44:49.922Z",
+  "config": {
+    "networks": {
+      "mainnet": {
+        "polygon": {
+          "name": "Polygon Mainnet",
+          "chainId": 137,
+          "rpc": "https://polygon-rpc.com",
+          "explorer": "https://polygonscan.com",
+          "currency": "MATIC",
+          "gasPrice": "35000000000",
+          "confirmations": 12,
+          "features": [
+            "UAE_PROPERTY_TOKENS",
+            "AED_SETTLEMENTS",
+            "RERA_COMPLIANCE",
+            "DLD_INTEGRATION"
+          ],
+          "contracts": {
+            "UAEPropertyToken": "0x0000000000000000000000000000000000000000",
+            "UAECompliance": "0x0000000000000000000000000000000000000000",
+            "UAEStaking": "0x0000000000000000000000000000000000000000",
+            "UAEOracle": "0x0000000000000000000000000000000000000000"
+          }
+        },
+        "flare": {
+          "name": "Flare Network",
+          "chainId": 14,
+          "rpc": "https://flare-api.flare.network/ext/bc/C/rpc",
+          "explorer": "https://flare-explorer.flare.network",
+          "currency": "FLR",
+          "gasPrice": "25000000000",
+          "confirmations": 10,
+          "features": [
+            "PRICE_ORACLES",
+            "FTSO_INTEGRATION",
+            "AED_PRICE_FEEDS",
+            "CROSS_CHAIN_BRIDGE"
+          ],
+          "oracles": {
+            "AED_USD": "ftso://AED/USD",
+            "AED_EUR": "ftso://AED/EUR",
+            "AED_GBP": "ftso://AED/GBP",
+            "PROPERTY_INDEX": "custom://UAE_PROPERTY_INDEX"
+          }
+        },
+        "xrpl": {
+          "name": "XRPL EVM Sidechain",
+          "chainId": 1440002,
+          "rpc": "https://rpc-evm-sidechain.xrpl.org",
+          "explorer": "https://evm-sidechain.xrpl.org",
+          "currency": "XRP",
+          "gasPrice": "10000000000",
+          "confirmations": 8,
+          "features": [
+            "XERA_TOKEN_BRIDGE",
+            "LIQUIDITY_POOLS",
+            "AMM_INTEGRATION",
+            "CROSS_CHAIN_SETTLEMENTS"
+          ],
+          "bridge": {
+            "xeraToken": "0x0000000000000000000000000000000000000000",
+            "liquidityPool": "0x0000000000000000000000000000000000000000",
+            "bridgeContract": "0x0000000000000000000000000000000000000000"
+          }
+        }
+      },
+      "testnet": {
+        "polygonMumbai": {
+          "name": "Polygon Mumbai Testnet",
+          "chainId": 80001,
+          "rpc": "https://rpc-mumbai.maticvigil.com",
+          "explorer": "https://mumbai.polygonscan.com",
+          "currency": "MATIC",
+          "gasPrice": "35000000000",
+          "confirmations": 5,
+          "features": [
+            "UAE_PROPERTY_TOKENS",
+            "AED_SETTLEMENTS",
+            "RERA_COMPLIANCE",
+            "DLD_INTEGRATION"
+          ],
+          "faucets": [
+            "https://faucet.polygon.technology/",
+            "https://mumbaifaucet.com/"
+          ]
+        },
+        "flareCoston2": {
+          "name": "Flare Coston2 Testnet",
+          "chainId": 114,
+          "rpc": "https://coston2-api.flare.network/ext/bc/C/rpc",
+          "explorer": "https://coston2-explorer.flare.network",
+          "currency": "C2FLR",
+          "gasPrice": "25000000000",
+          "confirmations": 3,
+          "features": [
+            "PRICE_ORACLES",
+            "FTSO_INTEGRATION",
+            "AED_PRICE_FEEDS",
+            "CROSS_CHAIN_BRIDGE"
+          ],
+          "faucets": [
+            "https://coston2-faucet.towolabs.com/"
+          ]
+        },
+        "xrplTestnet": {
+          "name": "XRPL EVM Devnet",
+          "chainId": 1440001,
+          "rpc": "https://rpc-evm-sidechain.devnet.ripple.com",
+          "explorer": "https://evm-sidechain.devnet.ripple.com",
+          "currency": "XRP",
+          "gasPrice": "10000000000",
+          "confirmations": 3,
+          "features": [
+            "XERA_TOKEN_BRIDGE",
+            "LIQUIDITY_POOLS",
+            "AMM_INTEGRATION",
+            "CROSS_CHAIN_SETTLEMENTS"
+          ],
+          "faucets": [
+            "https://faucet.devnet.ripple.com/"
+          ]
+        }
+      }
+    },
+    "bridges": {
+      "polygon_to_flare": {
+        "name": "Polygon-Flare Bridge",
+        "type": "cross_chain_oracle",
+        "direction": "bidirectional",
+        "supported_tokens": [
+          "UAE_PROPERTY_TOKEN",
+          "AED",
+          "USDC"
+        ],
+        "fee": "0.1%",
+        "time": "5-10 minutes",
+        "security": "multi_sig_validation"
+      },
+      "flare_to_xrpl": {
+        "name": "Flare-XRPL Bridge",
+        "type": "native_bridge",
+        "direction": "bidirectional",
+        "supported_tokens": [
+          "XERA",
+          "AED",
+          "USD"
+        ],
+        "fee": "0.05%",
+        "time": "2-5 minutes",
+        "security": "validator_consensus"
+      },
+      "polygon_to_xrpl": {
+        "name": "Polygon-XRPL Bridge",
+        "type": "layerzero_bridge",
+        "direction": "bidirectional",
+        "supported_tokens": [
+          "UAE_PROPERTY_TOKEN",
+          "XERA"
+        ],
+        "fee": "0.15%",
+        "time": "10-15 minutes",
+        "security": "ultra_light_node"
+      }
+    },
+    "oracles": {
+      "primary": {
+        "provider": "Flare FTSO",
+        "feeds": {
+          "AED/USD": {
+            "address": "0x0000000000000000000000000000000000000000",
+            "decimals": 18,
+            "heartbeat": 300,
+            "deviation": "0.5%"
+          },
+          "AED/EUR": {
+            "address": "0x0000000000000000000000000000000000000000",
+            "decimals": 18,
+            "heartbeat": 300,
+            "deviation": "0.5%"
+          },
+          "AED/GBP": {
+            "address": "0x0000000000000000000000000000000000000000",
+            "decimals": 18,
+            "heartbeat": 300,
+            "deviation": "0.5%"
+          }
+        }
+      },
+      "secondary": {
+        "provider": "Chainlink",
+        "feeds": {
+          "USD/AED": {
+            "address": "0x0000000000000000000000000000000000000000",
+            "decimals": 8,
+            "heartbeat": 3600,
+            "deviation": "1%"
+          }
+        }
+      },
+      "custom": {
+        "provider": "UAE Property Index",
+        "feeds": {
+          "DUBAI_PROPERTY_INDEX": {
+            "address": "0x0000000000000000000000000000000000000000",
+            "decimals": 18,
+            "heartbeat": 86400,
+            "deviation": "2%"
+          },
+          "ABU_DHABI_PROPERTY_INDEX": {
+            "address": "0x0000000000000000000000000000000000000000",
+            "decimals": 18,
+            "heartbeat": 86400,
+            "deviation": "2%"
+          }
+        }
+      }
+    },
+    "compliance": {
+      "rera": {
+        "authority": "Real Estate Regulatory Agency",
+        "jurisdiction": "UAE",
+        "requirements": [
+          "DEVELOPER_VERIFICATION",
+          "PROJECT_REGISTRATION",
+          "ESCROW_COMPLIANCE",
+          "INVESTOR_PROTECTION"
+        ],
+        "contact": {
+          "website": "https://www.rera.gov.ae",
+          "email": "info@rera.gov.ae",
+          "phone": "+971-4-123-4567"
+        }
+      },
+      "dld": {
+        "authority": "Dubai Land Department",
+        "jurisdiction": "Dubai, UAE",
+        "requirements": [
+          "TITLE_DEED_REGISTRATION",
+          "PROPERTY_VALUATION",
+          "TRANSFER_COMPLIANCE",
+          "OWNERSHIP_VERIFICATION"
+        ],
+        "contact": {
+          "website": "https://www.dubailand.gov.ae",
+          "email": "info@dubailand.gov.ae",
+          "phone": "+971-4-222-2222"
+        }
+      },
+      "adm": {
+        "authority": "Abu Dhabi Municipality",
+        "jurisdiction": "Abu Dhabi, UAE",
+        "requirements": [
+          "BUILDING_PERMITS",
+          "ZONING_COMPLIANCE",
+          "MUNICIPAL_APPROVAL",
+          "INFRASTRUCTURE_COMPLIANCE"
+        ],
+        "contact": {
+          "website": "https://www.adm.gov.ae",
+          "email": "info@adm.gov.ae",
+          "phone": "+971-2-333-3333"
+        }
+      }
+    },
+    "currencies": {
+      "primary": "AED",
+      "supported": [
+        {
+          "code": "AED",
+          "name": "UAE Dirham",
+          "symbol": "د.إ",
+          "decimals": 18,
+          "network": "native"
+        },
+        {
+          "code": "USD",
+          "name": "US Dollar",
+          "symbol": "$",
+          "decimals": 18,
+          "network": "cross_chain"
+        },
+        {
+          "code": "EUR",
+          "name": "Euro",
+          "symbol": "€",
+          "decimals": 18,
+          "network": "cross_chain"
+        },
+        {
+          "code": "GBP",
+          "name": "British Pound",
+          "symbol": "£",
+          "decimals": 18,
+          "network": "cross_chain"
+        },
+        {
+          "code": "SAR",
+          "name": "Saudi Riyal",
+          "symbol": "ر.س",
+          "decimals": 18,
+          "network": "gcc_regional"
+        },
+        {
+          "code": "QAR",
+          "name": "Qatari Riyal",
+          "symbol": "ر.ق",
+          "decimals": 18,
+          "network": "gcc_regional"
+        },
+        {
+          "code": "KWD",
+          "name": "Kuwaiti Dinar",
+          "symbol": "د.ك",
+          "decimals": 18,
+          "network": "gcc_regional"
+        },
+        {
+          "code": "XERA",
+          "name": "XERA Token",
+          "symbol": "XERA",
+          "decimals": 18,
+          "network": "xrpl_bridge"
+        }
+      ]
+    },
+    "investment_tiers": {
+      "retail": {
+        "name": "Retail Investor",
+        "min_investment": "25000000000000000000000",
+        "max_investment": "500000000000000000000000",
+        "currency": "AED",
+        "kyc_level": "STANDARD",
+        "target_market": [
+          "UAE_RESIDENTS",
+          "GCC_RESIDENTS"
+        ],
+        "features": [
+          "PROPERTY_TOKENS",
+          "DIVIDEND_DISTRIBUTION",
+          "SECONDARY_TRADING"
+        ]
+      },
+      "premium": {
+        "name": "Premium Investor",
+        "min_investment": "500000000000000000000000",
+        "max_investment": "2000000000000000000000000",
+        "currency": "AED",
+        "kyc_level": "ENHANCED",
+        "target_market": [
+          "UAE_RESIDENTS",
+          "GCC_RESIDENTS",
+          "EXPATS"
+        ],
+        "features": [
+          "PROPERTY_TOKENS",
+          "DIVIDEND_DISTRIBUTION",
+          "SECONDARY_TRADING",
+          "STAKING_REWARDS",
+          "PRIORITY_ACCESS"
+        ]
+      },
+      "institutional": {
+        "name": "Institutional Investor",
+        "min_investment": "2000000000000000000000000",
+        "max_investment": "unlimited",
+        "currency": "AED",
+        "kyc_level": "COMPREHENSIVE",
+        "target_market": [
+          "GLOBAL"
+        ],
+        "features": [
+          "PROPERTY_TOKENS",
+          "DIVIDEND_DISTRIBUTION",
+          "SECONDARY_TRADING",
+          "STAKING_REWARDS",
+          "PRIORITY_ACCESS",
+          "BULK_TRADING",
+          "CUSTOM_AGREEMENTS",
+          "OTC_DESK"
+        ]
+      }
+    },
+    "gas_optimization": {
+      "polygon": {
+        "target_gas_price": "35 gwei",
+        "max_gas_limit": "10000000",
+        "batch_size": "50",
+        "optimization_level": "high"
+      },
+      "flare": {
+        "target_gas_price": "25 gwei",
+        "max_gas_limit": "8000000",
+        "batch_size": "100",
+        "optimization_level": "medium"
+      },
+      "xrpl": {
+        "target_gas_price": "10 gwei",
+        "max_gas_limit": "6000000",
+        "batch_size": "25",
+        "optimization_level": "low"
+      }
+    }
+  },
+  "status": "CONFIGURED"
+}
