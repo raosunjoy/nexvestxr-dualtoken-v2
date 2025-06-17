@@ -1,0 +1,803 @@
+/* Aldar Properties Admin Dashboard Theme */
+
+/* Import Aldar Brand Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* ===============================================
+   Aldar Admin Color Variables
+   =============================================== */
+:root {
+  /* Aldar Brand Colors */
+  --aldar-black: #000000;
+  --aldar-white: #FFFFFF;
+  --aldar-frame-gray: #333333;
+  
+  /* Aldar Dynamic Accent Colors */
+  --aldar-blue: #0066CC;
+  --aldar-blue-light: #E6F2FF;
+  --aldar-blue-dark: #004080;
+  
+  --aldar-green: #00A651;
+  --aldar-green-light: #E6F7ED;
+  --aldar-green-dark: #007A3D;
+  
+  --aldar-orange: #FF6B35;
+  --aldar-orange-light: #FFE8E1;
+  --aldar-orange-dark: #E5522A;
+  
+  --aldar-purple: #8B5CF6;
+  --aldar-purple-light: #F3EFFF;
+  --aldar-purple-dark: #7C3AED;
+  
+  /* Aldar Neutral Palette */
+  --aldar-gray-50: #F9FAFB;
+  --aldar-gray-100: #F3F4F6;
+  --aldar-gray-200: #E5E7EB;
+  --aldar-gray-300: #D1D5DB;
+  --aldar-gray-400: #9CA3AF;
+  --aldar-gray-500: #6B7280;
+  --aldar-gray-600: #4B5563;
+  --aldar-gray-700: #374151;
+  --aldar-gray-800: #1F2937;
+  --aldar-gray-900: #111827;
+  
+  /* Aldar Typography */
+  --aldar-font-primary: 'Poppins', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --aldar-font-secondary: 'Inter', var(--aldar-font-primary);
+  
+  /* Aldar Admin Layout */
+  --aldar-sidebar-width: 280px;
+  --aldar-header-height: 80px;
+  
+  /* Aldar Shadows */
+  --aldar-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --aldar-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+  --aldar-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.15);
+  --aldar-shadow-xl: 0 12px 32px rgba(0, 0, 0, 0.2);
+}
+
+/* ===============================================
+   Aldar Admin Layout
+   =============================================== */
+
+.aldar-admin-container {
+  display: grid;
+  grid-template-areas: 
+    "sidebar header"
+    "sidebar main";
+  grid-template-columns: var(--aldar-sidebar-width) 1fr;
+  grid-template-rows: var(--aldar-header-height) 1fr;
+  height: 100vh;
+  background: var(--aldar-gray-50);
+  font-family: var(--aldar-font-secondary);
+}
+
+/* ===============================================
+   Aldar Sidebar Styles
+   =============================================== */
+
+.aldar-sidebar {
+  grid-area: sidebar;
+  background: var(--aldar-white);
+  border-right: 1px solid var(--aldar-gray-200);
+  box-shadow: var(--aldar-shadow-lg);
+  overflow-y: auto;
+  z-index: 10;
+}
+
+.aldar-logo-section {
+  padding: 24px 20px;
+  border-bottom: 1px solid var(--aldar-gray-200);
+  background: linear-gradient(135deg, var(--aldar-gray-50) 0%, var(--aldar-white) 100%);
+}
+
+.aldar-logo-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.aldar-logo-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s ease;
+}
+
+.aldar-logo-icon:hover {
+  transform: scale(1.05);
+}
+
+.aldar-logo-text {
+  font-family: var(--aldar-font-primary);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--aldar-black);
+  letter-spacing: -0.02em;
+}
+
+.aldar-brand-subtitle {
+  font-family: var(--aldar-font-secondary);
+  font-size: 12px;
+  color: var(--aldar-gray-600);
+  margin-left: 44px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Aldar Navigation */
+.aldar-nav {
+  padding: 16px 0;
+}
+
+.aldar-nav-menu {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.aldar-nav-item {
+  margin-bottom: 2px;
+}
+
+.aldar-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 20px;
+  font-family: var(--aldar-font-secondary);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--aldar-gray-700);
+  text-decoration: none;
+  border: none;
+  background: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.aldar-nav-link:hover {
+  background: var(--aldar-gray-100);
+  color: var(--aldar-black);
+}
+
+.aldar-nav-link.active {
+  background: linear-gradient(135deg, var(--aldar-black) 0%, var(--aldar-gray-800) 100%);
+  color: var(--aldar-white);
+  font-weight: 600;
+}
+
+.aldar-nav-link.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 24px;
+  background: var(--aldar-blue);
+  border-radius: 0 2px 2px 0;
+}
+
+.aldar-nav-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  color: inherit;
+}
+
+/* Aldar Sidebar Footer */
+.aldar-sidebar-footer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 20px;
+  border-top: 1px solid var(--aldar-gray-200);
+  background: var(--aldar-gray-50);
+}
+
+.aldar-tier-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: linear-gradient(135deg, var(--aldar-blue-light) 0%, var(--aldar-white) 100%);
+  border: 1px solid var(--aldar-blue);
+  border-radius: 8px;
+}
+
+.aldar-tier-icon {
+  font-size: 16px;
+}
+
+.aldar-tier-text {
+  font-family: var(--aldar-font-primary);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--aldar-blue);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ===============================================
+   Aldar Header Styles
+   =============================================== */
+
+.aldar-header {
+  grid-area: header;
+  background: var(--aldar-white);
+  border-bottom: 1px solid var(--aldar-gray-200);
+  box-shadow: var(--aldar-shadow-sm);
+  z-index: 5;
+}
+
+.aldar-header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 100%;
+  padding: 0 32px;
+}
+
+.aldar-header-title {
+  flex: 1;
+}
+
+.aldar-page-title {
+  font-family: var(--aldar-font-primary);
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--aldar-black);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.aldar-page-subtitle {
+  font-family: var(--aldar-font-secondary);
+  font-size: 14px;
+  color: var(--aldar-gray-600);
+  margin: 2px 0 0 0;
+}
+
+.aldar-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+
+.aldar-stats-summary {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.aldar-stat-item {
+  text-align: center;
+}
+
+.aldar-stat-value {
+  display: block;
+  font-family: var(--aldar-font-primary);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--aldar-black);
+  line-height: 1;
+}
+
+.aldar-stat-label {
+  display: block;
+  font-family: var(--aldar-font-secondary);
+  font-size: 12px;
+  color: var(--aldar-gray-600);
+  margin-top: 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.aldar-user-profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  background: var(--aldar-gray-50);
+  border-radius: 12px;
+  border: 1px solid var(--aldar-gray-200);
+}
+
+.aldar-user-info {
+  text-align: right;
+}
+
+.aldar-user-name {
+  font-family: var(--aldar-font-primary);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--aldar-black);
+  line-height: 1;
+}
+
+.aldar-user-role {
+  font-family: var(--aldar-font-secondary);
+  font-size: 12px;
+  color: var(--aldar-gray-600);
+  margin-top: 2px;
+}
+
+.aldar-user-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease;
+}
+
+.aldar-user-avatar:hover {
+  transform: scale(1.05);
+}
+
+/* ===============================================
+   Aldar Main Content Styles
+   =============================================== */
+
+.aldar-main-content {
+  grid-area: main;
+  overflow-y: auto;
+  background: var(--aldar-gray-50);
+}
+
+.aldar-content-wrapper {
+  padding: 32px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* ===============================================
+   Aldar Dashboard Overview
+   =============================================== */
+
+.aldar-dashboard-overview {
+  margin-bottom: 32px;
+}
+
+.aldar-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.aldar-metric-card {
+  background: var(--aldar-white);
+  border-radius: 16px;
+  border: 1px solid var(--aldar-gray-200);
+  box-shadow: var(--aldar-shadow-sm);
+  padding: 24px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.aldar-metric-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--aldar-blue), var(--aldar-green), var(--aldar-orange), var(--aldar-purple));
+}
+
+.aldar-metric-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--aldar-shadow-lg);
+}
+
+.aldar-metric-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.aldar-metric-header h3 {
+  font-family: var(--aldar-font-primary);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--aldar-gray-700);
+  margin: 0;
+}
+
+.aldar-metric-trend {
+  font-family: var(--aldar-font-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.aldar-metric-trend.positive {
+  color: var(--aldar-green);
+  background: var(--aldar-green-light);
+}
+
+.aldar-metric-trend.negative {
+  color: var(--aldar-orange);
+  background: var(--aldar-orange-light);
+}
+
+.aldar-metric-value {
+  font-family: var(--aldar-font-primary);
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--aldar-black);
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.aldar-metric-subtitle {
+  font-family: var(--aldar-font-secondary);
+  font-size: 14px;
+  color: var(--aldar-gray-600);
+}
+
+/* ===============================================
+   Aldar Form Styles
+   =============================================== */
+
+.aldar-form-container {
+  background: var(--aldar-white);
+  border-radius: 16px;
+  border: 1px solid var(--aldar-gray-200);
+  box-shadow: var(--aldar-shadow-sm);
+  padding: 32px;
+}
+
+.aldar-form-header {
+  margin-bottom: 32px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--aldar-gray-200);
+}
+
+.aldar-form-title {
+  font-family: var(--aldar-font-primary);
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--aldar-black);
+  margin: 0 0 8px 0;
+}
+
+.aldar-form-subtitle {
+  font-family: var(--aldar-font-secondary);
+  font-size: 14px;
+  color: var(--aldar-gray-600);
+  margin: 0;
+}
+
+.aldar-form-group {
+  margin-bottom: 24px;
+}
+
+.aldar-form-label {
+  display: block;
+  font-family: var(--aldar-font-primary);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--aldar-gray-700);
+  margin-bottom: 8px;
+}
+
+.aldar-form-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid var(--aldar-gray-300);
+  border-radius: 8px;
+  font-family: var(--aldar-font-secondary);
+  font-size: 14px;
+  color: var(--aldar-black);
+  background: var(--aldar-white);
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.aldar-form-input:focus {
+  border-color: var(--aldar-blue);
+  box-shadow: 0 0 0 3px var(--aldar-blue-light);
+}
+
+.aldar-form-textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.aldar-form-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 12px center;
+  background-repeat: no-repeat;
+  background-size: 16px;
+  padding-right: 40px;
+}
+
+/* ===============================================
+   Aldar Button Styles
+   =============================================== */
+
+.aldar-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-family: var(--aldar-font-primary);
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  outline: none;
+  min-height: 44px;
+}
+
+.aldar-btn-primary {
+  background: var(--aldar-black);
+  color: var(--aldar-white);
+  box-shadow: var(--aldar-shadow-sm);
+}
+
+.aldar-btn-primary:hover {
+  background: var(--aldar-gray-800);
+  box-shadow: var(--aldar-shadow-md);
+  transform: translateY(-1px);
+}
+
+.aldar-btn-secondary {
+  background: var(--aldar-white);
+  color: var(--aldar-black);
+  border: 1px solid var(--aldar-gray-300);
+  box-shadow: var(--aldar-shadow-sm);
+}
+
+.aldar-btn-secondary:hover {
+  background: var(--aldar-gray-50);
+  border-color: var(--aldar-gray-400);
+  box-shadow: var(--aldar-shadow-md);
+  transform: translateY(-1px);
+}
+
+.aldar-btn-blue {
+  background: var(--aldar-blue);
+  color: var(--aldar-white);
+  box-shadow: var(--aldar-shadow-sm);
+}
+
+.aldar-btn-blue:hover {
+  background: var(--aldar-blue-dark);
+  box-shadow: var(--aldar-shadow-md);
+  transform: translateY(-1px);
+}
+
+.aldar-btn-green {
+  background: var(--aldar-green);
+  color: var(--aldar-white);
+  box-shadow: var(--aldar-shadow-sm);
+}
+
+.aldar-btn-green:hover {
+  background: var(--aldar-green-dark);
+  box-shadow: var(--aldar-shadow-md);
+  transform: translateY(-1px);
+}
+
+.aldar-btn-lg {
+  padding: 16px 32px;
+  font-size: 16px;
+  min-height: 52px;
+}
+
+.aldar-btn-sm {
+  padding: 8px 16px;
+  font-size: 12px;
+  min-height: 36px;
+}
+
+/* ===============================================
+   Aldar Table Styles
+   =============================================== */
+
+.aldar-table-container {
+  background: var(--aldar-white);
+  border-radius: 16px;
+  border: 1px solid var(--aldar-gray-200);
+  box-shadow: var(--aldar-shadow-sm);
+  overflow: hidden;
+}
+
+.aldar-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.aldar-table th {
+  background: var(--aldar-gray-50);
+  padding: 16px 20px;
+  text-align: left;
+  font-family: var(--aldar-font-primary);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--aldar-gray-700);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--aldar-gray-200);
+}
+
+.aldar-table td {
+  padding: 16px 20px;
+  font-family: var(--aldar-font-secondary);
+  font-size: 14px;
+  color: var(--aldar-gray-700);
+  border-bottom: 1px solid var(--aldar-gray-100);
+}
+
+.aldar-table tr:hover {
+  background: var(--aldar-gray-50);
+}
+
+/* ===============================================
+   Aldar Responsive Design
+   =============================================== */
+
+@media (max-width: 1024px) {
+  .aldar-admin-container {
+    grid-template-areas: 
+      "header"
+      "main";
+    grid-template-columns: 1fr;
+    grid-template-rows: var(--aldar-header-height) 1fr;
+  }
+  
+  .aldar-sidebar {
+    position: fixed;
+    top: 0;
+    left: -100%;
+    height: 100vh;
+    z-index: 100;
+    transition: left 0.3s ease;
+  }
+  
+  .aldar-sidebar.open {
+    left: 0;
+  }
+  
+  .aldar-header-actions {
+    gap: 16px;
+  }
+  
+  .aldar-stats-summary {
+    display: none;
+  }
+  
+  .aldar-metrics-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .aldar-content-wrapper {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 640px) {
+  .aldar-page-title {
+    font-size: 20px;
+  }
+  
+  .aldar-page-subtitle {
+    font-size: 12px;
+  }
+  
+  .aldar-user-info {
+    display: none;
+  }
+  
+  .aldar-metric-card {
+    padding: 16px;
+  }
+  
+  .aldar-metric-value {
+    font-size: 24px;
+  }
+  
+  .aldar-form-container {
+    padding: 20px;
+  }
+}
+
+/* ===============================================
+   Aldar Animations
+   =============================================== */
+
+@keyframes aldar-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.aldar-fade-in {
+  animation: aldar-fade-in 0.6s ease-out;
+}
+
+@keyframes aldar-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.aldar-slide-in {
+  animation: aldar-slide-in 0.4s ease-out;
+}
+
+/* ===============================================
+   Aldar Accessibility
+   =============================================== */
+
+.aldar-nav-link:focus,
+.aldar-btn:focus,
+.aldar-form-input:focus {
+  outline: 2px solid var(--aldar-blue);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aldar-metric-card:hover,
+  .aldar-btn:hover,
+  .aldar-nav-link,
+  .aldar-logo-icon,
+  .aldar-user-avatar {
+    transform: none;
+    transition: none;
+  }
+  
+  .aldar-fade-in,
+  .aldar-slide-in {
+    animation: none;
+  }
+}
+
+@media (prefers-contrast: high) {
+  .aldar-metric-card,
+  .aldar-form-container,
+  .aldar-table-container {
+    border-width: 2px;
+    border-color: var(--aldar-black);
+  }
+  
+  .aldar-btn-primary {
+    background: var(--aldar-black);
+    border: 2px solid var(--aldar-black);
+  }
+  
+  .aldar-btn-secondary {
+    border-width: 2px;
+    border-color: var(--aldar-black);
+  }
+}

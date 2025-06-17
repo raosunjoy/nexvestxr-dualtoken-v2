@@ -1,0 +1,327 @@
+{
+  "brand": {
+    "name": "Aldar Properties",
+    "shortName": "Aldar",
+    "tagline": "Abu Dhabi's Premier Real Estate Platform",
+    "description": "Leading real estate developer and manager in the UAE with a diversified and sustainable operating model",
+    "website": "https://www.aldar.com",
+    "logo": {
+      "primary": "/assets/aldar-logo-primary.svg",
+      "white": "/assets/aldar-logo-white.svg",
+      "icon": "/assets/aldar-icon.svg"
+    }
+  },
+  "theme": {
+    "primary": "#000000",
+    "secondary": "#0066CC", 
+    "accent": "#00A651",
+    "warning": "#FF6B35",
+    "info": "#8B5CF6",
+    "fonts": {
+      "primary": "Poppins",
+      "secondary": "Inter",
+      "arabic": "Almarai"
+    }
+  },
+  "platform": {
+    "name": "NexVestXR for Aldar",
+    "version": "2.0.0",
+    "environment": "production",
+    "region": "UAE",
+    "currency": "AED",
+    "language": {
+      "primary": "en",
+      "supported": ["en", "ar"],
+      "rtl": true
+    }
+  },
+  "features": {
+    "dualToken": true,
+    "xeraToken": true,
+    "propxToken": true,
+    "governance": true,
+    "staking": true,
+    "dividends": true,
+    "crossChain": true,
+    "realTimeTrading": true,
+    "marginTrading": true,
+    "arbitrage": true,
+    "multiCurrency": true,
+    "kycAml": true,
+    "smartContracts": true
+  },
+  "developer": {
+    "name": "Aldar Properties",
+    "tier": "TIER1",
+    "license": "ADRA-ALDAR-001",
+    "address": "0x5555555555555555555555555555555555555555",
+    "platformFee": 1.5,
+    "operatingEmirates": ["ABU_DHABI", "DUBAI"],
+    "compliance": {
+      "rera": true,
+      "adra": true,
+      "sec": true,
+      "cbuae": true
+    }
+  },
+  "properties": {
+    "minimumInvestment": 10000,
+    "currency": "AED",
+    "locations": [
+      {
+        "id": "saadiyat_island",
+        "name": "Saadiyat Island",
+        "emirate": "ABU_DHABI",
+        "zone": "Cultural District",
+        "premium": true
+      },
+      {
+        "id": "al_reem_island", 
+        "name": "Al Reem Island",
+        "emirate": "ABU_DHABI",
+        "zone": "Business District",
+        "premium": true
+      },
+      {
+        "id": "yas_island",
+        "name": "Yas Island",
+        "emirate": "ABU_DHABI", 
+        "zone": "Entertainment District",
+        "premium": true
+      },
+      {
+        "id": "corniche",
+        "name": "Corniche",
+        "emirate": "ABU_DHABI",
+        "zone": "Waterfront",
+        "premium": true
+      },
+      {
+        "id": "al_maryah_island",
+        "name": "Al Maryah Island",
+        "emirate": "ABU_DHABI",
+        "zone": "Financial District", 
+        "premium": true
+      }
+    ],
+    "types": [
+      {
+        "id": "villa",
+        "name": "Villa",
+        "multiplier": 1.2,
+        "minValue": 1000000
+      },
+      {
+        "id": "apartment",
+        "name": "Apartment", 
+        "multiplier": 1.0,
+        "minValue": 500000
+      },
+      {
+        "id": "commercial",
+        "name": "Commercial",
+        "multiplier": 1.3,
+        "minValue": 2000000
+      },
+      {
+        "id": "resort",
+        "name": "Resort",
+        "multiplier": 1.4,
+        "minValue": 5000000
+      },
+      {
+        "id": "mixed_use",
+        "name": "Mixed Use",
+        "multiplier": 1.1,
+        "minValue": 1500000
+      }
+    ]
+  },
+  "blockchain": {
+    "networks": {
+      "xrpl": {
+        "enabled": true,
+        "mainnet": "wss://xrplcluster.com",
+        "testnet": "wss://s.altnet.rippletest.net:51233"
+      },
+      "flare": {
+        "enabled": true,
+        "mainnet": "https://flare-api.flare.network/ext/bc/C/rpc",
+        "testnet": "https://coston2-api.flare.network/ext/bc/C/rpc"
+      }
+    },
+    "contracts": {
+      "xeraToken": "0x1234567890123456789012345678901234567890",
+      "propxFactory": "0x2345678901234567890123456789012345678901",
+      "classifier": "0x3456789012345678901234567890123456789012",
+      "staking": "0x4567890123456789012345678901234567890123"
+    }
+  },
+  "trading": {
+    "enabled": true,
+    "pairs": [
+      "XERA/AED",
+      "XERA/USD", 
+      "PROPX/AED",
+      "PROPX/USD",
+      "XERA/PROPX"
+    ],
+    "orderTypes": [
+      "MARKET",
+      "LIMIT", 
+      "STOP_LOSS",
+      "TAKE_PROFIT",
+      "OCO",
+      "TRAILING_STOP",
+      "MARGIN_BUY",
+      "MARGIN_SELL"
+    ],
+    "fees": {
+      "trading": 0.1,
+      "withdrawal": 0.05,
+      "margin": 0.02
+    }
+  },
+  "compliance": {
+    "kyc": {
+      "enabled": true,
+      "provider": "Jumio",
+      "levels": ["BASIC", "ADVANCED", "INSTITUTIONAL"]
+    },
+    "aml": {
+      "enabled": true,
+      "provider": "Chainalysis",
+      "monitoring": true
+    },
+    "fatca": {
+      "enabled": true,
+      "reporting": true
+    },
+    "mifid": {
+      "enabled": false,
+      "applicableRegions": []
+    }
+  },
+  "payments": {
+    "providers": {
+      "moonpay": {
+        "enabled": true,
+        "currencies": ["AED", "USD", "EUR", "GBP"]
+      },
+      "ramp": {
+        "enabled": true,
+        "currencies": ["AED", "USD", "EUR"]
+      },
+      "stripe": {
+        "enabled": true,
+        "currencies": ["USD", "EUR", "GBP"]
+      },
+      "razorpay": {
+        "enabled": false,
+        "currencies": []
+      }
+    },
+    "bankTransfer": {
+      "enabled": true,
+      "currencies": ["AED", "USD"],
+      "swift": true,
+      "domestic": true
+    }
+  },
+  "notifications": {
+    "email": {
+      "enabled": true,
+      "provider": "SendGrid"
+    },
+    "sms": {
+      "enabled": true,
+      "provider": "Twilio"
+    },
+    "push": {
+      "enabled": true,
+      "provider": "Firebase"
+    },
+    "webhook": {
+      "enabled": true,
+      "endpoints": []
+    }
+  },
+  "analytics": {
+    "google": {
+      "enabled": true,
+      "trackingId": "GA-ALDAR-001"
+    },
+    "mixpanel": {
+      "enabled": true,
+      "projectId": "aldar-nexvestxr"
+    },
+    "amplitude": {
+      "enabled": false
+    }
+  },
+  "security": {
+    "twoFactor": {
+      "enabled": true,
+      "methods": ["SMS", "EMAIL", "TOTP"]
+    },
+    "ipWhitelist": {
+      "enabled": true,
+      "adminOnly": true
+    },
+    "rateLimit": {
+      "enabled": true,
+      "requests": 1000,
+      "window": 3600
+    },
+    "encryption": {
+      "algorithm": "AES-256-GCM",
+      "keyRotation": true
+    }
+  },
+  "api": {
+    "version": "v2",
+    "baseUrl": "https://api.nexvestxr.aldar.com",
+    "documentation": "https://docs.nexvestxr.aldar.com",
+    "rateLimit": {
+      "public": 100,
+      "authenticated": 1000,
+      "premium": 5000
+    }
+  },
+  "mobile": {
+    "appName": "Aldar NexVestXR",
+    "bundleId": "com.aldar.nexvestxr",
+    "version": "2.0.0",
+    "minVersion": {
+      "ios": "14.0",
+      "android": "7.0"
+    },
+    "features": {
+      "biometric": true,
+      "offline": true,
+      "pushNotifications": true,
+      "deepLinking": true
+    }
+  },
+  "social": {
+    "twitter": "@AldarProperties",
+    "linkedin": "aldar-properties",
+    "instagram": "@aldarproperties",
+    "youtube": "AldarPropertiesOfficial",
+    "facebook": "AldarProperties"
+  },
+  "support": {
+    "email": "support@nexvestxr.aldar.com",
+    "phone": "+971-2-810-5555",
+    "hours": "Sunday-Thursday: 9AM-6PM GST",
+    "languages": ["en", "ar"],
+    "channels": ["email", "phone", "chat", "whatsapp"]
+  },
+  "legal": {
+    "terms": "https://nexvestxr.aldar.com/terms",
+    "privacy": "https://nexvestxr.aldar.com/privacy", 
+    "cookies": "https://nexvestxr.aldar.com/cookies",
+    "disclaimer": "https://nexvestxr.aldar.com/disclaimer",
+    "jurisdiction": "Abu Dhabi Global Market (ADGM)"
+  }
+}

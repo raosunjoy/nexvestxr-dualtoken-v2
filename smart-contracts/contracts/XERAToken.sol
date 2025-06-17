@@ -4,7 +4,7 @@ pragma solidity ^0.8.19;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "./security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
@@ -96,7 +96,7 @@ contract XERAToken is ERC20, ERC20Votes, ReentrancyGuard, Pausable, AccessContro
         string memory ipfsDocumentHash,
         PropertyCategory category,
         string memory cityCode
-    ) external onlyRole(PROPERTY_MANAGER_ROLE) returns (uint256) {
+    ) external onlyRole(PROPERTY_MANAGER_ROLE) nonReentrantFunction returns (uint256) {
         require(valuationInWei >= minimumPropertyValue, "Property value below minimum");
         require(bytes(propertyAddress).length > 0, "Property address required");
         require(bytes(ipfsDocumentHash).length > 0, "Document hash required");
@@ -126,7 +126,7 @@ contract XERAToken is ERC20, ERC20Votes, ReentrancyGuard, Pausable, AccessContro
         return propertyId;
     }
 
-    function approveProperty(uint256 propertyId) external onlyRole(ADMIN_ROLE) {
+    function approveProperty(uint256 propertyId) external onlyRole(ADMIN_ROLE) nonReentrantAdvanced {
         require(properties[propertyId].id != 0, "Property does not exist");
         require(properties[propertyId].status == PropertyStatus.PENDING, "Property not pending");
 
@@ -255,7 +255,7 @@ contract XERAToken is ERC20, ERC20Votes, ReentrancyGuard, Pausable, AccessContro
     // ENHANCED DIVIDEND MANAGEMENT
     // ============================================================================
 
-    function declareDividend(string memory source) external payable onlyRole(ADMIN_ROLE) {
+    function declareDividend(string memory source) external payable onlyRole(ADMIN_ROLE) nonReentrantAdvanced {
         require(msg.value > 0, "Dividend amount must be positive");
         
         currentDividendPeriod++;
@@ -268,7 +268,7 @@ contract XERAToken is ERC20, ERC20Votes, ReentrancyGuard, Pausable, AccessContro
         emit DividendDeclared(currentDividendPeriod, msg.value);
     }
 
-    function claimAllAvailableDividends() external nonReentrant {
+    function claimAllAvailableDividends() external nonReentrantAdvanced {
         uint256 totalClaimable = 0;
         uint256 userBalance = balanceOf(msg.sender);
         require(userBalance > 0, "No tokens held");
@@ -345,5 +345,106 @@ contract XERAToken is ERC20, ERC20Votes, ReentrancyGuard, Pausable, AccessContro
 
     function _burn(address account, uint256 amount) internal override(ERC20, ERC20Votes) {
         super._burn(account, amount);
+    }
+
+    // ============================================================================
+    // SECURITY FUNCTIONS
+    // ============================================================================
+
+    /**
+     * @dev Emergency pause function
+     */
+    function emergencyPause() external onlyRole(ADMIN_ROLE) {
+        _pause();
+        _emergencyLock();
+    }
+
+    /**
+     * @dev Unpause function
+     */
+    function unpause() external onlyRole(ADMIN_ROLE) {
+        _unpause();
+        _emergencyUnlock();
+    }
+
+    /**
+     * @dev Enhanced transfer with additional security checks
+     */
+    function secureTransfer(address to, uint256 amount) external nonReentrantAdvanced returns (bool) {
+        require(to != address(0), "Transfer to zero address");
+        require(to != address(this), "Transfer to contract address");
+        require(amount > 0, "Transfer amount must be positive");
+        require(balanceOf(msg.sender) >= amount, "Insufficient balance");
+        
+        return transfer(to, amount);
+    }
+
+    /**
+     * @dev Batch transfer with reentrancy protection
+     */
+    function batchTransfer(address[] calldata recipients, uint256[] calldata amounts) 
+        external 
+        nonReentrantAdvanced 
+        returns (bool) 
+    {
+        require(recipients.length == amounts.length, "Arrays length mismatch");
+        require(recipients.length <= 100, "Too many recipients");
+        
+        uint256 totalAmount = 0;
+        for (uint256 i = 0; i < amounts.length; i++) {
+            totalAmount = totalAmount.add(amounts[i]);
+        }
+        
+        require(balanceOf(msg.sender) >= totalAmount, "Insufficient balance for batch transfer");
+        
+        for (uint256 i = 0; i < recipients.length; i++) {
+            require(recipients[i] != address(0), "Transfer to zero address");
+            require(amounts[i] > 0, "Transfer amount must be positive");
+            _transfer(msg.sender, recipients[i], amounts[i]);
+        }
+        
+        return true;
+    }
+
+    /**
+     * @dev Override transfer to add security checks
+     */
+    function transfer(address to, uint256 amount) public override nonReentrant returns (bool) {
+        require(!_isEmergencyLocked(), "Contract is emergency locked");
+        return super.transfer(to, amount);
+    }
+
+    /**
+     * @dev Override transferFrom to add security checks
+     */
+    function transferFrom(address from, address to, uint256 amount) public override nonReentrant returns (bool) {
+        require(!_isEmergencyLocked(), "Contract is emergency locked");
+        return super.transferFrom(from, to, amount);
+    }
+
+    /**
+     * @dev Override approve to add security checks
+     */
+    function approve(address spender, uint256 amount) public override nonReentrant returns (bool) {
+        require(!_isEmergencyLocked(), "Contract is emergency locked");
+        require(spender != address(0), "Approve to zero address");
+        return super.approve(spender, amount);
+    }
+
+    /**
+     * @dev Get security status
+     */
+    function getSecurityStatus() external view returns (
+        bool isPaused,
+        bool isEmergencyLocked,
+        uint256 lockCounter,
+        bool reentrancyGuardEntered
+    ) {
+        return (
+            paused(),
+            _isEmergencyLocked(),
+            _getLockCounter(),
+            _reentrancyGuardEntered()
+        );
     }
 }

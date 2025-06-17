@@ -1,0 +1,1434 @@
+{
+  "timestamp": "2025-06-17T17:35:36.761Z",
+  "platform": "NexVestXR v2 Dual Token Platform",
+  "auditResults": {
+    "smartContracts": [
+      {
+        "id": "098511f0-87f5-4d2a-a797-24cb057b91a0",
+        "category": "smartContracts",
+        "severity": "medium",
+        "title": "Missing Emergency Pause",
+        "description": "Critical functions lack emergency pause capability",
+        "recommendation": "Implement Pausable contract for emergency stops",
+        "file": "UAEPROPXFactory.sol",
+        "timestamp": "2025-06-17T17:35:36.000Z"
+      },
+      {
+        "id": "07b6d945-5e0e-41e5-84ed-e46f8e2c52ef",
+        "category": "smartContracts",
+        "severity": "medium",
+        "title": "Hardcoded Addresses",
+        "description": "Contract contains hardcoded addresses",
+        "recommendation": "Use configurable addresses or address provider",
+        "file": "UAEPROPXFactory.sol",
+        "timestamp": "2025-06-17T17:35:36.000Z"
+      },
+      {
+        "id": "45a8a416-c10a-45cd-ad6c-7fb72c1452c8",
+        "category": "smartContracts",
+        "severity": "medium",
+        "title": "Hardcoded Addresses",
+        "description": "Contract contains hardcoded addresses",
+        "recommendation": "Use configurable addresses or address provider",
+        "file": "UAEDualTokenClassifier.sol",
+        "timestamp": "2025-06-17T17:35:36.001Z"
+      },
+      {
+        "id": "184fa6b6-3f34-4e8c-92be-9b5000829710",
+        "category": "smartContracts",
+        "severity": "info",
+        "title": "Check: Front-running",
+        "description": "Transaction ordering attacks",
+        "recommendation": "Use commit-reveal schemes or MEV protection",
+        "file": "",
+        "timestamp": "2025-06-17T17:35:36.001Z"
+      },
+      {
+        "id": "3f32ffc9-e0d5-461d-8ca7-8ca61101c19c",
+        "category": "smartContracts",
+        "severity": "info",
+        "title": "Check: Flash loan attacks",
+        "description": "Manipulation using flash loans",
+        "recommendation": "Implement oracle manipulation protection",
+        "file": "",
+        "timestamp": "2025-06-17T17:35:36.001Z"
+      },
+      {
+        "id": "ecaccd8a-b5c3-464f-b442-2a7c0b31caf4",
+        "category": "smartContracts",
+        "severity": "info",
+        "title": "Check: Governance attacks",
+        "description": "Voting manipulation",
+        "recommendation": "Use timelock and minimum voting periods",
+        "file": "",
+        "timestamp": "2025-06-17T17:35:36.001Z"
+      },
+      {
+        "id": "3de6919d-ccd1-438b-8573-87e1ebae1cd9",
+        "category": "smartContracts",
+        "severity": "info",
+        "title": "Check: Price oracle manipulation",
+        "description": "External price feed attacks",
+        "recommendation": "Use multiple oracle sources and TWAP",
+        "file": "",
+        "timestamp": "2025-06-17T17:35:36.001Z"
+      }
+    ],
+    "api": [
+      {
+        "id": "a694826f-dd5b-4e24-9444-c3c183055b6c",
+        "category": "api",
+        "severity": "medium",
+        "title": "Missing Input Validation",
+        "description": "Route file advancedTrade.js lacks input validation",
+        "recommendation": "Implement input validation using Joi or express-validator",
+        "file": "advancedTrade.js",
+        "timestamp": "2025-06-17T17:35:36.002Z"
+      },
+      {
+        "id": "6146e057-49fd-46eb-bc77-47a8d3a0da63",
+        "category": "api",
+        "severity": "medium",
+        "title": "Missing Input Validation",
+        "description": "Route file auth.js lacks input validation",
+        "recommendation": "Implement input validation using Joi or express-validator",
+        "file": "auth.js",
+        "timestamp": "2025-06-17T17:35:36.002Z"
+      },
+      {
+        "id": "7960cbc7-4a21-4d26-9818-0ea8f9101f5f",
+        "category": "api",
+        "severity": "medium",
+        "title": "Missing Input Validation",
+        "description": "Route file dualToken.js lacks input validation",
+        "recommendation": "Implement input validation using Joi or express-validator",
+        "file": "dualToken.js",
+        "timestamp": "2025-06-17T17:35:36.003Z"
+      },
+      {
+        "id": "40925c08-791b-4f4a-96e7-99c9e3f8d382",
+        "category": "api",
+        "severity": "high",
+        "title": "Potential SQL Injection",
+        "description": "Route file dualToken.js may be vulnerable to SQL injection",
+        "recommendation": "Use parameterized queries or ORM",
+        "file": "dualToken.js",
+        "timestamp": "2025-06-17T17:35:36.003Z"
+      },
+      {
+        "id": "f7bbd637-7929-47dd-afaa-aea5c73e0b56",
+        "category": "api",
+        "severity": "medium",
+        "title": "Missing Input Validation",
+        "description": "Route file eKYC.js lacks input validation",
+        "recommendation": "Implement input validation using Joi or express-validator",
+        "file": "eKYC.js",
+        "timestamp": "2025-06-17T17:35:36.003Z"
+      },
+      {
+        "id": "2aabb5e7-8554-4f2d-90fb-e74d5a0cc0bf",
+        "category": "api",
+        "severity": "medium",
+        "title": "Missing Input Validation",
+        "description": "Route file flare.js lacks input validation",
+        "recommendation": "Implement input validation using Joi or express-validator",
+        "file": "flare.js",
+        "timestamp": "2025-06-17T17:35:36.003Z"
+      },
+      {
+        "id": "38a0496d-5e1a-4f4d-9df9-41747b47fc10",
+        "category": "api",
+        "severity": "high",
+        "title": "Potential SQL Injection",
+        "description": "Route file flare.js may be vulnerable to SQL injection",
+        "recommendation": "Use parameterized queries or ORM",
+        "file": "flare.js",
+        "timestamp": "2025-06-17T17:35:36.003Z"
+      },
+      {
+        "id": "50b0f504-1594-4a60-80ae-92fb813736b1",
+        "category": "api",
+        "severity": "medium",
+        "title": "Missing Input Validation",
+        "description": "Route file notifications.js lacks input validation",
+        "recommendation": "Implement input validation using Joi or express-validator",
+        "file": "notifications.js",
+        "timestamp": "2025-06-17T17:35:36.003Z"
+      },
+      {
+        "id": "eb59a1b8-763b-4b15-a2bc-314c45fddb5d",
+        "category": "api",
+        "severity": "medium",
+        "title": "Missing Input Validation",
+        "description": "Route file payment.js lacks input validation",
+        "recommendation": "Implement input validation using Joi or express-validator",
+        "file": "payment.js",
+        "timestamp": "2025-06-17T17:35:36.003Z"
+      },
+      {
+        "id": "cafa7a57-9af0-4b8b-a309-a0c695f559de",
+        "category": "api",
+        "severity": "high",
+        "title": "Missing Authentication Middleware",
+        "description": "Route file paymentWebhook.js may lack authentication protection",
+        "recommendation": "Add authentication middleware to protected routes",
+        "file": "paymentWebhook.js",
+        "timestamp": "2025-06-17T17:35:36.004Z"
+      },
+      {
+        "id": "741c182e-929f-46c7-9c0f-8407a8895a7a",
+        "category": "api",
+        "severity": "medium",
+        "title": "Missing Input Validation",
+        "description": "Route file paymentWebhook.js lacks input validation",
+        "recommendation": "Implement input validation using Joi or express-validator",
+        "file": "paymentWebhook.js",
+        "timestamp": "2025-06-17T17:35:36.004Z"
+      },
+      {
+        "id": "30f14d64-06ef-4849-a71b-75c5709970bf",
+        "category": "api",
+        "severity": "medium",
+        "title": "Missing Input Validation",
+        "description": "Route file portfolio.js lacks input validation",
+        "recommendation": "Implement input validation using Joi or express-validator",
+        "file": "portfolio.js",
+        "timestamp": "2025-06-17T17:35:36.004Z"
+      },
+      {
+        "id": "d27558b9-7a83-4642-a464-3dd0d6b5331a",
+        "category": "api",
+        "severity": "high",
+        "title": "Potential SQL Injection",
+        "description": "Route file portfolio.js may be vulnerable to SQL injection",
+        "recommendation": "Use parameterized queries or ORM",
+        "file": "portfolio.js",
+        "timestamp": "2025-06-17T17:35:36.004Z"
+      },
+      {
+        "id": "c275e6c2-43fe-441f-86f9-315ac009494d",
+        "category": "api",
+        "severity": "medium",
+        "title": "Missing Input Validation",
+        "description": "Route file property.js lacks input validation",
+        "recommendation": "Implement input validation using Joi or express-validator",
+        "file": "property.js",
+        "timestamp": "2025-06-17T17:35:36.004Z"
+      },
+      {
+        "id": "99480ee3-4cd1-4b29-bc06-8aeda6c0122f",
+        "category": "api",
+        "severity": "medium",
+        "title": "Missing Input Validation",
+        "description": "Route file subscription.js lacks input validation",
+        "recommendation": "Implement input validation using Joi or express-validator",
+        "file": "subscription.js",
+        "timestamp": "2025-06-17T17:35:36.004Z"
+      },
+      {
+        "id": "fc3797a4-3303-4a27-9161-e55e15d4f89a",
+        "category": "api",
+        "severity": "medium",
+        "title": "Missing Input Validation",
+        "description": "Route file support.js lacks input validation",
+        "recommendation": "Implement input validation using Joi or express-validator",
+        "file": "support.js",
+        "timestamp": "2025-06-17T17:35:36.004Z"
+      },
+      {
+        "id": "aad938a4-25ee-4ac9-8a10-43b2b101f368",
+        "category": "api",
+        "severity": "high",
+        "title": "Missing Authentication Middleware",
+        "description": "Route file supportMetrics.js may lack authentication protection",
+        "recommendation": "Add authentication middleware to protected routes",
+        "file": "supportMetrics.js",
+        "timestamp": "2025-06-17T17:35:36.004Z"
+      },
+      {
+        "id": "5cd1df1f-cec2-44c1-afc5-da8dadaf8203",
+        "category": "api",
+        "severity": "medium",
+        "title": "Missing Input Validation",
+        "description": "Route file supportMetrics.js lacks input validation",
+        "recommendation": "Implement input validation using Joi or express-validator",
+        "file": "supportMetrics.js",
+        "timestamp": "2025-06-17T17:35:36.004Z"
+      },
+      {
+        "id": "ebd6c743-6efd-47c9-9632-0c7e5b16eefc",
+        "category": "api",
+        "severity": "medium",
+        "title": "Missing Input Validation",
+        "description": "Route file tax.js lacks input validation",
+        "recommendation": "Implement input validation using Joi or express-validator",
+        "file": "tax.js",
+        "timestamp": "2025-06-17T17:35:36.005Z"
+      },
+      {
+        "id": "eeb23cb1-77a9-4203-8f30-b89ae6079ba0",
+        "category": "api",
+        "severity": "medium",
+        "title": "Missing Input Validation",
+        "description": "Route file trade.js lacks input validation",
+        "recommendation": "Implement input validation using Joi or express-validator",
+        "file": "trade.js",
+        "timestamp": "2025-06-17T17:35:36.005Z"
+      },
+      {
+        "id": "c3e64535-bdf9-4188-b41b-bbe7ef23207c",
+        "category": "api",
+        "severity": "high",
+        "title": "Potential SQL Injection",
+        "description": "Route file trade.js may be vulnerable to SQL injection",
+        "recommendation": "Use parameterized queries or ORM",
+        "file": "trade.js",
+        "timestamp": "2025-06-17T17:35:36.005Z"
+      },
+      {
+        "id": "5b78d066-7964-4ff0-8ea7-786ac07eeb96",
+        "category": "api",
+        "severity": "medium",
+        "title": "Missing Input Validation",
+        "description": "Route file uaeRoutes.js lacks input validation",
+        "recommendation": "Implement input validation using Joi or express-validator",
+        "file": "uaeRoutes.js",
+        "timestamp": "2025-06-17T17:35:36.005Z"
+      },
+      {
+        "id": "760e8171-376d-4a5a-a585-4c2df22aeacc",
+        "category": "api",
+        "severity": "high",
+        "title": "Potential SQL Injection",
+        "description": "Route file uaeRoutes.js may be vulnerable to SQL injection",
+        "recommendation": "Use parameterized queries or ORM",
+        "file": "uaeRoutes.js",
+        "timestamp": "2025-06-17T17:35:36.005Z"
+      },
+      {
+        "id": "b8bf0525-7bc3-4683-ab57-705b1a7d59bc",
+        "category": "api",
+        "severity": "high",
+        "title": "Missing Authentication Middleware",
+        "description": "Route file userMetrics.js may lack authentication protection",
+        "recommendation": "Add authentication middleware to protected routes",
+        "file": "userMetrics.js",
+        "timestamp": "2025-06-17T17:35:36.005Z"
+      },
+      {
+        "id": "e0f9ed4e-6a66-4e87-824e-cf0f24d6a225",
+        "category": "api",
+        "severity": "medium",
+        "title": "Missing Input Validation",
+        "description": "Route file userMetrics.js lacks input validation",
+        "recommendation": "Implement input validation using Joi or express-validator",
+        "file": "userMetrics.js",
+        "timestamp": "2025-06-17T17:35:36.005Z"
+      },
+      {
+        "id": "bc109f95-09dd-4d5e-a6d1-4b54b098a810",
+        "category": "api",
+        "severity": "medium",
+        "title": "Missing Input Validation",
+        "description": "Route file websocket.js lacks input validation",
+        "recommendation": "Implement input validation using Joi or express-validator",
+        "file": "websocket.js",
+        "timestamp": "2025-06-17T17:35:36.006Z"
+      },
+      {
+        "id": "22e46e9d-16a7-45a4-89b5-70205b0834df",
+        "category": "api",
+        "severity": "medium",
+        "title": "Missing Validation Middleware",
+        "description": "No dedicated validation middleware found",
+        "recommendation": "Create validation middleware for input sanitization",
+        "file": "",
+        "timestamp": "2025-06-17T17:35:36.006Z"
+      },
+      {
+        "id": "0bee77ff-83a1-40bd-b322-3caac2f4635e",
+        "category": "api",
+        "severity": "info",
+        "title": "Validation Check: XSS Protection",
+        "description": "Ensure proper validation is implemented",
+        "recommendation": "Use appropriate validation libraries",
+        "file": "",
+        "timestamp": "2025-06-17T17:35:36.006Z"
+      },
+      {
+        "id": "49b2af79-d526-43e9-892a-39905d8d59cc",
+        "category": "api",
+        "severity": "info",
+        "title": "Validation Check: SQL Injection Prevention",
+        "description": "Ensure proper validation is implemented",
+        "recommendation": "Use appropriate validation libraries",
+        "file": "",
+        "timestamp": "2025-06-17T17:35:36.006Z"
+      },
+      {
+        "id": "68d15897-c583-4c3b-83ee-be1361b6c5b1",
+        "category": "api",
+        "severity": "info",
+        "title": "Validation Check: NoSQL Injection Prevention",
+        "description": "Ensure proper validation is implemented",
+        "recommendation": "Use appropriate validation libraries",
+        "file": "",
+        "timestamp": "2025-06-17T17:35:36.006Z"
+      },
+      {
+        "id": "fe33340d-dada-44ca-ac58-1a09937a1cd6",
+        "category": "api",
+        "severity": "info",
+        "title": "Validation Check: File Upload Validation",
+        "description": "Ensure proper validation is implemented",
+        "recommendation": "Use appropriate validation libraries",
+        "file": "",
+        "timestamp": "2025-06-17T17:35:36.006Z"
+      },
+      {
+        "id": "941fc91a-cd34-43dc-9738-6c4a9b0aacd4",
+        "category": "api",
+        "severity": "info",
+        "title": "Validation Check: Email Validation",
+        "description": "Ensure proper validation is implemented",
+        "recommendation": "Use appropriate validation libraries",
+        "file": "",
+        "timestamp": "2025-06-17T17:35:36.006Z"
+      },
+      {
+        "id": "b7604d88-9c31-4274-94ed-9b77db0c9c8d",
+        "category": "api",
+        "severity": "info",
+        "title": "Validation Check: Phone Number Validation",
+        "description": "Ensure proper validation is implemented",
+        "recommendation": "Use appropriate validation libraries",
+        "file": "",
+        "timestamp": "2025-06-17T17:35:36.006Z"
+      }
+    ],
+    "frontend": [
+      {
+        "id": "b56db926-4312-434d-96ac-03651791238a",
+        "category": "frontend",
+        "severity": "info",
+        "title": "Audit Check Failed",
+        "description": "Could not run npm audit",
+        "recommendation": "Manually check dependencies for vulnerabilities",
+        "file": "package.json",
+        "timestamp": "2025-06-17T17:35:36.237Z"
+      },
+      {
+        "id": "298cb4b6-dd8e-42a8-a948-15ae1ba9ae39",
+        "category": "frontend",
+        "severity": "info",
+        "title": "Audit Check Failed",
+        "description": "Could not run npm audit",
+        "recommendation": "Manually check dependencies for vulnerabilities",
+        "file": "backend/package.json",
+        "timestamp": "2025-06-17T17:35:36.414Z"
+      },
+      {
+        "id": "d593b9af-677a-43e9-badc-0a88029e9986",
+        "category": "frontend",
+        "severity": "info",
+        "title": "Audit Check Failed",
+        "description": "Could not run npm audit",
+        "recommendation": "Manually check dependencies for vulnerabilities",
+        "file": "frontend/package.json",
+        "timestamp": "2025-06-17T17:35:36.582Z"
+      },
+      {
+        "id": "aaf25799-3cc5-4c08-a455-a7996081316d",
+        "category": "frontend",
+        "severity": "info",
+        "title": "Audit Check Failed",
+        "description": "Could not run npm audit",
+        "recommendation": "Manually check dependencies for vulnerabilities",
+        "file": "mobile/package.json",
+        "timestamp": "2025-06-17T17:35:36.756Z"
+      },
+      {
+        "id": "31dfa1da-94bf-4d5c-8351-701867e5674c",
+        "category": "frontend",
+        "severity": "medium",
+        "title": "Missing Content Security Policy",
+        "description": "No CSP headers found in HTML",
+        "recommendation": "Implement Content-Security-Policy headers",
+        "file": "index.html",
+        "timestamp": "2025-06-17T17:35:36.757Z"
+      },
+      {
+        "id": "9417e3d5-960f-40cf-9e72-3fb03bde429b",
+        "category": "frontend",
+        "severity": "info",
+        "title": "XSS Protection: Input sanitization",
+        "description": "Ensure proper XSS protection is implemented",
+        "recommendation": "Implement Input sanitization for XSS prevention",
+        "file": "",
+        "timestamp": "2025-06-17T17:35:36.757Z"
+      },
+      {
+        "id": "327ef055-ec2e-4356-a167-a59198ab9142",
+        "category": "frontend",
+        "severity": "info",
+        "title": "XSS Protection: Output encoding",
+        "description": "Ensure proper XSS protection is implemented",
+        "recommendation": "Implement Output encoding for XSS prevention",
+        "file": "",
+        "timestamp": "2025-06-17T17:35:36.757Z"
+      },
+      {
+        "id": "72f351e6-ca80-4521-b93e-dfe24e8e8240",
+        "category": "frontend",
+        "severity": "info",
+        "title": "XSS Protection: CSP headers",
+        "description": "Ensure proper XSS protection is implemented",
+        "recommendation": "Implement CSP headers for XSS prevention",
+        "file": "",
+        "timestamp": "2025-06-17T17:35:36.757Z"
+      },
+      {
+        "id": "877a4ab8-c0cb-4c1b-8d56-55bc749d25e2",
+        "category": "frontend",
+        "severity": "info",
+        "title": "XSS Protection: XSS-Protection headers",
+        "description": "Ensure proper XSS protection is implemented",
+        "recommendation": "Implement XSS-Protection headers for XSS prevention",
+        "file": "",
+        "timestamp": "2025-06-17T17:35:36.757Z"
+      },
+      {
+        "id": "3f8723b6-c836-4389-86f3-215609784220",
+        "category": "frontend",
+        "severity": "info",
+        "title": "XSS Protection: Content-Type validation",
+        "description": "Ensure proper XSS protection is implemented",
+        "recommendation": "Implement Content-Type validation for XSS prevention",
+        "file": "",
+        "timestamp": "2025-06-17T17:35:36.757Z"
+      }
+    ],
+    "infrastructure": [
+      {
+        "id": "dfbbc1b8-d09d-4e26-86e2-e53f64525f33",
+        "category": "infrastructure",
+        "severity": "medium",
+        "title": "Docker Running as Root",
+        "description": "Container may be running as root user",
+        "recommendation": "Use non-root user in Dockerfile",
+        "file": "backend/Dockerfile",
+        "timestamp": "2025-06-17T17:35:36.757Z"
+      },
+      {
+        "id": "7464cef9-b19d-4129-be87-70ec058b5e4b",
+        "category": "infrastructure",
+        "severity": "medium",
+        "title": "Docker Running as Root",
+        "description": "Container may be running as root user",
+        "recommendation": "Use non-root user in Dockerfile",
+        "file": "frontend/Dockerfile",
+        "timestamp": "2025-06-17T17:35:36.758Z"
+      },
+      {
+        "id": "ffd19bdf-8baa-4947-9eb2-c2c5441d5670",
+        "category": "infrastructure",
+        "severity": "low",
+        "title": "Exposed Ports in Docker Compose",
+        "description": "Services expose ports directly",
+        "recommendation": "Use reverse proxy for production",
+        "file": "docker-compose.yml",
+        "timestamp": "2025-06-17T17:35:36.759Z"
+      },
+      {
+        "id": "7e332672-ddd5-48d4-8ae2-371da9222467",
+        "category": "infrastructure",
+        "severity": "high",
+        "title": "Weak Environment Secret",
+        "description": "Weak secret found: RAMP_API_KEY",
+        "recommendation": "Use strong, randomly generated secrets",
+        "file": ".env",
+        "timestamp": "2025-06-17T17:35:36.759Z"
+      },
+      {
+        "id": "518c2b9c-5776-4faf-b551-3c3be13dcfbb",
+        "category": "infrastructure",
+        "severity": "high",
+        "title": "Weak Environment Secret",
+        "description": "Weak secret found: RAZORPAY_KEY_ID",
+        "recommendation": "Use strong, randomly generated secrets",
+        "file": ".env",
+        "timestamp": "2025-06-17T17:35:36.759Z"
+      },
+      {
+        "id": "d90ca819-cee1-42b6-a27b-f5d6baa5e604",
+        "category": "infrastructure",
+        "severity": "high",
+        "title": "Weak Environment Secret",
+        "description": "Weak secret found: RAZORPAY_KEY_SECRET",
+        "recommendation": "Use strong, randomly generated secrets",
+        "file": ".env",
+        "timestamp": "2025-06-17T17:35:36.759Z"
+      },
+      {
+        "id": "92fb6e54-8138-4924-819f-47fb4a9f4429",
+        "category": "infrastructure",
+        "severity": "high",
+        "title": "Weak Environment Secret",
+        "description": "Weak secret found: RAZORPAY_WEBHOOK_SECRET",
+        "recommendation": "Use strong, randomly generated secrets",
+        "file": ".env",
+        "timestamp": "2025-06-17T17:35:36.759Z"
+      },
+      {
+        "id": "4a8676c1-8c0f-4522-a705-d6f7abe7edc8",
+        "category": "infrastructure",
+        "severity": "high",
+        "title": "Weak Environment Secret",
+        "description": "Weak secret found: DIGILOCKER_CLIENT_SECRET",
+        "recommendation": "Use strong, randomly generated secrets",
+        "file": ".env",
+        "timestamp": "2025-06-17T17:35:36.759Z"
+      },
+      {
+        "id": "1cc5322d-20a1-46e3-8616-44d6d5d94a19",
+        "category": "infrastructure",
+        "severity": "high",
+        "title": "Weak Environment Secret",
+        "description": "Weak secret found: FLARE_PRIVATE_KEY",
+        "recommendation": "Use strong, randomly generated secrets",
+        "file": ".env.example",
+        "timestamp": "2025-06-17T17:35:36.759Z"
+      },
+      {
+        "id": "87133959-2df3-4f29-a52c-0a0e1e75090b",
+        "category": "infrastructure",
+        "severity": "high",
+        "title": "Weak Environment Secret",
+        "description": "Weak secret found: XUMM_API_KEY",
+        "recommendation": "Use strong, randomly generated secrets",
+        "file": ".env.example",
+        "timestamp": "2025-06-17T17:35:36.759Z"
+      },
+      {
+        "id": "3a55eb17-c8ad-43cb-ad75-f368f5896f74",
+        "category": "infrastructure",
+        "severity": "high",
+        "title": "Weak Environment Secret",
+        "description": "Weak secret found: XUMM_API_SECRET",
+        "recommendation": "Use strong, randomly generated secrets",
+        "file": ".env.example",
+        "timestamp": "2025-06-17T17:35:36.759Z"
+      },
+      {
+        "id": "15bc1af2-f88c-45bc-aa1e-50c015493d2c",
+        "category": "infrastructure",
+        "severity": "high",
+        "title": "Weak Environment Secret",
+        "description": "Weak secret found: COINBASE_API_KEY",
+        "recommendation": "Use strong, randomly generated secrets",
+        "file": ".env.example",
+        "timestamp": "2025-06-17T17:35:36.759Z"
+      },
+      {
+        "id": "ba159da6-d52f-448c-88e4-69503d2e38a7",
+        "category": "infrastructure",
+        "severity": "high",
+        "title": "Weak Environment Secret",
+        "description": "Weak secret found: PINATA_API_KEY",
+        "recommendation": "Use strong, randomly generated secrets",
+        "file": ".env.example",
+        "timestamp": "2025-06-17T17:35:36.759Z"
+      },
+      {
+        "id": "dd7459ab-5ae3-4f61-a7ff-26369d5080ae",
+        "category": "infrastructure",
+        "severity": "high",
+        "title": "Weak Environment Secret",
+        "description": "Weak secret found: PINATA_SECRET_API_KEY",
+        "recommendation": "Use strong, randomly generated secrets",
+        "file": ".env.example",
+        "timestamp": "2025-06-17T17:35:36.759Z"
+      },
+      {
+        "id": "17bf5b33-dd68-44d3-8484-de38a0efac55",
+        "category": "infrastructure",
+        "severity": "high",
+        "title": "Weak Environment Secret",
+        "description": "Weak secret found: STRIPE_API_KEY",
+        "recommendation": "Use strong, randomly generated secrets",
+        "file": ".env.example",
+        "timestamp": "2025-06-17T17:35:36.759Z"
+      },
+      {
+        "id": "1cf5fee7-e613-4cb6-886f-8eb5464d1eb4",
+        "category": "infrastructure",
+        "severity": "high",
+        "title": "Weak Environment Secret",
+        "description": "Weak secret found: MOONPAY_API_KEY",
+        "recommendation": "Use strong, randomly generated secrets",
+        "file": ".env.example",
+        "timestamp": "2025-06-17T17:35:36.759Z"
+      },
+      {
+        "id": "efab79f8-32b6-4d21-b1f0-588c2bfebf83",
+        "category": "infrastructure",
+        "severity": "high",
+        "title": "Weak Environment Secret",
+        "description": "Weak secret found: MOONPAY_SECRET",
+        "recommendation": "Use strong, randomly generated secrets",
+        "file": ".env.example",
+        "timestamp": "2025-06-17T17:35:36.759Z"
+      },
+      {
+        "id": "ccc88728-136b-4b3b-8b5c-c9b0c8c89c00",
+        "category": "infrastructure",
+        "severity": "high",
+        "title": "Weak Environment Secret",
+        "description": "Weak secret found: RAMP_API_KEY",
+        "recommendation": "Use strong, randomly generated secrets",
+        "file": ".env.example",
+        "timestamp": "2025-06-17T17:35:36.759Z"
+      },
+      {
+        "id": "1c089291-a5be-401d-ab40-dddf97a8d06a",
+        "category": "infrastructure",
+        "severity": "high",
+        "title": "Weak Environment Secret",
+        "description": "Weak secret found: RAZORPAY_KEY_ID",
+        "recommendation": "Use strong, randomly generated secrets",
+        "file": ".env.example",
+        "timestamp": "2025-06-17T17:35:36.759Z"
+      },
+      {
+        "id": "bfeab26c-7065-42e3-aa4f-34c563b6a7fa",
+        "category": "infrastructure",
+        "severity": "high",
+        "title": "Weak Environment Secret",
+        "description": "Weak secret found: RAZORPAY_KEY_SECRET",
+        "recommendation": "Use strong, randomly generated secrets",
+        "file": ".env.example",
+        "timestamp": "2025-06-17T17:35:36.759Z"
+      },
+      {
+        "id": "c6267287-2cf1-4f28-a02e-ec21632a6033",
+        "category": "infrastructure",
+        "severity": "high",
+        "title": "Weak Environment Secret",
+        "description": "Weak secret found: RAZORPAY_WEBHOOK_SECRET",
+        "recommendation": "Use strong, randomly generated secrets",
+        "file": ".env.example",
+        "timestamp": "2025-06-17T17:35:36.759Z"
+      },
+      {
+        "id": "b7e06c11-f3c2-43b6-8371-7ebc61f2e393",
+        "category": "infrastructure",
+        "severity": "high",
+        "title": "Weak Environment Secret",
+        "description": "Weak secret found: DIGILOCKER_CLIENT_SECRET",
+        "recommendation": "Use strong, randomly generated secrets",
+        "file": ".env.example",
+        "timestamp": "2025-06-17T17:35:36.759Z"
+      },
+      {
+        "id": "23731c2a-c616-449e-a897-3f2c787ab48e",
+        "category": "infrastructure",
+        "severity": "high",
+        "title": "Weak Environment Secret",
+        "description": "Weak secret found: RAMP_API_KEY",
+        "recommendation": "Use strong, randomly generated secrets",
+        "file": "backend/.env",
+        "timestamp": "2025-06-17T17:35:36.759Z"
+      },
+      {
+        "id": "157983a8-a032-434c-b083-57a0cb4f852c",
+        "category": "infrastructure",
+        "severity": "high",
+        "title": "Weak Environment Secret",
+        "description": "Weak secret found: RAZORPAY_KEY_ID",
+        "recommendation": "Use strong, randomly generated secrets",
+        "file": "backend/.env",
+        "timestamp": "2025-06-17T17:35:36.759Z"
+      },
+      {
+        "id": "48b7e532-4068-4966-a543-af08f4a0cc67",
+        "category": "infrastructure",
+        "severity": "high",
+        "title": "Weak Environment Secret",
+        "description": "Weak secret found: RAZORPAY_KEY_SECRET",
+        "recommendation": "Use strong, randomly generated secrets",
+        "file": "backend/.env",
+        "timestamp": "2025-06-17T17:35:36.759Z"
+      },
+      {
+        "id": "081c14f0-7f5d-4f6a-8f5d-dcbd614f815c",
+        "category": "infrastructure",
+        "severity": "high",
+        "title": "Weak Environment Secret",
+        "description": "Weak secret found: RAZORPAY_WEBHOOK_SECRET",
+        "recommendation": "Use strong, randomly generated secrets",
+        "file": "backend/.env",
+        "timestamp": "2025-06-17T17:35:36.760Z"
+      },
+      {
+        "id": "f6c7a3b2-6863-4d39-8178-c7835ca14f4a",
+        "category": "infrastructure",
+        "severity": "high",
+        "title": "Weak Environment Secret",
+        "description": "Weak secret found: DIGILOCKER_CLIENT_SECRET",
+        "recommendation": "Use strong, randomly generated secrets",
+        "file": "backend/.env",
+        "timestamp": "2025-06-17T17:35:36.760Z"
+      },
+      {
+        "id": "a09f2bb3-b96a-4e9e-8fce-de3d2ca26098",
+        "category": "infrastructure",
+        "severity": "info",
+        "title": "Network Security: HTTPS enforcement",
+        "description": "Ensure proper network security is configured",
+        "recommendation": "Implement HTTPS enforcement for production",
+        "file": "",
+        "timestamp": "2025-06-17T17:35:36.760Z"
+      },
+      {
+        "id": "d7114124-3ee2-46bf-9545-487a368925b2",
+        "category": "infrastructure",
+        "severity": "info",
+        "title": "Network Security: SSL/TLS configuration",
+        "description": "Ensure proper network security is configured",
+        "recommendation": "Implement SSL/TLS configuration for production",
+        "file": "",
+        "timestamp": "2025-06-17T17:35:36.760Z"
+      },
+      {
+        "id": "caf277f5-a14b-43d6-8288-edc862ba19c4",
+        "category": "infrastructure",
+        "severity": "info",
+        "title": "Network Security: Firewall rules",
+        "description": "Ensure proper network security is configured",
+        "recommendation": "Implement Firewall rules for production",
+        "file": "",
+        "timestamp": "2025-06-17T17:35:36.760Z"
+      },
+      {
+        "id": "6a9b5427-3056-46aa-9cd5-14314c30be04",
+        "category": "infrastructure",
+        "severity": "info",
+        "title": "Network Security: VPC configuration",
+        "description": "Ensure proper network security is configured",
+        "recommendation": "Implement VPC configuration for production",
+        "file": "",
+        "timestamp": "2025-06-17T17:35:36.760Z"
+      },
+      {
+        "id": "414ed28c-cf62-4083-ad6c-45a053add922",
+        "category": "infrastructure",
+        "severity": "info",
+        "title": "Network Security: Load balancer security",
+        "description": "Ensure proper network security is configured",
+        "recommendation": "Implement Load balancer security for production",
+        "file": "",
+        "timestamp": "2025-06-17T17:35:36.760Z"
+      },
+      {
+        "id": "815e19cc-ed12-4de2-953a-cd2029d4f172",
+        "category": "infrastructure",
+        "severity": "info",
+        "title": "Network Security: API Gateway protection",
+        "description": "Ensure proper network security is configured",
+        "recommendation": "Implement API Gateway protection for production",
+        "file": "",
+        "timestamp": "2025-06-17T17:35:36.760Z"
+      },
+      {
+        "id": "96fa678c-b95f-4031-a00f-55fda2827b31",
+        "category": "infrastructure",
+        "severity": "info",
+        "title": "Monitoring: Security event logging",
+        "description": "Ensure comprehensive security monitoring",
+        "recommendation": "Implement Security event logging for security visibility",
+        "file": "",
+        "timestamp": "2025-06-17T17:35:36.760Z"
+      },
+      {
+        "id": "3573c899-388b-4ae5-ba25-5ee93d852530",
+        "category": "infrastructure",
+        "severity": "info",
+        "title": "Monitoring: Intrusion detection",
+        "description": "Ensure comprehensive security monitoring",
+        "recommendation": "Implement Intrusion detection for security visibility",
+        "file": "",
+        "timestamp": "2025-06-17T17:35:36.760Z"
+      },
+      {
+        "id": "7253b282-2336-4770-9e66-071a606b24f5",
+        "category": "infrastructure",
+        "severity": "info",
+        "title": "Monitoring: Anomaly detection",
+        "description": "Ensure comprehensive security monitoring",
+        "recommendation": "Implement Anomaly detection for security visibility",
+        "file": "",
+        "timestamp": "2025-06-17T17:35:36.760Z"
+      },
+      {
+        "id": "4d9354d9-1efc-47fc-a88d-047be069d909",
+        "category": "infrastructure",
+        "severity": "info",
+        "title": "Monitoring: Access logging",
+        "description": "Ensure comprehensive security monitoring",
+        "recommendation": "Implement Access logging for security visibility",
+        "file": "",
+        "timestamp": "2025-06-17T17:35:36.760Z"
+      },
+      {
+        "id": "d5ae35f7-742a-4af7-be0e-65a1e25163b7",
+        "category": "infrastructure",
+        "severity": "info",
+        "title": "Monitoring: Audit trails",
+        "description": "Ensure comprehensive security monitoring",
+        "recommendation": "Implement Audit trails for security visibility",
+        "file": "",
+        "timestamp": "2025-06-17T17:35:36.760Z"
+      },
+      {
+        "id": "158518a2-fb5c-451b-a72c-f5e26115dcda",
+        "category": "infrastructure",
+        "severity": "info",
+        "title": "Monitoring: Alert mechanisms",
+        "description": "Ensure comprehensive security monitoring",
+        "recommendation": "Implement Alert mechanisms for security visibility",
+        "file": "",
+        "timestamp": "2025-06-17T17:35:36.760Z"
+      }
+    ],
+    "database": [
+      {
+        "id": "aed3a61b-276c-48b6-aff0-50f42ab31d66",
+        "category": "database",
+        "severity": "high",
+        "title": "Connection Security",
+        "description": "Ensure encrypted connections (SSL/TLS)",
+        "recommendation": "Configure according to security best practices",
+        "file": "",
+        "timestamp": "2025-06-17T17:35:36.760Z"
+      },
+      {
+        "id": "c33fbf53-5cfb-4a73-ad75-7d93c2ea8ca6",
+        "category": "database",
+        "severity": "critical",
+        "title": "Authentication",
+        "description": "Strong database authentication",
+        "recommendation": "Configure according to security best practices",
+        "file": "",
+        "timestamp": "2025-06-17T17:35:36.760Z"
+      },
+      {
+        "id": "df481aca-f4b8-427e-9a3b-8031dc179e89",
+        "category": "database",
+        "severity": "high",
+        "title": "Network Access",
+        "description": "Restrict network access to database",
+        "recommendation": "Configure according to security best practices",
+        "file": "",
+        "timestamp": "2025-06-17T17:35:36.760Z"
+      },
+      {
+        "id": "95b061c4-768d-422e-8d87-cb0ab049eee2",
+        "category": "database",
+        "severity": "medium",
+        "title": "Default Settings",
+        "description": "Change default database settings",
+        "recommendation": "Configure according to security best practices",
+        "file": "",
+        "timestamp": "2025-06-17T17:35:36.760Z"
+      },
+      {
+        "id": "f1c6145e-598e-4d47-8641-059119e06afd",
+        "category": "database",
+        "severity": "high",
+        "title": "Data Encryption: Encryption at rest",
+        "description": "Ensure comprehensive data encryption",
+        "recommendation": "Implement Encryption at rest for data protection",
+        "file": "",
+        "timestamp": "2025-06-17T17:35:36.760Z"
+      },
+      {
+        "id": "14f18e88-b096-468c-a913-5bbe05fb2e05",
+        "category": "database",
+        "severity": "high",
+        "title": "Data Encryption: Encryption in transit",
+        "description": "Ensure comprehensive data encryption",
+        "recommendation": "Implement Encryption in transit for data protection",
+        "file": "",
+        "timestamp": "2025-06-17T17:35:36.760Z"
+      },
+      {
+        "id": "5148dcf3-baac-43a1-8da0-21be53d16b90",
+        "category": "database",
+        "severity": "high",
+        "title": "Data Encryption: Key management",
+        "description": "Ensure comprehensive data encryption",
+        "recommendation": "Implement Key management for data protection",
+        "file": "",
+        "timestamp": "2025-06-17T17:35:36.760Z"
+      },
+      {
+        "id": "039e2070-ff9b-4647-9eea-1218ba6a6733",
+        "category": "database",
+        "severity": "high",
+        "title": "Data Encryption: Field-level encryption for PII",
+        "description": "Ensure comprehensive data encryption",
+        "recommendation": "Implement Field-level encryption for PII for data protection",
+        "file": "",
+        "timestamp": "2025-06-17T17:35:36.760Z"
+      },
+      {
+        "id": "731542ca-cac6-46af-af5b-4ea101b703b6",
+        "category": "database",
+        "severity": "high",
+        "title": "Data Encryption: Backup encryption",
+        "description": "Ensure comprehensive data encryption",
+        "recommendation": "Implement Backup encryption for data protection",
+        "file": "",
+        "timestamp": "2025-06-17T17:35:36.760Z"
+      },
+      {
+        "id": "3637766a-f5b7-4bbd-8dcc-3fa4e8cf3d81",
+        "category": "database",
+        "severity": "medium",
+        "title": "Access Control: Role-based access control",
+        "description": "Ensure proper database access controls",
+        "recommendation": "Implement Role-based access control for access security",
+        "file": "",
+        "timestamp": "2025-06-17T17:35:36.760Z"
+      },
+      {
+        "id": "de3b695c-13f4-4b92-bf3c-c4d29fc8a4ab",
+        "category": "database",
+        "severity": "medium",
+        "title": "Access Control: Principle of least privilege",
+        "description": "Ensure proper database access controls",
+        "recommendation": "Implement Principle of least privilege for access security",
+        "file": "",
+        "timestamp": "2025-06-17T17:35:36.760Z"
+      },
+      {
+        "id": "321a6455-7164-4d44-b84f-8c5ca0b967a3",
+        "category": "database",
+        "severity": "medium",
+        "title": "Access Control: Regular access reviews",
+        "description": "Ensure proper database access controls",
+        "recommendation": "Implement Regular access reviews for access security",
+        "file": "",
+        "timestamp": "2025-06-17T17:35:36.760Z"
+      },
+      {
+        "id": "1f66d180-8dd1-4c7b-ad44-7309b8541b10",
+        "category": "database",
+        "severity": "medium",
+        "title": "Access Control: Service account management",
+        "description": "Ensure proper database access controls",
+        "recommendation": "Implement Service account management for access security",
+        "file": "",
+        "timestamp": "2025-06-17T17:35:36.760Z"
+      },
+      {
+        "id": "3e1ea0c2-754a-4e19-a7ad-7de74fd6f30c",
+        "category": "database",
+        "severity": "medium",
+        "title": "Access Control: Query logging and monitoring",
+        "description": "Ensure proper database access controls",
+        "recommendation": "Implement Query logging and monitoring for access security",
+        "file": "",
+        "timestamp": "2025-06-17T17:35:36.760Z"
+      },
+      {
+        "id": "c1c61781-5862-4c0a-a976-b700f93ff560",
+        "category": "database",
+        "severity": "medium",
+        "title": "Backup Security: Backup encryption",
+        "description": "Ensure secure backup practices",
+        "recommendation": "Implement Backup encryption for backup security",
+        "file": "",
+        "timestamp": "2025-06-17T17:35:36.760Z"
+      },
+      {
+        "id": "20491a5f-aa18-48f7-8600-5b1eb4f2204f",
+        "category": "database",
+        "severity": "medium",
+        "title": "Backup Security: Backup access controls",
+        "description": "Ensure secure backup practices",
+        "recommendation": "Implement Backup access controls for backup security",
+        "file": "",
+        "timestamp": "2025-06-17T17:35:36.760Z"
+      },
+      {
+        "id": "dbb68ca0-4990-4f38-b4f8-e198921e0368",
+        "category": "database",
+        "severity": "medium",
+        "title": "Backup Security: Backup testing and validation",
+        "description": "Ensure secure backup practices",
+        "recommendation": "Implement Backup testing and validation for backup security",
+        "file": "",
+        "timestamp": "2025-06-17T17:35:36.760Z"
+      },
+      {
+        "id": "f0044df2-4a86-4386-864a-145c3d19a648",
+        "category": "database",
+        "severity": "medium",
+        "title": "Backup Security: Geographic distribution",
+        "description": "Ensure secure backup practices",
+        "recommendation": "Implement Geographic distribution for backup security",
+        "file": "",
+        "timestamp": "2025-06-17T17:35:36.760Z"
+      },
+      {
+        "id": "0633e965-66fa-49a0-b9f9-fabc81285bb5",
+        "category": "database",
+        "severity": "medium",
+        "title": "Backup Security: Retention policies",
+        "description": "Ensure secure backup practices",
+        "recommendation": "Implement Retention policies for backup security",
+        "file": "",
+        "timestamp": "2025-06-17T17:35:36.760Z"
+      }
+    ],
+    "authentication": [],
+    "compliance": [
+      {
+        "id": "7021ad60-84aa-4c07-bb05-0e7bc5db08ea",
+        "category": "compliance",
+        "severity": "medium",
+        "title": "GDPR: Data processing lawfulness",
+        "description": "Ensure GDPR compliance for EU users",
+        "recommendation": "Implement Data processing lawfulness according to GDPR requirements",
+        "file": "",
+        "timestamp": "2025-06-17T17:35:36.760Z"
+      },
+      {
+        "id": "f4928e95-7425-46d7-8f00-5fbfe103bb24",
+        "category": "compliance",
+        "severity": "medium",
+        "title": "GDPR: Data subject consent",
+        "description": "Ensure GDPR compliance for EU users",
+        "recommendation": "Implement Data subject consent according to GDPR requirements",
+        "file": "",
+        "timestamp": "2025-06-17T17:35:36.760Z"
+      },
+      {
+        "id": "b2d71a1c-4e40-43de-8b33-851487a0ec6d",
+        "category": "compliance",
+        "severity": "medium",
+        "title": "GDPR: Right to be forgotten",
+        "description": "Ensure GDPR compliance for EU users",
+        "recommendation": "Implement Right to be forgotten according to GDPR requirements",
+        "file": "",
+        "timestamp": "2025-06-17T17:35:36.760Z"
+      },
+      {
+        "id": "67ae332e-5f73-447c-946e-312452514d69",
+        "category": "compliance",
+        "severity": "medium",
+        "title": "GDPR: Data portability",
+        "description": "Ensure GDPR compliance for EU users",
+        "recommendation": "Implement Data portability according to GDPR requirements",
+        "file": "",
+        "timestamp": "2025-06-17T17:35:36.760Z"
+      },
+      {
+        "id": "b7fc4f2f-8408-402a-aa49-06a5f5d1d9b8",
+        "category": "compliance",
+        "severity": "medium",
+        "title": "GDPR: Privacy by design",
+        "description": "Ensure GDPR compliance for EU users",
+        "recommendation": "Implement Privacy by design according to GDPR requirements",
+        "file": "",
+        "timestamp": "2025-06-17T17:35:36.760Z"
+      },
+      {
+        "id": "68b0ae52-22be-4ad1-b096-c7770709643f",
+        "category": "compliance",
+        "severity": "medium",
+        "title": "GDPR: Data protection impact assessment",
+        "description": "Ensure GDPR compliance for EU users",
+        "recommendation": "Implement Data protection impact assessment according to GDPR requirements",
+        "file": "",
+        "timestamp": "2025-06-17T17:35:36.760Z"
+      },
+      {
+        "id": "883796a3-13a8-4b39-bef4-e3be13909a26",
+        "category": "compliance",
+        "severity": "medium",
+        "title": "GDPR: Data breach notification",
+        "description": "Ensure GDPR compliance for EU users",
+        "recommendation": "Implement Data breach notification according to GDPR requirements",
+        "file": "",
+        "timestamp": "2025-06-17T17:35:36.760Z"
+      },
+      {
+        "id": "e1c4792b-1069-4628-b3ef-e4114054e14a",
+        "category": "compliance",
+        "severity": "critical",
+        "title": "PCI DSS: Secure cardholder data storage",
+        "description": "Ensure PCI DSS compliance for payment processing",
+        "recommendation": "Implement Secure cardholder data storage for payment security",
+        "file": "",
+        "timestamp": "2025-06-17T17:35:36.760Z"
+      },
+      {
+        "id": "e04ef463-af4c-41a3-86ba-2f9428c4d548",
+        "category": "compliance",
+        "severity": "critical",
+        "title": "PCI DSS: Encryption of payment data",
+        "description": "Ensure PCI DSS compliance for payment processing",
+        "recommendation": "Implement Encryption of payment data for payment security",
+        "file": "",
+        "timestamp": "2025-06-17T17:35:36.760Z"
+      },
+      {
+        "id": "5dda0568-a8dc-4a34-896f-8cbcb08d5985",
+        "category": "compliance",
+        "severity": "critical",
+        "title": "PCI DSS: Access controls for payment systems",
+        "description": "Ensure PCI DSS compliance for payment processing",
+        "recommendation": "Implement Access controls for payment systems for payment security",
+        "file": "",
+        "timestamp": "2025-06-17T17:35:36.760Z"
+      },
+      {
+        "id": "034a913d-5727-4649-b327-203b816cdcd3",
+        "category": "compliance",
+        "severity": "critical",
+        "title": "PCI DSS: Regular security testing",
+        "description": "Ensure PCI DSS compliance for payment processing",
+        "recommendation": "Implement Regular security testing for payment security",
+        "file": "",
+        "timestamp": "2025-06-17T17:35:36.760Z"
+      },
+      {
+        "id": "12f79a76-7fd2-46a6-96f9-6c05663ce0cb",
+        "category": "compliance",
+        "severity": "critical",
+        "title": "PCI DSS: Security policy maintenance",
+        "description": "Ensure PCI DSS compliance for payment processing",
+        "recommendation": "Implement Security policy maintenance for payment security",
+        "file": "",
+        "timestamp": "2025-06-17T17:35:36.760Z"
+      },
+      {
+        "id": "f7c7fc6e-6922-4a91-8792-052589113772",
+        "category": "compliance",
+        "severity": "medium",
+        "title": "SOC 2: Security controls",
+        "description": "Ensure SOC 2 compliance for enterprise customers",
+        "recommendation": "Implement Security controls according to SOC 2 requirements",
+        "file": "",
+        "timestamp": "2025-06-17T17:35:36.760Z"
+      },
+      {
+        "id": "a3957641-168e-4f23-ae93-68a7796e66b3",
+        "category": "compliance",
+        "severity": "medium",
+        "title": "SOC 2: Availability controls",
+        "description": "Ensure SOC 2 compliance for enterprise customers",
+        "recommendation": "Implement Availability controls according to SOC 2 requirements",
+        "file": "",
+        "timestamp": "2025-06-17T17:35:36.760Z"
+      },
+      {
+        "id": "e8466a29-201d-4ff3-a164-04105adf4142",
+        "category": "compliance",
+        "severity": "medium",
+        "title": "SOC 2: Processing integrity",
+        "description": "Ensure SOC 2 compliance for enterprise customers",
+        "recommendation": "Implement Processing integrity according to SOC 2 requirements",
+        "file": "",
+        "timestamp": "2025-06-17T17:35:36.760Z"
+      },
+      {
+        "id": "14af2236-14c7-479a-822d-886f0035f823",
+        "category": "compliance",
+        "severity": "medium",
+        "title": "SOC 2: Confidentiality controls",
+        "description": "Ensure SOC 2 compliance for enterprise customers",
+        "recommendation": "Implement Confidentiality controls according to SOC 2 requirements",
+        "file": "",
+        "timestamp": "2025-06-17T17:35:36.760Z"
+      },
+      {
+        "id": "271cc488-253b-471f-b705-f2b3efd18394",
+        "category": "compliance",
+        "severity": "medium",
+        "title": "SOC 2: Privacy controls",
+        "description": "Ensure SOC 2 compliance for enterprise customers",
+        "recommendation": "Implement Privacy controls according to SOC 2 requirements",
+        "file": "",
+        "timestamp": "2025-06-17T17:35:36.760Z"
+      },
+      {
+        "id": "728e176f-0425-4ff4-a6f1-3996109cdcfc",
+        "category": "compliance",
+        "severity": "high",
+        "title": "UAE Compliance: RERA compliance for real estate",
+        "description": "Ensure compliance with UAE regulations",
+        "recommendation": "Implement RERA compliance for real estate for UAE market operations",
+        "file": "",
+        "timestamp": "2025-06-17T17:35:36.760Z"
+      },
+      {
+        "id": "35803442-a692-49b9-80a2-895b7fce3ee8",
+        "category": "compliance",
+        "severity": "high",
+        "title": "UAE Compliance: ADRA compliance for Abu Dhabi",
+        "description": "Ensure compliance with UAE regulations",
+        "recommendation": "Implement ADRA compliance for Abu Dhabi for UAE market operations",
+        "file": "",
+        "timestamp": "2025-06-17T17:35:36.760Z"
+      },
+      {
+        "id": "05ab0fe3-c57a-4b0a-8d0e-334b27bfd627",
+        "category": "compliance",
+        "severity": "high",
+        "title": "UAE Compliance: CBUAE compliance for financial services",
+        "description": "Ensure compliance with UAE regulations",
+        "recommendation": "Implement CBUAE compliance for financial services for UAE market operations",
+        "file": "",
+        "timestamp": "2025-06-17T17:35:36.761Z"
+      },
+      {
+        "id": "9351c8a0-42d7-46c5-94dd-ae3a69c09826",
+        "category": "compliance",
+        "severity": "high",
+        "title": "UAE Compliance: Data localization requirements",
+        "description": "Ensure compliance with UAE regulations",
+        "recommendation": "Implement Data localization requirements for UAE market operations",
+        "file": "",
+        "timestamp": "2025-06-17T17:35:36.761Z"
+      },
+      {
+        "id": "d2a43dd3-a754-48fa-9fd8-871d25e5fbd9",
+        "category": "compliance",
+        "severity": "high",
+        "title": "UAE Compliance: KYC/AML compliance",
+        "description": "Ensure compliance with UAE regulations",
+        "recommendation": "Implement KYC/AML compliance for UAE market operations",
+        "file": "",
+        "timestamp": "2025-06-17T17:35:36.761Z"
+      },
+      {
+        "id": "a3c851a1-f4fc-4f6b-9997-dcf29af7c914",
+        "category": "compliance",
+        "severity": "high",
+        "title": "UAE Compliance: Securities regulations",
+        "description": "Ensure compliance with UAE regulations",
+        "recommendation": "Implement Securities regulations for UAE market operations",
+        "file": "",
+        "timestamp": "2025-06-17T17:35:36.761Z"
+      }
+    ],
+    "summary": {
+      "critical": 6,
+      "high": 45,
+      "medium": 48,
+      "low": 1,
+      "info": 31
+    }
+  },
+  "riskScore": 568,
+  "riskLevel": "Critical",
+  "recommendations": [
+    {
+      "priority": "Critical",
+      "category": "Authentication",
+      "recommendations": [
+        "Implement multi-factor authentication (MFA)",
+        "Use strong password policies",
+        "Implement account lockout mechanisms",
+        "Regular password rotation for service accounts"
+      ]
+    },
+    {
+      "priority": "High",
+      "category": "Smart Contracts",
+      "recommendations": [
+        "Conduct formal security audit by third party",
+        "Implement reentrancy guards",
+        "Use OpenZeppelin security libraries",
+        "Implement emergency pause functionality"
+      ]
+    },
+    {
+      "priority": "High",
+      "category": "Infrastructure",
+      "recommendations": [
+        "Implement Web Application Firewall (WAF)",
+        "Use Container security scanning",
+        "Implement network segmentation",
+        "Regular security updates and patching"
+      ]
+    },
+    {
+      "priority": "Medium",
+      "category": "Monitoring",
+      "recommendations": [
+        "Implement security information and event management (SIEM)",
+        "Set up intrusion detection system (IDS)",
+        "Regular security assessments",
+        "Incident response plan"
+      ]
+    },
+    {
+      "priority": "Medium",
+      "category": "Data Protection",
+      "recommendations": [
+        "Implement data classification",
+        "Regular backup testing",
+        "Data loss prevention (DLP)",
+        "Encryption key rotation"
+      ]
+    }
+  ],
+  "pentestChecklist": {
+    "Network Security": [
+      "Port scanning and service enumeration",
+      "Vulnerability scanning",
+      "Network protocol testing",
+      "Wireless security assessment",
+      "Firewall and IDS evasion"
+    ],
+    "Web Application Security": [
+      "OWASP Top 10 testing",
+      "Authentication bypass attempts",
+      "Session management testing",
+      "Input validation testing",
+      "Business logic flaws"
+    ],
+    "API Security": [
+      "API endpoint enumeration",
+      "Authentication and authorization testing",
+      "Rate limiting bypass",
+      "Input validation on API parameters",
+      "API versioning security"
+    ],
+    "Smart Contract Security": [
+      "Reentrancy attack testing",
+      "Integer overflow/underflow testing",
+      "Access control testing",
+      "Gas limit and DoS testing",
+      "Front-running attack simulation"
+    ],
+    "Infrastructure Security": [
+      "Container escape testing",
+      "Privilege escalation attempts",
+      "Configuration assessment",
+      "Backup and recovery testing",
+      "Disaster recovery validation"
+    ]
+  },
+  "nextSteps": [
+    "Address all critical and high severity findings",
+    "Implement security recommendations",
+    "Conduct third-party security audit",
+    "Perform penetration testing",
+    "Regular security assessments"
+  ]
+}

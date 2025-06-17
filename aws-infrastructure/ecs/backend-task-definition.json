@@ -1,0 +1,124 @@
+{
+  "family": "nexvestxr-backend",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "1024",
+  "memory": "2048",
+  "executionRoleArn": "${ECS_EXECUTION_ROLE_ARN}",
+  "taskRoleArn": "${ECS_TASK_ROLE_ARN}",
+  "containerDefinitions": [
+    {
+      "name": "nexvestxr-backend",
+      "image": "${ECR_REPOSITORY_URI}:backend-latest",
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 8080,
+          "protocol": "tcp"
+        }
+      ],
+      "environment": [
+        {
+          "name": "NODE_ENV",
+          "value": "production"
+        },
+        {
+          "name": "PORT",
+          "value": "8080"
+        },
+        {
+          "name": "AWS_REGION",
+          "value": "${AWS_REGION}"
+        }
+      ],
+      "secrets": [
+        {
+          "name": "DATABASE_URL",
+          "valueFrom": "${DATABASE_SECRET_ARN}:database_url::"
+        },
+        {
+          "name": "REDIS_URL",
+          "valueFrom": "${REDIS_SECRET_ARN}:redis_url::"
+        },
+        {
+          "name": "JWT_SECRET",
+          "valueFrom": "${JWT_SECRET_ARN}:jwt_secret::"
+        },
+        {
+          "name": "XRPL_NETWORK",
+          "valueFrom": "${BLOCKCHAIN_SECRET_ARN}:xrpl_network::"
+        },
+        {
+          "name": "XRPL_WALLET_SEED",
+          "valueFrom": "${BLOCKCHAIN_SECRET_ARN}:xrpl_wallet_seed::"
+        },
+        {
+          "name": "FLARE_PRIVATE_KEY",
+          "valueFrom": "${BLOCKCHAIN_SECRET_ARN}:flare_private_key::"
+        },
+        {
+          "name": "FLARE_RPC_URL",
+          "valueFrom": "${BLOCKCHAIN_SECRET_ARN}:flare_rpc_url::"
+        },
+        {
+          "name": "ENCRYPTION_KEY",
+          "valueFrom": "${ENCRYPTION_SECRET_ARN}:encryption_key::"
+        },
+        {
+          "name": "WEBHOOK_SECRET",
+          "valueFrom": "${WEBHOOK_SECRET_ARN}:webhook_secret::"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/nexvestxr-backend",
+          "awslogs-region": "${AWS_REGION}",
+          "awslogs-stream-prefix": "ecs"
+        }
+      },
+      "healthCheck": {
+        "command": [
+          "CMD-SHELL",
+          "curl -f http://localhost:8080/health || exit 1"
+        ],
+        "interval": 30,
+        "timeout": 5,
+        "retries": 3,
+        "startPeriod": 60
+      },
+      "mountPoints": [],
+      "volumesFrom": [],
+      "linuxParameters": {
+        "initProcessEnabled": true
+      },
+      "stopTimeout": 120,
+      "startTimeout": 120,
+      "dependsOn": [],
+      "ulimits": [
+        {
+          "name": "nofile",
+          "hardLimit": 65536,
+          "softLimit": 65536
+        }
+      ],
+      "systemControls": []
+    }
+  ],
+  "volumes": [],
+  "placementConstraints": [],
+  "tags": [
+    {
+      "key": "Environment",
+      "value": "${ENVIRONMENT}"
+    },
+    {
+      "key": "Service",
+      "value": "nexvestxr-backend"
+    },
+    {
+      "key": "Project",
+      "value": "nexvestxr-v2"
+    }
+  ]
+}

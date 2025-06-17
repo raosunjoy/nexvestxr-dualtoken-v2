@@ -1,0 +1,113 @@
+{
+  "family": "nexvestxr-frontend",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "512",
+  "memory": "1024",
+  "executionRoleArn": "${ECS_EXECUTION_ROLE_ARN}",
+  "taskRoleArn": "${ECS_TASK_ROLE_ARN}",
+  "containerDefinitions": [
+    {
+      "name": "nexvestxr-frontend",
+      "image": "${ECR_REPOSITORY_URI}:frontend-latest",
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 3000,
+          "protocol": "tcp"
+        }
+      ],
+      "environment": [
+        {
+          "name": "NODE_ENV",
+          "value": "production"
+        },
+        {
+          "name": "REACT_APP_API_URL",
+          "value": "/api"
+        },
+        {
+          "name": "REACT_APP_WEBSOCKET_URL",
+          "value": "wss://api.nexvestxr.com/ws"
+        },
+        {
+          "name": "REACT_APP_ENVIRONMENT",
+          "value": "${ENVIRONMENT}"
+        }
+      ],
+      "secrets": [
+        {
+          "name": "REACT_APP_GOOGLE_ANALYTICS_ID",
+          "valueFrom": "${ANALYTICS_SECRET_ARN}:google_analytics_id::"
+        },
+        {
+          "name": "REACT_APP_SENTRY_DSN",
+          "valueFrom": "${MONITORING_SECRET_ARN}:sentry_dsn::"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/nexvestxr-frontend",
+          "awslogs-region": "${AWS_REGION}",
+          "awslogs-stream-prefix": "ecs"
+        }
+      },
+      "healthCheck": {
+        "command": [
+          "CMD-SHELL",
+          "curl -f http://localhost:3000/health || exit 1"
+        ],
+        "interval": 30,
+        "timeout": 5,
+        "retries": 3,
+        "startPeriod": 60
+      },
+      "mountPoints": [],
+      "volumesFrom": [],
+      "linuxParameters": {
+        "initProcessEnabled": true
+      },
+      "stopTimeout": 120,
+      "startTimeout": 120,
+      "dependsOn": [],
+      "ulimits": [
+        {
+          "name": "nofile",
+          "hardLimit": 65536,
+          "softLimit": 65536
+        }
+      ],
+      "systemControls": [],
+      "readonlyRootFilesystem": true,
+      "tmpfs": [
+        {
+          "containerPath": "/tmp",
+          "size": 100,
+          "mountOptions": ["noexec", "nosuid", "nodev"]
+        },
+        {
+          "containerPath": "/var/cache/nginx",
+          "size": 100,
+          "mountOptions": ["noexec", "nosuid", "nodev"]
+        }
+      ]
+    }
+  ],
+  "volumes": [],
+  "placementConstraints": [],
+  "tags": [
+    {
+      "key": "Environment",
+      "value": "${ENVIRONMENT}"
+    },
+    {
+      "key": "Service",
+      "value": "nexvestxr-frontend"
+    },
+    {
+      "key": "Project",
+      "value": "nexvestxr-v2"
+    }
+  ]
+}

@@ -1,0 +1,701 @@
+/* Aldar Properties Official Theme */
+/* Based on official brand guidelines: https://www.aldar.com/en/explore-aldar/aldar-brand */
+
+/* ===============================================
+   Aldar Official Brand Colors & Variables
+   =============================================== */
+:root {
+  /* Aldar Primary Brand Colors */
+  --aldar-black: #000000;
+  --aldar-white: #FFFFFF;
+  --aldar-frame-gray: #333333;
+  
+  /* Aldar Dynamic Tones (Accent Colors) */
+  --aldar-blue: #0066CC;
+  --aldar-blue-light: #E6F2FF;
+  --aldar-blue-dark: #004080;
+  
+  --aldar-green: #00A651;
+  --aldar-green-light: #E6F7ED;
+  --aldar-green-dark: #007A3D;
+  
+  --aldar-orange: #FF6B35;
+  --aldar-orange-light: #FFE8E1;
+  --aldar-orange-dark: #E5522A;
+  
+  --aldar-purple: #8B5CF6;
+  --aldar-purple-light: #F3EFFF;
+  --aldar-purple-dark: #7C3AED;
+  
+  /* Aldar Neutral Palette */
+  --aldar-gray-50: #F9FAFB;
+  --aldar-gray-100: #F3F4F6;
+  --aldar-gray-200: #E5E7EB;
+  --aldar-gray-300: #D1D5DB;
+  --aldar-gray-400: #9CA3AF;
+  --aldar-gray-500: #6B7280;
+  --aldar-gray-600: #4B5563;
+  --aldar-gray-700: #374151;
+  --aldar-gray-800: #1F2937;
+  --aldar-gray-900: #111827;
+  
+  /* Aldar Semantic Colors */
+  --aldar-success: var(--aldar-green);
+  --aldar-warning: var(--aldar-orange);
+  --aldar-error: #EF4444;
+  --aldar-info: var(--aldar-blue);
+  
+  /* Aldar Typography Variables */
+  --aldar-font-primary: 'Poppins', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --aldar-font-arabic: 'Almarai', 'Noto Sans Arabic', 'Amiri', Arial, sans-serif;
+  --aldar-font-secondary: 'Inter', var(--aldar-font-primary);
+  
+  /* Aldar Spacing & Dimensions */
+  --aldar-border-radius: 8px;
+  --aldar-border-radius-lg: 12px;
+  --aldar-border-radius-xl: 16px;
+  --aldar-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --aldar-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+  --aldar-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.15);
+  
+  /* RTL Support */
+  --text-direction: ltr;
+  --start: left;
+  --end: right;
+}
+
+/* RTL Direction Variables */
+[dir="rtl"], .rtl {
+  --text-direction: rtl;
+  --start: right;
+  --end: left;
+}
+
+/* ===============================================
+   Aldar Typography System
+   =============================================== */
+
+/* Import Aldar Official Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Almarai:wght@300;400;700;800&display=swap');
+
+/* Base Typography */
+.font-aldar-primary {
+  font-family: var(--aldar-font-primary);
+}
+
+.font-aldar-arabic {
+  font-family: var(--aldar-font-arabic);
+}
+
+.font-aldar-secondary {
+  font-family: var(--aldar-font-secondary);
+}
+
+/* Aldar Heading Styles */
+.aldar-heading-xl {
+  font-family: var(--aldar-font-primary);
+  font-size: 3rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--aldar-black);
+}
+
+.aldar-heading-lg {
+  font-family: var(--aldar-font-primary);
+  font-size: 2.25rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--aldar-black);
+}
+
+.aldar-heading-md {
+  font-family: var(--aldar-font-primary);
+  font-size: 1.75rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--aldar-black);
+}
+
+.aldar-heading-sm {
+  font-family: var(--aldar-font-primary);
+  font-size: 1.25rem;
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--aldar-black);
+}
+
+/* Aldar Body Text */
+.aldar-body-lg {
+  font-family: var(--aldar-font-secondary);
+  font-size: 1.125rem;
+  font-weight: 400;
+  line-height: 1.6;
+  color: var(--aldar-gray-700);
+}
+
+.aldar-body {
+  font-family: var(--aldar-font-secondary);
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.6;
+  color: var(--aldar-gray-700);
+}
+
+.aldar-body-sm {
+  font-family: var(--aldar-font-secondary);
+  font-size: 0.875rem;
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--aldar-gray-600);
+}
+
+/* ===============================================
+   Aldar Logo & Brand Elements
+   =============================================== */
+
+.aldar-logo-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.aldar-logo {
+  height: 40px;
+  width: auto;
+  transition: all 0.3s ease;
+}
+
+.aldar-logo:hover {
+  transform: scale(1.05);
+}
+
+.aldar-brand-text {
+  font-family: var(--aldar-font-primary);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--aldar-black);
+  letter-spacing: -0.02em;
+}
+
+/* Aldar Frame Design Element */
+.aldar-frame {
+  position: relative;
+  padding: 2rem;
+}
+
+.aldar-frame::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border: 2px solid var(--aldar-frame-gray);
+  border-radius: var(--aldar-border-radius);
+  pointer-events: none;
+}
+
+/* ===============================================
+   Aldar Button System
+   =============================================== */
+
+.btn-aldar-base {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-radius: var(--aldar-border-radius);
+  font-family: var(--aldar-font-primary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  outline: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-aldar-primary {
+  @apply btn-aldar-base;
+  background-color: var(--aldar-black);
+  color: var(--aldar-white);
+  box-shadow: var(--aldar-shadow-sm);
+}
+
+.btn-aldar-primary:hover {
+  background-color: var(--aldar-gray-800);
+  box-shadow: var(--aldar-shadow-md);
+  transform: translateY(-1px);
+}
+
+.btn-aldar-primary:active {
+  transform: translateY(0);
+  box-shadow: var(--aldar-shadow-sm);
+}
+
+.btn-aldar-secondary {
+  @apply btn-aldar-base;
+  background-color: var(--aldar-white);
+  color: var(--aldar-black);
+  border: 1px solid var(--aldar-gray-300);
+  box-shadow: var(--aldar-shadow-sm);
+}
+
+.btn-aldar-secondary:hover {
+  background-color: var(--aldar-gray-50);
+  border-color: var(--aldar-gray-400);
+  box-shadow: var(--aldar-shadow-md);
+  transform: translateY(-1px);
+}
+
+.btn-aldar-blue {
+  @apply btn-aldar-base;
+  background-color: var(--aldar-blue);
+  color: var(--aldar-white);
+  box-shadow: var(--aldar-shadow-sm);
+}
+
+.btn-aldar-blue:hover {
+  background-color: var(--aldar-blue-dark);
+  box-shadow: var(--aldar-shadow-md);
+  transform: translateY(-1px);
+}
+
+.btn-aldar-green {
+  @apply btn-aldar-base;
+  background-color: var(--aldar-green);
+  color: var(--aldar-white);
+  box-shadow: var(--aldar-shadow-sm);
+}
+
+.btn-aldar-green:hover {
+  background-color: var(--aldar-green-dark);
+  box-shadow: var(--aldar-shadow-md);
+  transform: translateY(-1px);
+}
+
+/* Button Sizes */
+.btn-aldar-sm {
+  padding: 8px 16px;
+  font-size: 0.75rem;
+}
+
+.btn-aldar-lg {
+  padding: 16px 32px;
+  font-size: 1rem;
+}
+
+.btn-aldar-xl {
+  padding: 20px 40px;
+  font-size: 1.125rem;
+}
+
+/* ===============================================
+   Aldar Card System
+   =============================================== */
+
+.aldar-card {
+  background: var(--aldar-white);
+  border-radius: var(--aldar-border-radius-lg);
+  box-shadow: var(--aldar-shadow-sm);
+  border: 1px solid var(--aldar-gray-200);
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.aldar-card:hover {
+  box-shadow: var(--aldar-shadow-lg);
+  transform: translateY(-2px);
+}
+
+.aldar-card-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--aldar-gray-200);
+  background: var(--aldar-gray-50);
+}
+
+.aldar-card-body {
+  padding: 1.5rem;
+}
+
+.aldar-card-footer {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--aldar-gray-200);
+  background: var(--aldar-gray-50);
+}
+
+/* Property Card Specific */
+.aldar-property-card {
+  @apply aldar-card;
+  position: relative;
+}
+
+.aldar-property-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--aldar-blue), var(--aldar-green), var(--aldar-orange), var(--aldar-purple));
+}
+
+.aldar-property-price {
+  font-family: var(--aldar-font-primary);
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--aldar-black);
+}
+
+.aldar-property-location {
+  font-family: var(--aldar-font-secondary);
+  font-size: 0.875rem;
+  color: var(--aldar-gray-600);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ===============================================
+   Aldar Form Elements
+   =============================================== */
+
+.aldar-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid var(--aldar-gray-300);
+  border-radius: var(--aldar-border-radius);
+  font-family: var(--aldar-font-secondary);
+  font-size: 0.875rem;
+  background: var(--aldar-white);
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.aldar-input:focus {
+  border-color: var(--aldar-blue);
+  box-shadow: 0 0 0 3px var(--aldar-blue-light);
+}
+
+.aldar-input::placeholder {
+  color: var(--aldar-gray-400);
+}
+
+.aldar-select {
+  @apply aldar-input;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 12px center;
+  background-repeat: no-repeat;
+  background-size: 16px;
+  padding-right: 40px;
+}
+
+.aldar-textarea {
+  @apply aldar-input;
+  min-height: 100px;
+  resize: vertical;
+}
+
+/* Form Labels */
+.aldar-label {
+  display: block;
+  font-family: var(--aldar-font-primary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--aldar-gray-700);
+  margin-bottom: 6px;
+}
+
+/* ===============================================
+   Aldar Navigation
+   =============================================== */
+
+.aldar-nav {
+  background: var(--aldar-white);
+  border-bottom: 1px solid var(--aldar-gray-200);
+  box-shadow: var(--aldar-shadow-sm);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  backdrop-filter: blur(8px);
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.aldar-nav-item {
+  padding: 12px 16px;
+  font-family: var(--aldar-font-primary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--aldar-gray-700);
+  text-decoration: none;
+  border-radius: var(--aldar-border-radius);
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.aldar-nav-item:hover {
+  background: var(--aldar-gray-100);
+  color: var(--aldar-black);
+}
+
+.aldar-nav-item.active {
+  background: var(--aldar-black);
+  color: var(--aldar-white);
+}
+
+.aldar-nav-item.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20px;
+  height: 2px;
+  background: var(--aldar-blue);
+}
+
+/* ===============================================
+   Aldar Dashboard Components
+   =============================================== */
+
+.aldar-dashboard-header {
+  background: linear-gradient(135deg, var(--aldar-gray-50) 0%, var(--aldar-white) 100%);
+  padding: 2rem;
+  border-bottom: 1px solid var(--aldar-gray-200);
+}
+
+.aldar-stat-card {
+  @apply aldar-card;
+  padding: 1.5rem;
+  text-align: center;
+  background: linear-gradient(135deg, var(--aldar-white) 0%, var(--aldar-gray-50) 100%);
+}
+
+.aldar-stat-value {
+  font-family: var(--aldar-font-primary);
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--aldar-black);
+  margin-bottom: 4px;
+}
+
+.aldar-stat-label {
+  font-family: var(--aldar-font-secondary);
+  font-size: 0.875rem;
+  color: var(--aldar-gray-600);
+}
+
+/* Trading Interface Aldar Theme */
+.aldar-trading-panel {
+  @apply aldar-card;
+  background: var(--aldar-white);
+  border-left: 4px solid var(--aldar-blue);
+}
+
+.aldar-price-up {
+  color: var(--aldar-green);
+  background: var(--aldar-green-light);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.aldar-price-down {
+  color: var(--aldar-error);
+  background: rgba(239, 68, 68, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+/* ===============================================
+   Aldar Mobile Optimizations
+   =============================================== */
+
+@media (max-width: 640px) {
+  .aldar-heading-xl {
+    font-size: 2rem;
+  }
+  
+  .aldar-heading-lg {
+    font-size: 1.75rem;
+  }
+  
+  .aldar-card-body {
+    padding: 1rem;
+  }
+  
+  .btn-aldar-base {
+    padding: 10px 20px;
+    font-size: 0.875rem;
+  }
+  
+  .aldar-property-price {
+    font-size: 1.5rem;
+  }
+  
+  .aldar-dashboard-header {
+    padding: 1rem;
+  }
+}
+
+/* ===============================================
+   Aldar Animations & Interactions
+   =============================================== */
+
+@keyframes aldar-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.aldar-fade-in {
+  animation: aldar-fade-in 0.6s ease-out;
+}
+
+@keyframes aldar-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.aldar-slide-in {
+  animation: aldar-slide-in 0.4s ease-out;
+}
+
+/* Loading States */
+.aldar-skeleton {
+  background: linear-gradient(90deg, var(--aldar-gray-200) 25%, var(--aldar-gray-100) 50%, var(--aldar-gray-200) 75%);
+  background-size: 200% 100%;
+  animation: aldar-skeleton-loading 1.5s infinite;
+  border-radius: var(--aldar-border-radius);
+}
+
+@keyframes aldar-skeleton-loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* ===============================================
+   Aldar Accessibility & Contrast
+   =============================================== */
+
+/* Focus States */
+.aldar-input:focus,
+.aldar-select:focus,
+.aldar-textarea:focus,
+.btn-aldar-primary:focus,
+.btn-aldar-secondary:focus,
+.btn-aldar-blue:focus,
+.btn-aldar-green:focus,
+.aldar-nav-item:focus {
+  outline: 2px solid var(--aldar-blue);
+  outline-offset: 2px;
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+  .aldar-card {
+    border-width: 2px;
+    border-color: var(--aldar-black);
+  }
+  
+  .btn-aldar-primary {
+    background: var(--aldar-black);
+    border: 2px solid var(--aldar-black);
+  }
+  
+  .btn-aldar-secondary {
+    border-width: 2px;
+    border-color: var(--aldar-black);
+  }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .aldar-card:hover,
+  .btn-aldar-primary:hover,
+  .btn-aldar-secondary:hover,
+  .btn-aldar-blue:hover,
+  .btn-aldar-green:hover {
+    transform: none;
+  }
+  
+  .aldar-fade-in,
+  .aldar-slide-in,
+  .aldar-skeleton {
+    animation: none;
+  }
+}
+
+/* ===============================================
+   Aldar RTL Support
+   =============================================== */
+
+[dir="rtl"] .aldar-nav-item.active::after {
+  right: 50%;
+  left: auto;
+  transform: translateX(50%);
+}
+
+[dir="rtl"] .aldar-select {
+  background-position: left 12px center;
+  padding-left: 40px;
+  padding-right: 16px;
+}
+
+[dir="rtl"] .aldar-property-location {
+  direction: rtl;
+}
+
+/* ===============================================
+   Aldar Dark Mode Support
+   =============================================== */
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --aldar-white: #1F2937;
+    --aldar-black: #F9FAFB;
+    --aldar-gray-50: #111827;
+    --aldar-gray-100: #1F2937;
+    --aldar-gray-200: #374151;
+    --aldar-gray-300: #4B5563;
+  }
+  
+  .aldar-card {
+    background: var(--aldar-gray-100);
+    border-color: var(--aldar-gray-300);
+  }
+  
+  .aldar-nav {
+    background: rgba(31, 41, 55, 0.95);
+    border-color: var(--aldar-gray-300);
+  }
+  
+  .aldar-input,
+  .aldar-select,
+  .aldar-textarea {
+    background: var(--aldar-gray-100);
+    border-color: var(--aldar-gray-300);
+    color: var(--aldar-black);
+  }
+}

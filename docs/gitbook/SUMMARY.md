@@ -8,6 +8,7 @@
 ## Market Implementations
 * [🇮🇳 Indian Market](indian-market.md)
 * [🇦🇪 UAE Market](uae-market.md)
+* [🏢 Aldar Properties Integration](aldar-integration.md)
 * [Dual Token System](dual-token-system.md)
 
 ## User Guide

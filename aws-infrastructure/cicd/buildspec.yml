@@ -1,0 +1,244 @@
+# NexVestXR v2 Dual Token Platform - CodeBuild BuildSpec
+# Production CI/CD pipeline configuration
+
+version: 0.2
+
+env:
+  variables:
+    NODE_VERSION: "18"
+    DOCKER_BUILDKIT: "1"
+  secrets-manager:
+    DOCKER_HUB_USERNAME: "prod/nexvestxr/docker:username"
+    DOCKER_HUB_PASSWORD: "prod/nexvestxr/docker:password"
+    SONAR_TOKEN: "prod/nexvestxr/sonar:token"
+    SNYK_TOKEN: "prod/nexvestxr/snyk:token"
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 18
+      docker: 20
+    commands:
+      - echo "Installing dependencies..."
+      - curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+      - export NVM_DIR="$HOME/.nvm"
+      - '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"'
+      - nvm install $NODE_VERSION
+      - nvm use $NODE_VERSION
+      - npm install -g npm@latest
+      - npm install -g @aws-amplify/cli
+      - npm install -g serverless
+      - npm install -g snyk
+      - pip install --upgrade awscli
+      - echo "Installing SonarScanner..."
+      - wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.8.0.2856-linux.zip
+      - unzip sonar-scanner-cli-4.8.0.2856-linux.zip
+      - export PATH=$PATH:$PWD/sonar-scanner-4.8.0.2856-linux/bin
+
+  pre_build:
+    commands:
+      - echo "Pre-build phase started on `date`"
+      - echo "Logging in to Amazon ECR..."
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
+      
+      - echo "Setting up environment variables..."
+      - export COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
+      - export IMAGE_TAG=${COMMIT_HASH:=latest}
+      - export REPOSITORY_URI=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/nexvestxr-v2
+      
+      - echo "Installing project dependencies..."
+      - cd backend && npm ci && cd ..
+      - cd frontend && npm ci && cd ..
+      - cd mobile && npm ci && cd ..
+      
+      - echo "Running security scans..."
+      - snyk auth $SNYK_TOKEN
+      - snyk test backend/ --json > backend-security-report.json || true
+      - snyk test frontend/ --json > frontend-security-report.json || true
+      - snyk test mobile/ --json > mobile-security-report.json || true
+
+  build:
+    commands:
+      - echo "Build phase started on `date`"
+      
+      - echo "Running tests..."
+      - cd backend && npm test 2>&1 | tee ../backend-test-results.txt && cd ..
+      - cd frontend && npm test -- --coverage --watchAll=false 2>&1 | tee ../frontend-test-results.txt && cd ..
+      - cd mobile && npm test 2>&1 | tee ../mobile-test-results.txt && cd ..
+      
+      - echo "Running linting..."
+      - cd backend && npm run lint 2>&1 | tee ../backend-lint-results.txt && cd ..
+      - cd frontend && npm run lint 2>&1 | tee ../frontend-lint-results.txt && cd ..
+      - cd mobile && npm run lint 2>&1 | tee ../mobile-lint-results.txt && cd ..
+      
+      - echo "Running type checking..."
+      - cd backend && npm run type-check 2>&1 | tee ../backend-typecheck-results.txt && cd ..
+      - cd frontend && npm run type-check 2>&1 | tee ../frontend-typecheck-results.txt && cd ..
+      
+      - echo "Running smart contract tests..."
+      - cd smart-contracts && npm test 2>&1 | tee ../contracts-test-results.txt && cd ..
+      
+      - echo "Running security audit..."
+      - node security-audit-suite.js 2>&1 | tee security-audit-results.txt || true
+      
+      - echo "Running SonarQube analysis..."
+      - |
+        sonar-scanner \
+          -Dsonar.projectKey=nexvestxr-v2 \
+          -Dsonar.sources=. \
+          -Dsonar.host.url=https://sonarcloud.io \
+          -Dsonar.login=$SONAR_TOKEN \
+          -Dsonar.exclusions=node_modules/**,coverage/**,build/**,dist/** \
+          -Dsonar.javascript.lcov.reportPaths=frontend/coverage/lcov.info \
+          -Dsonar.typescript.lcov.reportPaths=backend/coverage/lcov.info || true
+      
+      - echo "Building frontend application..."
+      - cd frontend
+      - npm run build
+      - echo "Frontend build completed"
+      - cd ..
+      
+      - echo "Building Docker images..."
+      - echo "Building backend image..."
+      - docker build -f aws-infrastructure/docker/Dockerfile.backend -t $REPOSITORY_URI:backend-$IMAGE_TAG .
+      - docker tag $REPOSITORY_URI:backend-$IMAGE_TAG $REPOSITORY_URI:backend-latest
+      
+      - echo "Building frontend image..."
+      - docker build -f aws-infrastructure/docker/Dockerfile.frontend -t $REPOSITORY_URI:frontend-$IMAGE_TAG .
+      - docker tag $REPOSITORY_URI:frontend-$IMAGE_TAG $REPOSITORY_URI:frontend-latest
+      
+      - echo "Running container security scans..."
+      - docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image $REPOSITORY_URI:backend-$IMAGE_TAG > backend-container-scan.txt || true
+      - docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image $REPOSITORY_URI:frontend-$IMAGE_TAG > frontend-container-scan.txt || true
+
+  post_build:
+    commands:
+      - echo "Post-build phase started on `date`"
+      
+      - echo "Pushing Docker images to ECR..."
+      - docker push $REPOSITORY_URI:backend-$IMAGE_TAG
+      - docker push $REPOSITORY_URI:backend-latest
+      - docker push $REPOSITORY_URI:frontend-$IMAGE_TAG
+      - docker push $REPOSITORY_URI:frontend-latest
+      
+      - echo "Generating deployment artifacts..."
+      - |
+        cat > deployment-config.json << EOF
+        {
+          "imageUri": "$REPOSITORY_URI",
+          "imageTag": "$IMAGE_TAG",
+          "commitHash": "$COMMIT_HASH",
+          "buildTime": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+          "environment": "$ENVIRONMENT",
+          "region": "$AWS_DEFAULT_REGION"
+        }
+        EOF
+      
+      - echo "Updating ECS task definitions..."
+      - |
+        # Replace placeholders in task definitions
+        sed -i "s|\${ECR_REPOSITORY_URI}|$REPOSITORY_URI|g" aws-infrastructure/ecs/backend-task-definition.json
+        sed -i "s|\${IMAGE_TAG}|$IMAGE_TAG|g" aws-infrastructure/ecs/backend-task-definition.json
+        sed -i "s|\${AWS_REGION}|$AWS_DEFAULT_REGION|g" aws-infrastructure/ecs/backend-task-definition.json
+        sed -i "s|\${ENVIRONMENT}|$ENVIRONMENT|g" aws-infrastructure/ecs/backend-task-definition.json
+        
+        sed -i "s|\${ECR_REPOSITORY_URI}|$REPOSITORY_URI|g" aws-infrastructure/ecs/frontend-task-definition.json
+        sed -i "s|\${IMAGE_TAG}|$IMAGE_TAG|g" aws-infrastructure/ecs/frontend-task-definition.json
+        sed -i "s|\${AWS_REGION}|$AWS_DEFAULT_REGION|g" aws-infrastructure/ecs/frontend-task-definition.json
+        sed -i "s|\${ENVIRONMENT}|$ENVIRONMENT|g" aws-infrastructure/ecs/frontend-task-definition.json
+      
+      - echo "Generating CloudFormation change sets..."
+      - |
+        aws cloudformation create-change-set \
+          --stack-name $ENVIRONMENT-nexvestxr-infrastructure \
+          --template-body file://aws-infrastructure/cloudformation/nexvestxr-infrastructure.yaml \
+          --parameters file://aws-infrastructure/cloudformation/$ENVIRONMENT-parameters.json \
+          --change-set-name deployment-$IMAGE_TAG \
+          --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
+          --region $AWS_DEFAULT_REGION || true
+      
+      - echo "Generating test and coverage reports..."
+      - |
+        cat > build-summary.json << EOF
+        {
+          "build": {
+            "commitHash": "$COMMIT_HASH",
+            "imageTag": "$IMAGE_TAG",
+            "buildTime": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "environment": "$ENVIRONMENT"
+          },
+          "tests": {
+            "backend": $(if [ -f backend-test-results.txt ]; then echo "\"$(tail -1 backend-test-results.txt)\""; else echo "\"No tests run\""; fi),
+            "frontend": $(if [ -f frontend-test-results.txt ]; then echo "\"$(tail -1 frontend-test-results.txt)\""; else echo "\"No tests run\""; fi),
+            "contracts": $(if [ -f contracts-test-results.txt ]; then echo "\"$(tail -1 contracts-test-results.txt)\""; else echo "\"No tests run\""; fi)
+          },
+          "security": {
+            "vulnerabilities": $(if [ -f backend-security-report.json ]; then cat backend-security-report.json | jq '.vulnerabilities | length' 2>/dev/null || echo 0; else echo 0; fi),
+            "containerScanPassed": $(if [ -f backend-container-scan.txt ] && ! grep -q "HIGH\|CRITICAL" backend-container-scan.txt; then echo "true"; else echo "false"; fi)
+          },
+          "quality": {
+            "lintPassed": $(if grep -q "✨" backend-lint-results.txt frontend-lint-results.txt 2>/dev/null; then echo "true"; else echo "false"; fi),
+            "typeCheckPassed": $(if ! grep -q "error" backend-typecheck-results.txt frontend-typecheck-results.txt 2>/dev/null; then echo "true"; else echo "false"; fi)
+          }
+        }
+        EOF
+      
+      - echo "Build completed successfully"
+
+artifacts:
+  files:
+    - '**/*'
+  secondary-artifacts:
+    task-definitions:
+      files:
+        - 'aws-infrastructure/ecs/backend-task-definition.json'
+        - 'aws-infrastructure/ecs/frontend-task-definition.json'
+      name: TaskDefinitions
+    
+    deployment-config:
+      files:
+        - 'deployment-config.json'
+        - 'build-summary.json'
+      name: DeploymentConfig
+    
+    test-reports:
+      files:
+        - '*-test-results.txt'
+        - '*-lint-results.txt'
+        - '*-typecheck-results.txt'
+        - 'security-audit-results.txt'
+        - '*-security-report.json'
+        - '*-container-scan.txt'
+      name: TestReports
+    
+    frontend-build:
+      files:
+        - 'frontend/build/**/*'
+      name: FrontendBuild
+      base-directory: 'frontend'
+
+reports:
+  SonarQubeReports:
+    files:
+      - 'sonar-report.json'
+    base-directory: '.'
+  
+  SecurityReports:
+    files:
+      - '*-security-report.json'
+      - 'security-audit-results.txt'
+    base-directory: '.'
+  
+  TestReports:
+    files:
+      - '*-test-results.txt'
+    base-directory: '.'
+
+cache:
+  paths:
+    - 'backend/node_modules/**/*'
+    - 'frontend/node_modules/**/*'
+    - 'mobile/node_modules/**/*'
+    - 'smart-contracts/node_modules/**/*'
+    - '$HOME/.npm/**/*'
+    - '$HOME/.cache/**/*'

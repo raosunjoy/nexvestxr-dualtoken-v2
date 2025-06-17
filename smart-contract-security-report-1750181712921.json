@@ -1,0 +1,239 @@
+{
+  "timestamp": "2025-06-17T17:35:12.920Z",
+  "platform": "NexVestXR Smart Contracts",
+  "vulnerabilities": [
+    {
+      "severity": "MEDIUM",
+      "type": "Gas Optimization",
+      "contract": "XERA",
+      "description": "Potentially unbounded loops detected",
+      "recommendation": "Implement gas-efficient patterns and loop limits",
+      "impact": "Functions could run out of gas or be expensive to execute"
+    },
+    {
+      "severity": "LOW",
+      "type": "Gas Optimization",
+      "contract": "XERA",
+      "description": "Dynamic array operations detected",
+      "recommendation": "Consider gas costs for array operations",
+      "impact": "Array operations could become expensive as array grows"
+    },
+    {
+      "severity": "MEDIUM",
+      "type": "Front-Running",
+      "contract": "XERA",
+      "description": "Function 'approve' may be vulnerable to front-running",
+      "recommendation": "Consider commit-reveal schemes or other MEV protection",
+      "impact": "Users could be front-run by miners or other users"
+    },
+    {
+      "severity": "LOW",
+      "type": "Front-Running",
+      "contract": "XERA",
+      "description": "Timestamp dependency detected",
+      "recommendation": "Avoid relying on block.timestamp for critical logic",
+      "impact": "Miners could manipulate timestamps within reasonable bounds"
+    },
+    {
+      "severity": "MEDIUM",
+      "type": "Flash Loan Attack",
+      "contract": "XERA",
+      "description": "Token balance dependencies detected",
+      "recommendation": "Avoid relying on spot balances for critical calculations",
+      "impact": "Flash loans could temporarily manipulate token balances"
+    },
+    {
+      "severity": "MEDIUM",
+      "type": "Gas Optimization",
+      "contract": "PROPX Factory",
+      "description": "Potentially unbounded loops detected",
+      "recommendation": "Implement gas-efficient patterns and loop limits",
+      "impact": "Functions could run out of gas or be expensive to execute"
+    },
+    {
+      "severity": "LOW",
+      "type": "Gas Optimization",
+      "contract": "PROPX Factory",
+      "description": "Dynamic array operations detected",
+      "recommendation": "Consider gas costs for array operations",
+      "impact": "Array operations could become expensive as array grows"
+    },
+    {
+      "severity": "LOW",
+      "type": "Front-Running",
+      "contract": "PROPX Factory",
+      "description": "Timestamp dependency detected",
+      "recommendation": "Avoid relying on block.timestamp for critical logic",
+      "impact": "Miners could manipulate timestamps within reasonable bounds"
+    },
+    {
+      "severity": "MEDIUM",
+      "type": "Gas Optimization",
+      "contract": "UAE XERA",
+      "description": "Potentially unbounded loops detected",
+      "recommendation": "Implement gas-efficient patterns and loop limits",
+      "impact": "Functions could run out of gas or be expensive to execute"
+    },
+    {
+      "severity": "LOW",
+      "type": "Gas Optimization",
+      "contract": "UAE XERA",
+      "description": "Dynamic array operations detected",
+      "recommendation": "Consider gas costs for array operations",
+      "impact": "Array operations could become expensive as array grows"
+    },
+    {
+      "severity": "LOW",
+      "type": "Front-Running",
+      "contract": "UAE XERA",
+      "description": "Timestamp dependency detected",
+      "recommendation": "Avoid relying on block.timestamp for critical logic",
+      "impact": "Miners could manipulate timestamps within reasonable bounds"
+    },
+    {
+      "severity": "HIGH",
+      "type": "Oracle Manipulation",
+      "contract": "UAE XERA",
+      "description": "Single oracle dependency detected",
+      "recommendation": "Use multiple oracle sources and price aggregation",
+      "impact": "Oracle manipulation could affect contract behavior"
+    },
+    {
+      "severity": "LOW",
+      "type": "Gas Optimization",
+      "contract": "UAE PROPX Factory",
+      "description": "Dynamic array operations detected",
+      "recommendation": "Consider gas costs for array operations",
+      "impact": "Array operations could become expensive as array grows"
+    },
+    {
+      "severity": "LOW",
+      "type": "Front-Running",
+      "contract": "UAE PROPX Factory",
+      "description": "Timestamp dependency detected",
+      "recommendation": "Avoid relying on block.timestamp for critical logic",
+      "impact": "Miners could manipulate timestamps within reasonable bounds"
+    },
+    {
+      "severity": "MEDIUM",
+      "type": "Flash Loan Attack",
+      "contract": "UAE PROPX Factory",
+      "description": "Token balance dependencies detected",
+      "recommendation": "Avoid relying on spot balances for critical calculations",
+      "impact": "Flash loans could temporarily manipulate token balances"
+    },
+    {
+      "severity": "MEDIUM",
+      "type": "Gas Optimization",
+      "contract": "UAE Classifier",
+      "description": "Potentially unbounded loops detected",
+      "recommendation": "Implement gas-efficient patterns and loop limits",
+      "impact": "Functions could run out of gas or be expensive to execute"
+    },
+    {
+      "severity": "LOW",
+      "type": "Gas Optimization",
+      "contract": "UAE Classifier",
+      "description": "Dynamic array operations detected",
+      "recommendation": "Consider gas costs for array operations",
+      "impact": "Array operations could become expensive as array grows"
+    },
+    {
+      "severity": "LOW",
+      "type": "Front-Running",
+      "contract": "UAE Classifier",
+      "description": "Timestamp dependency detected",
+      "recommendation": "Avoid relying on block.timestamp for critical logic",
+      "impact": "Miners could manipulate timestamps within reasonable bounds"
+    }
+  ],
+  "testResults": {
+    "reentrancy": [],
+    "accessControl": [],
+    "integerOverflow": [],
+    "gasOptimization": [
+      {
+        "severity": "MEDIUM",
+        "type": "Gas Optimization",
+        "contract": "UAE Classifier",
+        "description": "Potentially unbounded loops detected",
+        "recommendation": "Implement gas-efficient patterns and loop limits",
+        "impact": "Functions could run out of gas or be expensive to execute"
+      },
+      {
+        "severity": "LOW",
+        "type": "Gas Optimization",
+        "contract": "UAE Classifier",
+        "description": "Dynamic array operations detected",
+        "recommendation": "Consider gas costs for array operations",
+        "impact": "Array operations could become expensive as array grows"
+      }
+    ],
+    "frontRunning": [
+      {
+        "severity": "LOW",
+        "type": "Front-Running",
+        "contract": "UAE Classifier",
+        "description": "Timestamp dependency detected",
+        "recommendation": "Avoid relying on block.timestamp for critical logic",
+        "impact": "Miners could manipulate timestamps within reasonable bounds"
+      }
+    ],
+    "flashLoanAttacks": [],
+    "oracleManipulation": [],
+    "governanceAttacks": []
+  },
+  "summary": {
+    "CRITICAL": 0,
+    "HIGH": 1,
+    "MEDIUM": 7,
+    "LOW": 10
+  },
+  "recommendations": [
+    {
+      "category": "Critical Security",
+      "items": [
+        "Implement reentrancy guards for all external calls",
+        "Use proper access control modifiers on critical functions",
+        "Ensure integer overflow protection (SafeMath or Solidity 0.8+)",
+        "Validate all external oracle data"
+      ]
+    },
+    {
+      "category": "Access Control",
+      "items": [
+        "Use OpenZeppelin AccessControl for role-based permissions",
+        "Implement multi-signature for critical operations",
+        "Add emergency pause functionality",
+        "Use timelock for governance proposals"
+      ]
+    },
+    {
+      "category": "Economic Security",
+      "items": [
+        "Implement price manipulation protection",
+        "Use time-weighted average prices (TWAP)",
+        "Add slippage protection for large transactions",
+        "Implement circuit breakers for unusual activity"
+      ]
+    },
+    {
+      "category": "Governance Security",
+      "items": [
+        "Require minimum voting periods",
+        "Implement quorum requirements",
+        "Use delegation with vote escrow",
+        "Add proposal validation mechanisms"
+      ]
+    },
+    {
+      "category": "Monitoring & Response",
+      "items": [
+        "Implement comprehensive event logging",
+        "Set up real-time monitoring systems",
+        "Create incident response procedures",
+        "Regular security audits and updates"
+      ]
+    }
+  ]
+}

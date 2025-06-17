@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext, useCallback } from 'react';
 import { XummContext } from '../../context/XummContext';
 import { AuthContext } from '../../context/AuthContext';
 import axios from 'axios';
+import { useWebSocket } from '../../hooks/useWebSocket';
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -22,7 +23,8 @@ import {
   Plus,
   Minus,
   Droplet,
-  Layers
+  Layers,
+  Building2
 } from 'lucide-react';
 import { 
   LineChart, 
@@ -38,6 +40,7 @@ import IntercomChat from '../Support/IntercomChat';
 const AdvancedTradingInterface = ({ selectedPair = 'JVCOIMB789/XRP' }) => {
   const { isConnected, userAccount, createPayload } = useContext(XummContext);
   const { user } = useContext(AuthContext);
+  const { ws, isConnected: wsConnected, sendMessage } = useWebSocket();
 
   // Trading state
   const [orderType, setOrderType] = useState('limit');
@@ -47,6 +50,8 @@ const AdvancedTradingInterface = ({ selectedPair = 'JVCOIMB789/XRP' }) => {
     price: '',
     stopPrice: '',
     targetPrice: '',
+    trailAmount: '',
+    trailPercent: '',
     postOnly: false,
     reduceOnly: false,
     leverage: 1,
@@ -73,21 +78,110 @@ const AdvancedTradingInterface = ({ selectedPair = 'JVCOIMB789/XRP' }) => {
   // Portfolio state
   const [portfolio, setPortfolio] = useState(null);
   const [openOrders, setOpenOrders] = useState([]);
+  
+  // New trading features state
+  const [marginAccount, setMarginAccount] = useState(null);
+  const [marginPositions, setMarginPositions] = useState([]);
+  const [arbitrageOpportunities, setArbitrageOpportunities] = useState([]);
+  const [riskAlerts, setRiskAlerts] = useState([]);
+  const [propxMarkets, setPropxMarkets] = useState([]);
+  const [realTimeData, setRealTimeData] = useState(new Map());
 
   useEffect(() => {
     if (isConnected && selectedPair) {
       loadMarketData();
       loadPortfolio();
       loadChartData();
+      loadMarginAccount();
+      loadPROPXMarkets();
       
-      // Setup real-time updates
-      const interval = setInterval(() => {
-        loadMarketData();
-        loadChartData();
-      }, 5000);
-      return () => clearInterval(interval);
+      // Setup WebSocket subscriptions
+      if (wsConnected) {
+        setupWebSocketSubscriptions();
+      }
     }
-  }, [isConnected, selectedPair]);
+  }, [isConnected, selectedPair, wsConnected]);
+
+  const setupWebSocketSubscriptions = useCallback(() => {
+    const subscriptions = [
+      { type: 'orderbook', pair: selectedPair },
+      { type: 'trades', pair: selectedPair },
+      { type: 'price', pair: selectedPair },
+      { type: 'portfolio' },
+      { type: 'orders' },
+      { type: 'positions' },
+      { type: 'arbitrage' },
+      { type: 'risk_alerts' }
+    ];
+
+    ws.subscribe(subscriptions);
+
+    // Setup message handlers
+    const cleanupHandlers = [
+      ws.addMessageHandler('orderbook_update', handleOrderBookUpdate),
+      ws.addMessageHandler('price_update', handlePriceUpdate),
+      ws.addMessageHandler('order_triggered', handleOrderTriggered),
+      ws.addMessageHandler('order_executed', handleOrderExecuted),
+      ws.addMessageHandler('position_opened', handlePositionOpened),
+      ws.addMessageHandler('position_closed', handlePositionClosed),
+      ws.addMessageHandler('margin_call', handleMarginCall),
+      ws.addMessageHandler('arbitrage_opportunity', handleArbitrageOpportunity),
+      ws.addMessageHandler('risk_alert', handleRiskAlert)
+    ];
+
+    return () => {
+      cleanupHandlers.forEach(cleanup => cleanup());
+    };
+  }, [selectedPair, wsConnected]);
+
+  // WebSocket event handlers
+  const handleOrderBookUpdate = useCallback((message) => {
+    setOrderBook(message.data);
+  }, []);
+
+  const handlePriceUpdate = useCallback((message) => {
+    if (message.data.pair === selectedPair) {
+      setCurrentPrice(message.data.data.price);
+      setPriceChange(message.data.data.change24h);
+      
+      // Update real-time data map
+      setRealTimeData(prev => new Map(prev.set(message.data.pair, message.data.data)));
+    }
+  }, [selectedPair]);
+
+  const handleOrderTriggered = useCallback((message) => {
+    setSuccess(`Order triggered: ${message.data.type} order executed`);
+    loadPortfolio(); // Refresh portfolio
+  }, []);
+
+  const handleOrderExecuted = useCallback((message) => {
+    setSuccess(`Order executed successfully!`);
+    loadPortfolio();
+    loadMarginPositions();
+  }, []);
+
+  const handlePositionOpened = useCallback((message) => {
+    setSuccess(`Margin position opened: ${message.data.position.side} ${message.data.position.amount} ${message.data.position.pairId}`);
+    loadMarginPositions();
+  }, []);
+
+  const handlePositionClosed = useCallback((message) => {
+    const pnl = message.data.pnl > 0 ? '+' : '';
+    setSuccess(`Position closed with PnL: ${pnl}${message.data.pnl.toFixed(6)} XRP`);
+    loadMarginPositions();
+  }, []);
+
+  const handleMarginCall = useCallback((message) => {
+    setError(`Margin Call: Deposit ${message.data.requiredDeposit.toFixed(6)} XRP within 2 hours`);
+  }, []);
+
+  const handleArbitrageOpportunity = useCallback((message) => {
+    setArbitrageOpportunities(prev => [message.data, ...prev.slice(0, 9)]); // Keep last 10
+  }, []);
+
+  const handleRiskAlert = useCallback((message) => {
+    setRiskAlerts(prev => [message.data, ...prev.slice(0, 4)]); // Keep last 5
+  }, []);
 
   const loadMarketData = useCallback(async () => {
     try {
@@ -131,6 +225,50 @@ const AdvancedTradingInterface = ({ selectedPair = 'JVCOIMB789/XRP' }) => {
     }
   }, [userAccount, selectedPair]);
 
+  const loadMarginAccount = useCallback(async () => {
+    try {
+      if (!userAccount) return;
+      
+      const response = await axios.get(`/api/margin/accounts/${userAccount}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+      
+      if (response.data.success) {
+        setMarginAccount(response.data.data);
+      }
+    } catch (error) {
+      console.error('Error loading margin account:', error);
+    }
+  }, [userAccount]);
+
+  const loadMarginPositions = useCallback(async () => {
+    try {
+      if (!userAccount) return;
+      
+      const response = await axios.get(`/api/margin/positions/${userAccount}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+      
+      if (response.data.success) {
+        setMarginPositions(response.data.data);
+      }
+    } catch (error) {
+      console.error('Error loading margin positions:', error);
+    }
+  }, [userAccount]);
+
+  const loadPROPXMarkets = useCallback(async () => {
+    try {
+      const response = await axios.get('/api/propx/marketplace');
+      
+      if (response.data.success) {
+        setPropxMarkets(response.data.data.tokens || []);
+      }
+    } catch (error) {
+      console.error('Error loading PROPX markets:', error);
+    }
+  }, []);
+
   const loadChartData = useCallback(async () => {
     try {
       // Mock chart data for beta (in production, fetch from API)
@@ -155,86 +293,85 @@ const AdvancedTradingInterface = ({ selectedPair = 'JVCOIMB789/XRP' }) => {
       setLoading(true);
       setError('');
 
-      let endpoint = '/api/advanced-trade/';
-      let payload = {
-        userAddress: userAccount,
+      let success = false;
+      const orderData = {
         pairId: selectedPair,
-        ...orderForm
+        side: orderSide,
+        amount: parseFloat(orderForm.amount),
+        price: orderForm.price ? parseFloat(orderForm.price) : undefined,
+        stopPrice: orderForm.stopPrice ? parseFloat(orderForm.stopPrice) : undefined,
+        targetPrice: orderForm.targetPrice ? parseFloat(orderForm.targetPrice) : undefined,
+        trailAmount: orderForm.trailAmount ? parseFloat(orderForm.trailAmount) : undefined,
+        trailPercent: orderForm.trailPercent ? parseFloat(orderForm.trailPercent) : undefined,
+        postOnly: orderForm.postOnly,
+        reduceOnly: orderForm.reduceOnly,
+        leverage: orderForm.leverage ? parseFloat(orderForm.leverage) : 1
       };
 
-      // Determine endpoint based on order type
-      switch (orderType) {
-        case 'market':
-          endpoint += orderSide === 'buy' ? 'market/buy' : 'market/sell';
-          payload = {
-            ...payload,
-            quoteAmount: parseFloat(orderForm.amount) * currentPrice
-          };
-          break;
-        case 'limit':
-          endpoint += 'limit';
-          payload = {
-            ...payload,
-            side: orderSide,
-            amount: parseFloat(orderForm.amount),
-            price: parseFloat(orderForm.price),
-            options: {
+      // Use WebSocket for real-time order placement when connected
+      if (wsConnected && ['stop_loss', 'oco', 'trailing_stop'].includes(orderType)) {
+        success = ws.placeOrder(orderType, orderData);
+      } else {
+        // Fallback to HTTP API
+        let endpoint = '/api/advanced-trade/';
+        let payload = { userAddress: userAccount, ...orderData };
+
+        switch (orderType) {
+          case 'market':
+            endpoint += orderSide === 'buy' ? 'market/buy' : 'market/sell';
+            payload.quoteAmount = parseFloat(orderForm.amount) * currentPrice;
+            break;
+          case 'limit':
+            endpoint += 'limit';
+            payload.options = {
               postOnly: orderForm.postOnly,
               reduceOnly: orderForm.reduceOnly
-            }
-          };
-          break;
-        case 'stop-loss':
-          endpoint += 'stop-loss';
-          payload = {
-            ...payload,
-            side: orderSide,
-            amount: parseFloat(orderForm.amount),
-            stopPrice: parseFloat(orderForm.stopPrice),
-            limitPrice: orderForm.price ? parseFloat(orderForm.price) : null
-          };
-          break;
-        case 'oco':
-          endpoint += 'oco';
-          payload = {
-            ...payload,
-            side: orderSide,
-            amount: parseFloat(orderForm.amount),
-            stopPrice: parseFloat(orderForm.stopPrice),
-            limitPrice: parseFloat(orderForm.price),
-            targetPrice: parseFloat(orderForm.targetPrice)
-          };
-          break;
-        case 'margin':
-          endpoint += 'margin';
-          payload = {
-            ...payload,
-            side: orderSide,
-            amount: parseFloat(orderForm.amount),
-            price: parseFloat(orderForm.price),
-            leverage: parseFloat(orderForm.leverage)
-          };
-          break;
-      }
-
-      const response = await axios.post(endpoint, payload, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      });
-
-      if (response.data.success) {
-        const { transactions } = response.data.data;
-
-        // Sign transactions with XUMM
-        for (const tx of transactions || []) {
-          await createPayload({ txjson: tx });
+            };
+            break;
+          case 'stop-loss':
+            endpoint += 'stop-loss';
+            break;
+          case 'oco':
+            endpoint += 'oco';
+            break;
+          case 'trailing_stop':
+            endpoint += 'trailing-stop';
+            break;
+          case 'margin':
+            endpoint += 'margin';
+            break;
+          case 'propx_market':
+            endpoint = '/api/propx/market-order';
+            break;
+          case 'propx_limit':
+            endpoint = '/api/propx/limit-order';
+            break;
         }
 
-        setSuccess(`${orderType} ${orderSide} order created successfully!`);
+        const response = await axios.post(endpoint, payload, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        });
+
+        if (response.data.success) {
+          const { transactions } = response.data.data;
+
+          // Sign transactions with XUMM
+          for (const tx of transactions || []) {
+            await createPayload({ txjson: tx });
+          }
+          success = true;
+        }
+      }
+
+      if (success) {
+        setSuccess(`${orderType.replace('_', ' ')} ${orderSide} order created successfully!`);
         setOrderForm({
           amount: '',
           price: '',
           stopPrice: '',
           targetPrice: '',
+          trailAmount: '',
+          trailPercent: '',
           postOnly: false,
           reduceOnly: false,
           leverage: 1,
@@ -388,18 +525,18 @@ const AdvancedTradingInterface = ({ selectedPair = 'JVCOIMB789/XRP' }) => {
 
           {/* Order Type Selector */}
           <div className="mb-4">
-            <div className="grid grid-cols-3 gap-2">
-              {['market', 'limit', 'stop-loss', 'oco', 'margin'].map((type) => (
+            <div className="grid grid-cols-2 gap-1 text-xs">
+              {['market', 'limit', 'stop-loss', 'oco', 'trailing_stop', 'margin', 'propx_market', 'propx_limit'].map((type) => (
                 <button
                   key={type}
                   onClick={() => setOrderType(type)}
-                  className={`py-2 px-3 text-xs font-medium rounded-lg transition-colors ${
+                  className={`py-2 px-2 font-medium rounded transition-colors ${
                     orderType === type
                       ? 'bg-blue-600 text-white'
                       : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
                   }`}
                 >
-                  {type.replace('-', ' ').toUpperCase()}
+                  {type.replace(/_/g, ' ').replace('-', ' ').toUpperCase()}
                 </button>
               ))}
             </div>
@@ -508,6 +645,46 @@ const AdvancedTradingInterface = ({ selectedPair = 'JVCOIMB789/XRP' }) => {
               </div>
             )}
 
+            {/* Trailing Stop Options */}
+            {orderType === 'trailing_stop' && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Trail Amount (XRP)
+                    </label>
+                    <input
+                      type="number"
+                      value={orderForm.trailAmount}
+                      onChange={(e) => setOrderForm(prev => ({ ...prev, trailAmount: e.target.value, trailPercent: '' }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="0.001"
+                      step="0.000001"
+                      min="0"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Trail Percent (%)
+                    </label>
+                    <input
+                      type="number"
+                      value={orderForm.trailPercent}
+                      onChange={(e) => setOrderForm(prev => ({ ...prev, trailPercent: e.target.value, trailAmount: '' }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="2.5"
+                      step="0.1"
+                      min="0"
+                      max="50"
+                    />
+                  </div>
+                </div>
+                <p className="text-xs text-gray-500">
+                  Use either trail amount OR trail percent, not both
+                </p>
+              </div>
+            )}
+
             {/* Margin Options */}
             {orderType === 'margin' && (
               <div>
@@ -609,7 +786,9 @@ const AdvancedTradingInterface = ({ selectedPair = 'JVCOIMB789/XRP' }) => {
                   {orderType === 'limit' && <Target className="h-4 w-4" />}
                   {orderType === 'stop-loss' && <Shield className="h-4 w-4" />}
                   {orderType === 'oco' && <Activity className="h-4 w-4" />}
+                  {orderType === 'trailing_stop' && <TrendingUp className="h-4 w-4" />}
                   {orderType === 'margin' && <Layers className="h-4 w-4" />}
+                  {(orderType === 'propx_market' || orderType === 'propx_limit') && <Building2 className="h-4 w-4" />}
                   <span>
                     {orderSide === 'buy' ? 'Buy' : 'Sell'} {selectedPair.split('/')[0]}
                   </span>
