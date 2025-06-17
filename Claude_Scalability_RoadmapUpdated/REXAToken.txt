@@ -1,0 +1,175 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.19;
+
+import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+
+contract REXAToken is 
+    Initializable,
+    ERC20Upgradeable, 
+    AccessControlUpgradeable, 
+    ReentrancyGuardUpgradeable,
+    PausableUpgradeable 
+{
+    bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
+    bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
+    bytes32 public constant COMPLIANCE_ROLE = keccak256("COMPLIANCE_ROLE");
+    
+    struct PropertyData {
+        uint128 id; // Reduced from uint256
+        uint128 weight; // Basis points (10000 = 100%)
+        string ipfsHash;
+        bool active;
+        uint64 lastUpdated; // Reduced from uint256
+    }
+    
+    struct ComplianceData {
+        bool isBlacklisted;
+        bool isKycVerified;
+        uint64 lastTransferTime; // Reduced from uint256
+        uint128 dailyTransferred; // Reduced from uint256
+        uint64 lastDayReset; // Reduced from uint256
+    }
+    
+    mapping(address => ComplianceData) public compliance;
+    mapping(uint256 => PropertyData) public properties;
+    mapping(bytes32 => bool) public transactionHashes;
+    uint128 public propertyCount; // Reduced from uint256
+    uint128 public maxTransferPerDay; // Reduced from uint256
+    
+    event PropertyAdded(uint256 indexed propertyId, uint256 weight, string ipfsHash);
+    event PropertyUpdated(uint256 indexed propertyId, uint256 newWeight);
+    event ComplianceCheck(address indexed user, bytes32 transactionHash, bool approved);
+    event KYCStatusUpdated(address indexed user, bool verified);
+    
+    uint256 public constant TRANSFER_COOLDOWN = 1 minutes;
+    
+    function initialize(
+        string memory name,
+        string memory symbol,
+        uint128 _maxTransferPerDay
+    ) public initializer {
+        __ERC20_init(name, symbol);
+        __AccessControl_init();
+        __ReentrancyGuard_init();
+        __Pausable_init();
+        
+        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _grantRole(MINTER_ROLE, msg.sender);
+        _grantRole(PAUSER_ROLE, msg.sender);
+        _grantRole(COMPLIANCE_ROLE, msg.sender);
+        
+        maxTransferPerDay = _maxTransferPerDay;
+    }
+    
+    function addProperty(
+        uint128 propertyId, 
+        uint128 weight, 
+        string calldata ipfsHash
+    ) external onlyRole(MINTER_ROLE) {
+        require(weight <= 10000, "Weight exceeds 100%");
+        require(!properties[propertyId].active, "Property already exists");
+        
+        properties[propertyId] = PropertyData({
+            id: propertyId,
+            weight: weight,
+            ipfsHash: ipfsHash,
+            active: true,
+            lastUpdated: uint64(block.timestamp)
+        });
+        
+        unchecked { ++propertyCount; }
+        
+        emit PropertyAdded(propertyId, weight, ipfsHash);
+    }
+    
+    function addPropertiesBatch(
+        uint128[] calldata propertyIds,
+        uint128[] calldata weights,
+        string[] calldata ipfsHashes
+    ) external onlyRole(MINTER_ROLE) {
+        require(propertyIds.length == weights.length && weights.length == ipfsHashes.length, "Array length mismatch");
+        uint256 len = propertyIds.length;
+        for (uint256 i = 0; i < len;) {
+            properties[propertyIds[i]] = PropertyData({
+                id: propertyIds[i],
+                weight: weights[i],
+                ipfsHash: ipfsHashes[i],
+                active: true,
+                lastUpdated: uint64(block.timestamp)
+            });
+            emit PropertyAdded(propertyIds[i], weights[i], ipfsHashes[i]);
+            unchecked { ++i; ++propertyCount; }
+        }
+    }
+    
+    function transfer(address to, uint256 amount) public override nonReentrant whenNotPaused returns (bool) {
+        _beforeTokenTransfer(msg.sender, to, amount);
+        return super.transfer(to, amount);
+    }
+    
+    function transferFrom(address from, address to, uint256 amount) public override nonReentrant whenNotPaused returns (bool) {
+        _beforeTokenTransfer(from, to, amount);
+        return super.transferFrom(from, to, amount);
+    }
+    
+    function _beforeTokenTransfer(address from, address to, uint256 amount) internal {
+        require(!compliance[from].isBlacklisted && !compliance[to].isBlacklisted, "Address blacklisted");
+        require(compliance[from].isKycVerified && compliance[to].isKycVerified, "KYC not verified");
+        require(block.timestamp >= compliance[from].lastTransferTime + TRANSFER_COOLDOWN, "Transfer too frequent");
+        
+        if (block.timestamp >= compliance[from].lastDayReset + 1 days) {
+            compliance[from].dailyTransferred = 0;
+            compliance[from].lastDayReset = uint64(block.timestamp);
+        }
+        require(compliance[from].dailyTransferred + amount <= maxTransferPerDay, "Daily limit exceeded");
+        
+        compliance[from].lastTransferTime = uint64(block.timestamp);
+        compliance[from].dailyTransferred += uint128(amount);
+    }
+    
+    function setKYCStatus(address user, bool verified) external onlyRole(COMPLIANCE_ROLE) {
+        compliance[user].isKycVerified = verified;
+        emit KYCStatusUpdated(user, verified);
+    }
+    
+    function setBlacklist(address user, bool blacklist) external onlyRole(COMPLIANCE_ROLE) {
+        compliance[user].isBlacklisted = blacklist;
+    }
+    
+    function pause() external onlyRole(PAUSER_ROLE) {
+        _pause();
+    }
+    
+    function unpause() external onlyRole(PAUSER_ROLE) {
+        _unpause();
+    }
+    
+    function mint(address to, uint256 amount, bytes32 transactionHash) external onlyRole(MINTER_ROLE) {
+        require(!transactionHashes[transactionHash], "Transaction already processed");
+        require(compliance[to].isKycVerified, "Recipient not KYC verified");
+        transactionHashes[transactionHash] = true;
+        _mint(to, amount);
+        emit ComplianceCheck(to, transactionHash, true);
+    }
+    
+    function getPropertyData(uint256 propertyId) external view returns (PropertyData memory) {
+        return properties[propertyId];
+    }
+    
+    function getActiveProperties() external view returns (uint256[] memory) {
+        uint256[] memory activeProps = new uint256[](propertyCount);
+        uint256 count = 0;
+        for (uint256 i = 1; i <= propertyCount; i++) {
+            if (properties[i].active) {
+                activeProps[count] = i;
+                unchecked { ++count; }
+            }
+        }
+        assembly { mstore(activeProps, count) }
+        return activeProps;
+    }
+}

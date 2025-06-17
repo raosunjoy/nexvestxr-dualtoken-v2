@@ -1,0 +1,236 @@
+{
+  "platform": {
+    "name": "بروب إكسشينج الإمارات",
+    "tagline": "منصة الإمارات الأولى لاستثمار العقارات الرقمية",
+    "welcome": "مرحباً بك في بروب إكسشينج الإمارات",
+    "description": "استثمر في العقارات الإماراتية المميزة بالدرهم الإماراتي مع دعم كامل للعملات المتعددة"
+  },
+  "uae": {
+    "cities": {
+      "dubai": "دبي",
+      "abu_dhabi": "أبوظبي",
+      "sharjah": "الشارقة",
+      "ajman": "عجمان",
+      "fujairah": "الفجيرة",
+      "ras_al_khaimah": "رأس الخيمة",
+      "umm_al_quwain": "أم القيوين"
+    },
+    "zones": {
+      "downtown_dubai": "وسط مدينة دبي",
+      "dubai_marina": "مرسى دبي",
+      "business_bay": "الخليج التجاري",
+      "jumeirah_lake_towers": "أبراج بحيرة الجميرا",
+      "difc": "مركز دبي المالي العالمي",
+      "palm_jumeirah": "نخلة الجميرا",
+      "dubai_hills": "تلال دبي",
+      "arabian_ranches": "المراعي العربية",
+      "mirdif": "مردف",
+      "al_reem_island": "جزيرة الريم",
+      "yas_island": "جزيرة ياس",
+      "saadiyat_island": "جزيرة السعديات"
+    }
+  },
+  "property_types": {
+    "apartment": "شقة",
+    "villa": "فيلا",
+    "townhouse": "منزل مدرج",
+    "penthouse": "بنتهاوس",
+    "office": "مكتب",
+    "retail": "متجر",
+    "warehouse": "مستودع",
+    "hotel_apartment": "شقة فندقية"
+  },
+  "categories": {
+    "residential": "سكني",
+    "commercial": "تجاري",
+    "industrial": "صناعي",
+    "hospitality": "ضيافة"
+  },
+  "developers": {
+    "emaar": "إعمار",
+    "meraas": "مراس",
+    "nakheel": "نخيل",
+    "damac": "داماك",
+    "sobha_realty": "صوبا العقارية",
+    "majid_al_futtaim": "ماجد الفطيم",
+    "dubai_properties": "دبي العقارية",
+    "aldar": "الدار"
+  },
+  "amenities": {
+    "swimming_pool": "مسبح",
+    "gym": "نادي رياضي",
+    "sauna": "ساونا",
+    "steam_room": "غرفة بخار",
+    "jacuzzi": "جاكوزي",
+    "children_play_area": "منطقة ألعاب الأطفال",
+    "bbq_area": "منطقة الشواء",
+    "garden": "حديقة",
+    "balcony": "شرفة",
+    "maid_room": "غرفة الخادمة",
+    "study_room": "غرفة الدراسة",
+    "storage_room": "غرفة التخزين",
+    "laundry_room": "غرفة الغسيل",
+    "security": "أمن",
+    "concierge": "بواب",
+    "valet_parking": "خدمة صف السيارات",
+    "business_center": "مركز الأعمال"
+  },
+  "investment": {
+    "tiers": {
+      "retail": {
+        "name": "التجزئة",
+        "description": "للمستثمرين المحليين",
+        "min_amount": "25,000 درهم",
+        "max_amount": "500,000 درهم",
+        "kyc_level": "قياسي"
+      },
+      "premium": {
+        "name": "المميز",
+        "description": "لمستثمري دول مجلس التعاون",
+        "min_amount": "500,000 درهم",
+        "max_amount": "2,000,000 درهم",
+        "kyc_level": "محسن"
+      },
+      "institutional": {
+        "name": "المؤسسي",
+        "description": "للمستثمرين الدوليين",
+        "min_amount": "2,000,000 درهم",
+        "kyc_level": "شامل"
+      }
+    },
+    "messages": {
+      "start_investing": "ابدأ الاستثمار في العقارات الإماراتية",
+      "minimum_investment": "ابدأ بـ 100 درهم استثمار عقاري",
+      "average_investment": "متوسط الاستثمار: 2,500 درهم لكل مستخدم",
+      "returns": "عوائد المحفظة: 12-15% سنوياً",
+      "own_dubai_real_estate": "امتلك عقارات دبي بـ 100 درهم فقط",
+      "uae_platform": "منصة الإمارات الأولى لاستثمار العقارات"
+    }
+  },
+  "compliance": {
+    "rera": {
+      "name": "هيئة تنظيم العقارات",
+      "registered": "مسجل لدى ريرا",
+      "registration_number": "رقم التسجيل",
+      "status": "الحالة",
+      "expiry_date": "تاريخ الانتهاء"
+    },
+    "dld": {
+      "name": "دائرة الأراضي والأملاك",
+      "title_deed": "سند الملكية",
+      "registered": "مسجل لدى الدائرة",
+      "ownership": "الملكية"
+    },
+    "kyc": {
+      "levels": {
+        "standard": "قياسي",
+        "enhanced": "محسن",
+        "comprehensive": "شامل"
+      },
+      "documents": {
+        "emirates_id": "الهوية الإماراتية",
+        "passport": "جواز السفر",
+        "visa": "التأشيرة",
+        "salary_certificate": "شهادة الراتب",
+        "bank_statement": "كشف حساب بنكي",
+        "trade_license": "رخصة تجارية",
+        "proof_of_address": "إثبات العنوان"
+      },
+      "status": {
+        "pending": "معلق",
+        "submitted": "مرسل",
+        "under_review": "قيد المراجعة",
+        "approved": "موافق عليه",
+        "rejected": "مرفوض",
+        "expired": "منتهي الصلاحية"
+      }
+    }
+  },
+  "trading": {
+    "advanced_features": "ميزات التداول المتقدمة",
+    "order_types": {
+      "market": "أمر السوق",
+      "limit": "أمر محدود",
+      "stop_loss": "وقف الخسارة",
+      "take_profit": "جني الأرباح",
+      "oco": "أمر يلغي الآخر",
+      "trailing": "أمر متابع"
+    },
+    "analytics": {
+      "candlestick_charts": "الرسوم البيانية للشموع",
+      "order_book_depth": "عمق دفتر الأوامر",
+      "trading_volume": "حجم التداول",
+      "price_history": "تاريخ الأسعار",
+      "portfolio_performance": "أداء المحفظة",
+      "risk_metrics": "مقاييس المخاطر"
+    }
+  },
+  "ui": {
+    "rtl": {
+      "direction": "rtl",
+      "text_align": "right",
+      "float": "right"
+    },
+    "currency_display": {
+      "aed_primary": "الدرهم الإماراتي (العملة الأساسية)",
+      "multi_currency": "دعم العملات المتعددة",
+      "gcc_currencies": "عملات دول مجلس التعاون",
+      "international_currencies": "العملات الدولية"
+    }
+  },
+  "features": {
+    "mobile_first": "منصة محمولة أولاً",
+    "ai_verification": "التحقق بالذكاء الاصطناعي",
+    "xrpl_powered": "مشغل بـ XRPL",
+    "multi_currency": "متعدد العملات",
+    "arabic_support": "دعم اللغة العربية",
+    "compliance_ready": "جاهز للامتثال",
+    "real_time_trading": "التداول في الوقت الفعلي",
+    "professional_tools": "أدوات احترافية"
+  },
+  "marketing": {
+    "headlines": {
+      "primary": "استثمر في عقارات دبي المميزة",
+      "secondary": "منصة الإمارات الأولى للاستثمار العقاري الرقمي",
+      "mobile": "من جوالك إلى عقارات دبي في 31 ثانية"
+    },
+    "benefits": [
+      "استثمار آمن ومضمون",
+      "عوائد مجزية 12-15% سنوياً",
+      "تنويع استثماري ذكي",
+      "سيولة فورية",
+      "شفافية كاملة",
+      "امتثال تنظيمي"
+    ],
+    "cta": {
+      "start_investing": "ابدأ الاستثمار الآن",
+      "learn_more": "اعرف المزيد",
+      "view_properties": "استعرض العقارات",
+      "calculate_returns": "احسب العوائد",
+      "download_app": "حمل التطبيق"
+    }
+  },
+  "social": {
+    "share": "مشاركة",
+    "follow_us": "تابعنا",
+    "join_community": "انضم للمجتمع",
+    "telegram": "تيليجرام",
+    "whatsapp": "واتساب",
+    "twitter": "تويتر",
+    "linkedin": "لينكد إن",
+    "instagram": "إنستجرام",
+    "facebook": "فيسبوك"
+  },
+  "support": {
+    "help_center": "مركز المساعدة",
+    "contact_support": "اتصل بالدعم",
+    "live_chat": "دردشة مباشرة",
+    "email_support": "دعم البريد الإلكتروني",
+    "phone_support": "دعم هاتفي",
+    "faq": "الأسئلة الشائعة",
+    "guides": "الأدلة",
+    "tutorials": "الدروس التعليمية",
+    "api_docs": "وثائق API",
+    "status_page": "صفحة الحالة"
+  }
+}

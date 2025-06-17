@@ -1,0 +1,119 @@
+{
+  "title": "PropXchange UAE - Developer Documentation",
+  "description": "Complete documentation for the PropXchange UAE real estate tokenization platform",
+  "author": "PropXchange UAE Development Team",
+  "language": "en",
+  "direction": "ltr",
+  "gitbook": ">=3.2.0",
+  "root": ".",
+  "structure": {
+    "readme": "README.md",
+    "summary": "SUMMARY.md",
+    "glossary": "appendices/glossary.md",
+    "langs": "LANGS.md"
+  },
+  "plugins": [
+    "theme-api",
+    "search-plus",
+    "code",
+    "copy-code-button",
+    "expandable-chapters",
+    "github",
+    "edit-link",
+    "prism",
+    "anchors",
+    "toc",
+    "back-to-top-button",
+    "sharing",
+    "fontsettings",
+    "livereload",
+    "highlight",
+    "lunr",
+    "search",
+    "sharing",
+    "arabic-support"
+  ],
+  "pluginsConfig": {
+    "theme-api": {
+      "theme": "dark",
+      "split": true
+    },
+    "github": {
+      "url": "https://github.com/propxchange/uae-platform"
+    },
+    "edit-link": {
+      "base": "https://github.com/propxchange/uae-platform/edit/main/docs",
+      "label": "Edit This Page"
+    },
+    "sharing": {
+      "facebook": true,
+      "twitter": true,
+      "linkedin": true,
+      "google": false,
+      "weibo": false,
+      "instapaper": false,
+      "vk": false,
+      "all": [
+        "facebook",
+        "twitter",
+        "linkedin",
+        "google",
+        "weibo",
+        "instapaper"
+      ]
+    },
+    "fontsettings": {
+      "theme": "white",
+      "family": "sans",
+      "size": 2
+    },
+    "prism": {
+      "css": [
+        "prismjs/themes/prism-okaidia.css"
+      ]
+    },
+    "search-plus": {
+      "maxIndexSize": 1000000
+    }
+  },
+  "variables": {
+    "platform": {
+      "name": "PropXchange UAE",
+      "version": "2.0.0-UAE",
+      "api_url": "https://api.propxchange.ae",
+      "primary_currency": "AED",
+      "supported_languages": ["en", "ar"]
+    },
+    "urls": {
+      "production": "https://www.propxchange.ae",
+      "staging": "https://staging.propxchange.ae",
+      "api": "https://api.propxchange.ae",
+      "admin": "https://admin.propxchange.ae"
+    },
+    "contact": {
+      "support": "dev@propxchange.ae",
+      "business": "business@propxchange.ae",
+      "compliance": "compliance@propxchange.ae"
+    }
+  },
+  "styles": {
+    "website": "styles/website.css",
+    "pdf": "styles/pdf.css",
+    "epub": "styles/epub.css",
+    "mobi": "styles/mobi.css"
+  },
+  "pdf": {
+    "pageNumbers": true,
+    "fontSize": 12,
+    "fontFamily": "Arial",
+    "paperSize": "a4",
+    "chapterMark": "pagebreak",
+    "pageBreaksBefore": "/",
+    "margin": {
+      "right": 62,
+      "left": 62,
+      "top": 56,
+      "bottom": 56
+    }
+  }
+}

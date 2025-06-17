@@ -1,0 +1,38 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.19;
+
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+
+contract SocialTrust is ReentrancyGuard {
+    IERC20 public xeraToken;
+    mapping(uint256 => uint256) public confidenceScores;
+    mapping(uint256 => string[]) public reviews;
+    mapping(address => bool) public verifiedReviewers;
+    uint256 public stakeAmount = 100 * 10**18;
+    uint256 public reviewCount;
+    
+    event ReviewSubmitted(uint256 indexed propertyId, uint256 score, string review, address indexed reviewer);
+    event ReviewerVerified(address indexed reviewer);
+    
+    constructor(address _xeraToken) {
+        xeraToken = IERC20(_xeraToken);
+    }
+    
+    function verifyReviewer(address reviewer) external {
+        require(!verifiedReviewers[reviewer], "Reviewer already verified");
+        verifiedReviewers[reviewer] = true;
+        emit ReviewerVerified(reviewer);
+    }
+    
+    function submitReview(uint256 propertyId, uint256 score, string memory review) external nonReentrant {
+        require(verifiedReviewers[msg.sender], "Reviewer not verified");
+        require(score <= 100, "Invalid score");
+        require(bytes(review).length <= 500, "Review too long");
+        xeraToken.transferFrom(msg.sender, address(this), stakeAmount);
+        confidenceScores[propertyId] = (confidenceScores[propertyId] * reviewCount + score) / (reviewCount + 1);
+        reviews[propertyId].push(review);
+        unchecked { ++reviewCount; }
+        emit ReviewSubmitted(propertyId, score, review, msg.sender);
+    }
+}

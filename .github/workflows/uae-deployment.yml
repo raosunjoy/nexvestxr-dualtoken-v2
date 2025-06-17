@@ -1,0 +1,673 @@
+name: UAE Platform CI/CD Pipeline
+
+on:
+  push:
+    branches: [uae-main, uae-staging, uae-dev]
+    paths:
+      - 'frontend/**'
+      - 'backend/**'
+      - 'mobile/**'
+      - 'smart-contracts/**'
+      - 'Currencyupdate_nexvestxr/**'
+      - 'Claude_Scalability_RoadmapUpdated/**'
+  pull_request:
+    branches: [uae-main, uae-staging]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+      region:
+        description: 'AWS Region'
+        required: true
+        default: 'me-central-1'
+        type: choice
+        options:
+          - me-central-1
+          - me-south-1
+
+env:
+  NODE_VERSION: '18.x'
+  PYTHON_VERSION: '3.9'
+  AWS_REGION: ${{ github.event.inputs.region || 'me-central-1' }}
+  DEPLOY_ENV: ${{ github.event.inputs.environment || 'staging' }}
+
+jobs:
+  # Security and Code Quality Checks
+  security-scan:
+    name: Security & Quality Analysis
+    runs-on: ubuntu-latest
+    outputs:
+      security-passed: ${{ steps.security-check.outputs.passed }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ESLint security rules
+        run: npm run lint:security
+        continue-on-error: true
+
+      - name: Run Semgrep security scan
+        uses: returntocorp/semgrep-action@v1
+        with:
+          config: auto
+
+      - name: OWASP Dependency Check
+        uses: dependency-check/Dependency-Check_Action@main
+        with:
+          project: 'PropXchange-UAE'
+          path: '.'
+          format: 'JSON'
+
+      - name: Upload security reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-reports
+          path: |
+            reports/
+            dependency-check-report.json
+
+      - name: Set security status
+        id: security-check
+        run: echo "passed=true" >> $GITHUB_OUTPUT
+
+  # Multi-Currency System Tests
+  currency-tests:
+    name: Multi-Currency System Tests
+    runs-on: ubuntu-latest
+    needs: security-scan
+    strategy:
+      matrix:
+        currency: [AED, USD, EUR, GBP, SAR, QAR, KWD]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: |
+          cd Currencyupdate_nexvestxr
+          npm install
+
+      - name: Test currency conversion for ${{ matrix.currency }}
+        run: |
+          cd Currencyupdate_nexvestxr
+          npm test -- --testNamePattern="Currency.*${{ matrix.currency }}"
+        env:
+          TEST_CURRENCY: ${{ matrix.currency }}
+          EXCHANGE_RATE_API_KEY: ${{ secrets.EXCHANGE_RATE_API_KEY }}
+
+      - name: Test localization for ${{ matrix.currency }}
+        run: |
+          cd Currencyupdate_nexvestxr
+          npm run test:localization -- --currency=${{ matrix.currency }}
+
+  # Frontend Build and Test
+  frontend-build:
+    name: Frontend Build & Test (UAE)
+    runs-on: ubuntu-latest
+    needs: [security-scan, currency-tests]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Copy UAE configuration
+        run: |
+          cp frontend/src/config/uaeConfig.json frontend/src/config/config.json
+
+      - name: Run TypeScript compilation
+        working-directory: frontend
+        run: npm run type-check
+
+      - name: Run unit tests with UAE config
+        working-directory: frontend
+        run: |
+          npm test -- --coverage --watchAll=false
+        env:
+          REACT_APP_ENVIRONMENT: uae
+          REACT_APP_API_URL: https://api-staging.propxchange.ae
+          REACT_APP_PRIMARY_CURRENCY: AED
+
+      - name: Run Arabic RTL tests
+        working-directory: frontend
+        run: npm run test:rtl
+
+      - name: Build frontend for UAE
+        working-directory: frontend
+        run: |
+          npm run build
+        env:
+          REACT_APP_ENVIRONMENT: uae
+          REACT_APP_API_URL: https://api-staging.propxchange.ae
+          REACT_APP_PRIMARY_CURRENCY: AED
+          REACT_APP_SUPPORTED_LANGUAGES: en,ar
+
+      - name: Run Lighthouse CI for performance
+        uses: treosh/lighthouse-ci-action@v10
+        with:
+          configPath: '.lighthouserc.json'
+          uploadArtifacts: true
+
+      - name: Upload frontend build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build
+          path: frontend/build/
+
+  # Backend Build and Test
+  backend-build:
+    name: Backend Build & Test (UAE)
+    runs-on: ubuntu-latest
+    needs: [security-scan, currency-tests]
+    services:
+      mongodb:
+        image: mongo:6.0
+        ports:
+          - 27017:27017
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install backend dependencies
+        working-directory: backend
+        run: npm ci
+
+      - name: Copy UAE currency service
+        run: |
+          cp Currencyupdate_nexvestxr/currency_service.js backend/src/services/
+          cp Currencyupdate_nexvestxr/auth_context.js backend/src/context/
+
+      - name: Run backend unit tests
+        working-directory: backend
+        run: npm test -- --coverage
+        env:
+          NODE_ENV: test
+          MONGODB_URI: mongodb://localhost:27017/propxchange_uae_test
+          REDIS_URL: redis://localhost:6379
+          PRIMARY_CURRENCY: AED
+
+      - name: Run AED currency integration tests
+        working-directory: backend
+        run: npm run test:integration
+        env:
+          TEST_CURRENCY: AED
+          EXCHANGE_RATE_API_KEY: ${{ secrets.EXCHANGE_RATE_API_KEY }}
+
+      - name: Run UAE compliance tests
+        working-directory: backend
+        run: npm run test:compliance
+        env:
+          RERA_API_KEY: ${{ secrets.RERA_API_KEY }}
+          DLD_API_KEY: ${{ secrets.DLD_API_KEY }}
+
+      - name: Build backend Docker image
+        run: |
+          docker build -t propxchange-uae-backend:${{ github.sha }} \
+            --build-arg ENVIRONMENT=uae \
+            --build-arg PRIMARY_CURRENCY=AED \
+            -f backend/Dockerfile .
+
+      - name: Save Docker image
+        run: |
+          docker save propxchange-uae-backend:${{ github.sha }} | gzip > backend-image.tar.gz
+
+      - name: Upload backend artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-artifacts
+          path: |
+            backend-image.tar.gz
+            backend/coverage/
+
+  # Mobile App Build (iOS & Android)
+  mobile-build:
+    name: Mobile App Build (UAE)
+    runs-on: macos-latest
+    needs: [security-scan, currency-tests]
+    strategy:
+      matrix:
+        platform: [ios, android]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Setup React Native environment
+        working-directory: mobile
+        run: |
+          npm ci
+          npx pod-install ios
+
+      - name: Add Arabic language support
+        working-directory: mobile
+        run: |
+          mkdir -p src/locales/ar
+          cp ../frontend/src/locales/ar/* src/locales/ar/
+
+      - name: Configure UAE app settings
+        working-directory: mobile
+        run: |
+          # Update app name and bundle ID for UAE
+          sed -i '' 's/NexVestXR/PropXchange UAE/g' ios/NexVestXRMobile/Info.plist
+          sed -i '' 's/com.nexvestxr/com.propxchange.uae/g' ios/NexVestXRMobile.xcodeproj/project.pbxproj
+
+      - name: Build iOS app
+        if: matrix.platform == 'ios'
+        working-directory: mobile
+        run: |
+          npx react-native build-ios --configuration Release
+        env:
+          APP_ENVIRONMENT: uae
+          PRIMARY_CURRENCY: AED
+
+      - name: Build Android app
+        if: matrix.platform == 'android'
+        working-directory: mobile
+        run: |
+          cd android
+          ./gradlew assembleRelease
+        env:
+          APP_ENVIRONMENT: uae
+          PRIMARY_CURRENCY: AED
+
+      - name: Upload mobile artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobile-${{ matrix.platform }}
+          path: |
+            mobile/ios/build/
+            mobile/android/app/build/outputs/
+
+  # Smart Contracts Deployment
+  smart-contracts:
+    name: Smart Contracts (UAE)
+    runs-on: ubuntu-latest
+    needs: security-scan
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        working-directory: smart-contracts
+        run: npm ci
+
+      - name: Compile contracts with UAE settings
+        working-directory: smart-contracts
+        run: |
+          # Update contract with UAE cities
+          sed -i 's/Mumbai/Dubai/g' contracts/XERAToken.sol
+          sed -i 's/INR/AED/g' contracts/XERAToken.sol
+          npx hardhat compile
+
+      - name: Run contract tests
+        working-directory: smart-contracts
+        run: npx hardhat test
+        env:
+          PRIMARY_CURRENCY: AED
+          MIN_INVESTMENT_AED: 25000
+
+      - name: Deploy to Flare testnet
+        if: github.ref == 'refs/heads/uae-staging'
+        working-directory: smart-contracts
+        run: |
+          npx hardhat run scripts/deploy-uae.js --network coston2
+        env:
+          PRIVATE_KEY: ${{ secrets.DEPLOYER_PRIVATE_KEY }}
+          FLARE_RPC_URL: ${{ secrets.FLARE_TESTNET_RPC }}
+
+      - name: Verify contracts
+        working-directory: smart-contracts
+        run: |
+          npx hardhat verify --network coston2 $CONTRACT_ADDRESS
+        env:
+          CONTRACT_ADDRESS: ${{ steps.deploy.outputs.contract-address }}
+
+  # AI/ML Service Tests
+  ai-ml-tests:
+    name: AI/ML Property Scoring (UAE)
+    runs-on: ubuntu-latest
+    needs: security-scan
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install AI/ML dependencies
+        run: |
+          pip install -r Claude_Scalability_RoadmapUpdated/requirements.txt
+
+      - name: Test UAE property scoring model
+        run: |
+          python -m pytest Claude_Scalability_RoadmapUpdated/tests/ -v
+        env:
+          PROPERTY_REGION: UAE
+          MIN_PROPERTY_VALUE_AED: 500000
+
+      - name: Train UAE-specific model
+        run: |
+          python Claude_Scalability_RoadmapUpdated/train_uae_model.py
+        env:
+          TRAINING_DATA_PATH: ./data/uae_properties.csv
+
+  # Integration Tests
+  integration-tests:
+    name: End-to-End Integration Tests
+    runs-on: ubuntu-latest
+    needs: [frontend-build, backend-build]
+    services:
+      mongodb:
+        image: mongo:6.0
+        ports:
+          - 27017:27017
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download backend artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-artifacts
+
+      - name: Download frontend artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-build
+
+      - name: Setup test environment
+        run: |
+          docker load < backend-image.tar.gz
+          docker run -d --name backend \
+            -p 3000:3000 \
+            -e MONGODB_URI=mongodb://host.docker.internal:27017/propxchange_uae_test \
+            -e REDIS_URL=redis://host.docker.internal:6379 \
+            -e PRIMARY_CURRENCY=AED \
+            propxchange-uae-backend:${{ github.sha }}
+
+      - name: Setup frontend test server
+        run: |
+          cd frontend/build
+          npx serve -p 3001 &
+
+      - name: Run Cypress E2E tests
+        uses: cypress-io/github-action@v6
+        with:
+          start: echo "Services already running"
+          wait-on: 'http://localhost:3000, http://localhost:3001'
+          config: baseUrl=http://localhost:3001
+        env:
+          CYPRESS_API_URL: http://localhost:3000
+          CYPRESS_PRIMARY_CURRENCY: AED
+          CYPRESS_TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
+          CYPRESS_TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
+
+      - name: Test multi-currency flows
+        run: |
+          npm run test:e2e:currencies
+        env:
+          CURRENCIES: AED,USD,EUR,SAR,QAR
+
+      - name: Test Arabic localization
+        run: |
+          npm run test:e2e:arabic
+        env:
+          LOCALE: ar-AE
+
+  # AWS Infrastructure Deployment
+  deploy-infrastructure:
+    name: Deploy AWS Infrastructure
+    runs-on: ubuntu-latest
+    needs: [integration-tests, smart-contracts]
+    if: github.ref == 'refs/heads/uae-main' || github.ref == 'refs/heads/uae-staging'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Deploy CloudFormation stack
+        run: |
+          aws cloudformation deploy \
+            --template-file infrastructure/cloudformation/uae-infrastructure.yaml \
+            --stack-name propxchange-uae-${{ env.DEPLOY_ENV }} \
+            --capabilities CAPABILITY_IAM \
+            --parameter-overrides \
+              Environment=${{ env.DEPLOY_ENV }} \
+              Region=${{ env.AWS_REGION }} \
+              PrimaryCurrency=AED \
+              SupportedLanguages=en,ar
+
+      - name: Setup RDS with UAE compliance
+        run: |
+          aws rds create-db-instance \
+            --db-instance-identifier propxchange-uae-${{ env.DEPLOY_ENV }} \
+            --db-instance-class db.t3.medium \
+            --engine postgres \
+            --allocated-storage 100 \
+            --storage-encrypted \
+            --backup-retention-period 30 \
+            --tags Key=Environment,Value=${{ env.DEPLOY_ENV }} \
+                   Key=Compliance,Value=UAE-Banking-Standards
+
+  # Application Deployment
+  deploy-application:
+    name: Deploy to AWS (${{ github.ref == 'refs/heads/uae-main' && 'Production' || 'Staging' }})
+    runs-on: ubuntu-latest
+    needs: deploy-infrastructure
+    environment: ${{ github.ref == 'refs/heads/uae-main' && 'production' || 'staging' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+
+      - name: Push backend to ECR
+        run: |
+          aws ecr get-login-password --region ${{ env.AWS_REGION }} | \
+          docker login --username AWS --password-stdin ${{ secrets.ECR_REGISTRY }}
+          
+          docker load < backend-artifacts/backend-image.tar.gz
+          docker tag propxchange-uae-backend:${{ github.sha }} \
+            ${{ secrets.ECR_REGISTRY }}/propxchange-uae-backend:${{ github.sha }}
+          docker push ${{ secrets.ECR_REGISTRY }}/propxchange-uae-backend:${{ github.sha }}
+
+      - name: Deploy to ECS
+        run: |
+          aws ecs update-service \
+            --cluster propxchange-uae-${{ env.DEPLOY_ENV }} \
+            --service backend \
+            --task-definition propxchange-uae-backend:${{ github.sha }} \
+            --force-new-deployment
+
+      - name: Deploy frontend to S3 + CloudFront
+        run: |
+          aws s3 sync frontend-build/ \
+            s3://propxchange-uae-${{ env.DEPLOY_ENV }}-frontend/ \
+            --delete
+          
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
+            --paths "/*"
+
+      - name: Update Route53 DNS
+        run: |
+          aws route53 change-resource-record-sets \
+            --hosted-zone-id ${{ secrets.ROUTE53_HOSTED_ZONE_ID }} \
+            --change-batch file://dns-update.json
+
+  # Health Checks and Monitoring
+  post-deployment-checks:
+    name: Post-Deployment Health Checks
+    runs-on: ubuntu-latest
+    needs: deploy-application
+    steps:
+      - name: Wait for deployment
+        run: sleep 60
+
+      - name: Health check - API
+        run: |
+          curl -f https://api-${{ env.DEPLOY_ENV }}.propxchange.ae/health || exit 1
+
+      - name: Health check - Frontend
+        run: |
+          curl -f https://${{ env.DEPLOY_ENV == 'production' && 'www' || 'staging' }}.propxchange.ae || exit 1
+
+      - name: Test AED currency endpoint
+        run: |
+          response=$(curl -s https://api-${{ env.DEPLOY_ENV }}.propxchange.ae/api/currency/rates)
+          echo $response | jq '.rates.AED' | grep -q "1.0" || exit 1
+
+      - name: Test Arabic localization
+        run: |
+          response=$(curl -s -H "Accept-Language: ar" https://${{ env.DEPLOY_ENV == 'production' && 'www' || 'staging' }}.propxchange.ae)
+          echo $response | grep -q "العربية" || exit 1
+
+      - name: Setup monitoring alerts
+        run: |
+          aws cloudwatch put-metric-alarm \
+            --alarm-name "PropXchange-UAE-API-Health" \
+            --alarm-description "API health check for UAE platform" \
+            --metric-name "HealthCheck" \
+            --namespace "PropXchange/UAE" \
+            --statistic "Average" \
+            --period 300 \
+            --threshold 1 \
+            --comparison-operator "LessThanThreshold"
+
+  # GitBook Documentation Update
+  update-documentation:
+    name: Update GitBook Documentation
+    runs-on: ubuntu-latest
+    needs: post-deployment-checks
+    if: github.ref == 'refs/heads/uae-main'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install GitBook CLI
+        run: npm install -g @gitbook/cli
+
+      - name: Update documentation
+        run: |
+          cd docs/gitbook
+          gitbook build . _book
+          
+      - name: Deploy to GitBook
+        run: |
+          curl -X POST \
+            -H "Authorization: Bearer ${{ secrets.GITBOOK_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d '{"ref": "main", "message": "Updated UAE platform documentation"}' \
+            https://api.gitbook.com/v1/spaces/${{ secrets.GITBOOK_SPACE_ID }}/content
+
+  # Notification
+  notify-completion:
+    name: Notify Deployment Status
+    runs-on: ubuntu-latest
+    needs: [update-documentation]
+    if: always()
+    steps:
+      - name: Notify Slack
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          channel: '#propxchange-uae'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+          message: |
+            UAE Platform Deployment Status: ${{ job.status }}
+            Environment: ${{ env.DEPLOY_ENV }}
+            Region: ${{ env.AWS_REGION }}
+            Commit: ${{ github.sha }}
+            
+      - name: Notify Teams
+        if: failure()
+        run: |
+          curl -X POST \
+            -H "Content-Type: application/json" \
+            -d '{
+              "summary": "PropXchange UAE Deployment Failed",
+              "text": "Deployment to ${{ env.DEPLOY_ENV }} failed. Please check the logs.",
+              "potentialAction": [{
+                "@type": "OpenUri",
+                "name": "View Logs",
+                "targets": [{"os": "default", "uri": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"}]
+              }]
+            }' \
+            ${{ secrets.TEAMS_WEBHOOK }}

@@ -1,0 +1,321 @@
+{
+  "platform": {
+    "name": "PropXchange UAE",
+    "version": "2.0.0-UAE",
+    "environment": "production",
+    "region": "MENA",
+    "primaryCurrency": "AED",
+    "defaultLanguage": "en",
+    "supportedLanguages": ["en", "ar"],
+    "rtlSupport": true
+  },
+  "geography": {
+    "country": "UAE",
+    "primaryCity": "Dubai",
+    "cities": [
+      {
+        "id": "DXB_DT",
+        "name": "Downtown Dubai",
+        "arabicName": "وسط مدينة دبي",
+        "zone": "Central Dubai",
+        "active": true,
+        "premium": true
+      },
+      {
+        "id": "DXB_MR",
+        "name": "Dubai Marina",
+        "arabicName": "مرسى دبي",
+        "zone": "New Dubai",
+        "active": true,
+        "premium": true
+      },
+      {
+        "id": "DXB_BB",
+        "name": "Business Bay",
+        "arabicName": "الخليج التجاري",
+        "zone": "Central Dubai",
+        "active": true,
+        "premium": true
+      },
+      {
+        "id": "DXB_JLT",
+        "name": "Jumeirah Lake Towers",
+        "arabicName": "أبراج بحيرة الجميرا",
+        "zone": "New Dubai",
+        "active": true,
+        "premium": false
+      },
+      {
+        "id": "DXB_DIFC",
+        "name": "DIFC",
+        "arabicName": "مركز دبي المالي العالمي",
+        "zone": "Central Dubai",
+        "active": true,
+        "premium": true
+      },
+      {
+        "id": "DXB_PJ",
+        "name": "Palm Jumeirah",
+        "arabicName": "نخلة الجميرا",
+        "zone": "Islands",
+        "active": true,
+        "premium": true
+      },
+      {
+        "id": "DXB_DH",
+        "name": "Dubai Hills",
+        "arabicName": "تلال دبي",
+        "zone": "Emirates Hills",
+        "active": true,
+        "premium": false
+      },
+      {
+        "id": "DXB_AR",
+        "name": "Arabian Ranches",
+        "arabicName": "المراعي العربية",
+        "zone": "Dubai Land",
+        "active": true,
+        "premium": false
+      },
+      {
+        "id": "DXB_MDF",
+        "name": "Mirdif",
+        "arabicName": "مردف",
+        "zone": "East Dubai",
+        "active": true,
+        "premium": false
+      }
+    ]
+  },
+  "propertyTypes": [
+    {
+      "id": "apartment",
+      "name": "Apartment",
+      "arabicName": "شقة",
+      "minValue": 500000,
+      "maxValue": 50000000,
+      "category": "residential"
+    },
+    {
+      "id": "villa",
+      "name": "Villa",
+      "arabicName": "فيلا",
+      "minValue": 2000000,
+      "maxValue": 200000000,
+      "category": "residential"
+    },
+    {
+      "id": "townhouse",
+      "name": "Townhouse",
+      "arabicName": "منزل مدرج",
+      "minValue": 1500000,
+      "maxValue": 100000000,
+      "category": "residential"
+    },
+    {
+      "id": "penthouse",
+      "name": "Penthouse",
+      "arabicName": "بنتهاوس",
+      "minValue": 5000000,
+      "maxValue": 500000000,
+      "category": "residential"
+    },
+    {
+      "id": "office",
+      "name": "Office",
+      "arabicName": "مكتب",
+      "minValue": 1000000,
+      "maxValue": 100000000,
+      "category": "commercial"
+    },
+    {
+      "id": "retail",
+      "name": "Retail",
+      "arabicName": "متجر",
+      "minValue": 800000,
+      "maxValue": 50000000,
+      "category": "commercial"
+    },
+    {
+      "id": "warehouse",
+      "name": "Warehouse",
+      "arabicName": "مستودع",
+      "minValue": 2000000,
+      "maxValue": 100000000,
+      "category": "industrial"
+    },
+    {
+      "id": "hotel_apartment",
+      "name": "Hotel Apartment",
+      "arabicName": "شقة فندقية",
+      "minValue": 600000,
+      "maxValue": 20000000,
+      "category": "hospitality"
+    }
+  ],
+  "developers": {
+    "tier1": [
+      {
+        "id": "emaar",
+        "name": "EMAAR",
+        "arabicName": "إعمار",
+        "tier": 1,
+        "platformFee": 1.5,
+        "verified": true,
+        "projects": ["Downtown Dubai", "Dubai Marina", "Dubai Hills"]
+      },
+      {
+        "id": "meraas",
+        "name": "MERAAS",
+        "arabicName": "مراس",
+        "tier": 1,
+        "platformFee": 1.5,
+        "verified": true,
+        "projects": ["Bluewaters", "City Walk", "La Mer"]
+      },
+      {
+        "id": "nakheel",
+        "name": "NAKHEEL",
+        "arabicName": "نخيل",
+        "tier": 1,
+        "platformFee": 1.5,
+        "verified": true,
+        "projects": ["Palm Jumeirah", "The World", "Deira Islands"]
+      }
+    ],
+    "tier2": [
+      {
+        "id": "damac",
+        "name": "DAMAC",
+        "arabicName": "داماك",
+        "tier": 2,
+        "platformFee": 2.5,
+        "verified": true,
+        "projects": ["DAMAC Hills", "Business Bay", "Dubai Marina"]
+      },
+      {
+        "id": "sobha_realty",
+        "name": "SOBHA REALTY",
+        "arabicName": "صوبا العقارية",
+        "tier": 2,
+        "platformFee": 2.5,
+        "verified": true,
+        "projects": ["MBR City", "Motor City", "Dubai Hills"]
+      }
+    ]
+  },
+  "investment": {
+    "tiers": {
+      "retail": {
+        "minAmount": 25000,
+        "maxAmount": 500000,
+        "currency": "AED",
+        "kycLevel": "standard",
+        "targetMarket": "local_investors"
+      },
+      "premium": {
+        "minAmount": 500000,
+        "maxAmount": 2000000,
+        "currency": "AED",
+        "kycLevel": "enhanced",
+        "targetMarket": "gcc_investors"
+      },
+      "institutional": {
+        "minAmount": 2000000,
+        "maxAmount": null,
+        "currency": "AED",
+        "kycLevel": "comprehensive",
+        "targetMarket": "international_investors"
+      }
+    },
+    "fees": {
+      "platformFee": 2.5,
+      "tradingFee": 0.1,
+      "withdrawalFee": 50,
+      "currency": "AED"
+    }
+  },
+  "compliance": {
+    "regulators": {
+      "RERA": {
+        "name": "Real Estate Regulatory Agency",
+        "enabled": true,
+        "apiEndpoint": "https://api.rera.ae",
+        "required": true
+      },
+      "DLD": {
+        "name": "Dubai Land Department",
+        "enabled": true,
+        "apiEndpoint": "https://api.dubailand.gov.ae",
+        "required": true
+      },
+      "ADGM": {
+        "name": "Abu Dhabi Global Market",
+        "enabled": true,
+        "apiEndpoint": "https://api.adgm.com",
+        "required": false
+      },
+      "DFSA": {
+        "name": "Dubai Financial Services Authority",
+        "enabled": true,
+        "apiEndpoint": "https://api.dfsa.ae",
+        "required": false
+      }
+    },
+    "kyc": {
+      "levels": {
+        "standard": ["emirates_id", "passport"],
+        "enhanced": ["emirates_id", "passport", "salary_certificate"],
+        "comprehensive": ["emirates_id", "passport", "salary_certificate", "bank_statement", "trade_license"]
+      },
+      "international": {
+        "enabled": true,
+        "documents": ["passport", "proof_of_address", "bank_statement"],
+        "fatfCompliance": true
+      }
+    }
+  },
+  "localization": {
+    "dateFormat": "DD/MM/YYYY",
+    "timeFormat": "24h",
+    "firstDayOfWeek": "sunday",
+    "weekend": ["friday", "saturday"],
+    "numberFormat": "ar-AE",
+    "calendar": {
+      "gregorian": true,
+      "hijri": true
+    }
+  },
+  "api": {
+    "baseUrl": "https://api.propxchange.ae",
+    "version": "v2",
+    "timeout": 30000,
+    "rateLimits": {
+      "public": 100,
+      "authenticated": 1000,
+      "trading": 500
+    }
+  },
+  "blockchain": {
+    "networks": {
+      "primary": "flare",
+      "secondary": "xrpl",
+      "testnet": "coston2"
+    },
+    "contracts": {
+      "xeraToken": "0x...",
+      "propxFactory": "0x...",
+      "xeraStaking": "0x..."
+    }
+  },
+  "features": {
+    "dualToken": true,
+    "advancedTrading": true,
+    "multiCurrency": true,
+    "arabicSupport": true,
+    "socialScoring": true,
+    "aiVerification": true,
+    "stakingRewards": true,
+    "crossChainPortfolio": true
+  }
+}

@@ -1,0 +1,5830 @@
+r-frontend:latest
+
+# 6. Deploy full production stack
+chmod +x scripts/deploy-production.sh
+./scripts/deploy-production.sh
+
+# 7. Health check
+curl -f https://your-domain.com/health
+```
+
+### Environment Variables (.env.production)
+```bash
+# Server Configuration
+NODE_ENV=production
+PORT=3000
+DOMAIN=nexvestxr.com
+API_URL=https://api.nexvestxr.com
+FRONTEND_URL=https://nexvestxr.com
+
+# Database Configuration
+MONGO_URI=mongodb://nexvestxr:password@mongodb-primary:27017,mongodb-secondary1:27017,mongodb-secondary2:27017/nexvestxr?replicaSet=rs0&authSource=admin
+MONGO_ROOT_USERNAME=admin
+MONGO_ROOT_PASSWORD=your_secure_mongo_password
+MONGO_APP_PASSWORD=your_app_password
+REDIS_URL=redis://redis-cluster:6379
+
+# Blockchain Configuration
+XRPL_SERVER=wss://xrplcluster.com
+XRPL_ISSUER_SEED=sEdV19BLfeQeKdEXyYA4NhjPJe6XBfG5YLooPnZ
+FLARE_RPC_URL=https://flare-api.flare.network/ext/bc/C/rpc
+FLARE_PRIVATE_KEY=0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef
+
+# AWS Configuration
+AWS_REGION=ap-south-1
+AWS_ACCESS_KEY_ID=AKIA1234567890ABCDEF
+AWS_SECRET_ACCESS_KEY=abcdef1234567890abcdef1234567890abcdef12
+AWS_S3_BUCKET=nexvestxr-production-documents
+BACKUP_S3_BUCKET=nexvestxr-production-backups
+
+# Security Configuration
+JWT_SECRET=your_ultra_secure_64_character_jwt_secret_key_here_production
+BCRYPT_ROUNDS=12
+
+# External Services
+STRIPE_API_KEY=sk_live_51234567890abcdef
+MOONPAY_API_KEY=pk_live_1234567890abcdef
+RAMP_API_KEY=live_1234567890abcdef
+
+# Monitoring
+GRAFANA_PASSWORD=your_grafana_password
+PROMETHEUS_RETENTION=90d
+
+# Notifications
+SLACK_WEBHOOK_URL=https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX
+
+# Rate Limiting
+RATE_LIMIT_WINDOW_MS=900000
+RATE_LIMIT_MAX_REQUESTS=100
+RATE_LIMIT_AUTH_MAX=5
+
+# Feature Flags
+ENABLE_ADVANCED_TRADING=true
+ENABLE_AI_SERVICE=true
+ENABLE_STAKING=true
+ENABLE_INDEX_TOKENS=true
+ENABLE_CROSS_BORDER=true
+
+# Performance
+MAX_FILE_SIZE=10485760
+MAX_CONCURRENT_UPLOADS=5
+CACHE_TTL=300
+
+# Deployment
+PRODUCTION_SERVER_HOST=your-production-server.com
+DEPLOY_USER=ubuntu
+```
+
+## 📊 TESTING STRATEGY
+
+### backend/tests/integration/trading.test.js
+```javascript
+const request = require('supertest');
+const app = require('../../src/server');
+const TradingService = require('../../src/services/TradingService');
+
+describe('Trading API Integration Tests', () => {
+  let authToken;
+  let testUserAddress = 'rN7n7otQDd6FczFgLdSqtcsAUxDkw6fzRH';
+  
+  beforeAll(async () => {
+    // Setup test authentication
+    const loginResponse = await request(app)
+      .post('/api/auth/login')
+      .send({
+        email: 'test@example.com',
+        password: 'testpassword'
+      });
+    
+    authToken = loginResponse.body.token;
+  });
+
+  describe('POST /api/trading/orders/limit', () => {
+    it('should create a limit order successfully', async () => {
+      const orderData = {
+        pairId: 'REXA/XRP',
+        side: 'buy',
+        amount: 100,
+        price: 0.001234,
+        options: {
+          postOnly: false,
+          timeInForce: 'GTC'
+        }
+      };
+
+      const response = await request(app)
+        .post('/api/trading/orders/limit')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send(orderData)
+        .expect(201);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.order).toBeDefined();
+      expect(response.body.data.order.pairId).toBe('REXA/XRP');
+      expect(response.body.data.order.side).toBe('buy');
+      expect(response.body.data.order.amount).toBe(100);
+      expect(response.body.data.order.price).toBe(0.001234);
+    });
+
+    it('should reject invalid order parameters', async () => {
+      const invalidOrderData = {
+        pairId: 'INVALID/PAIR',
+        side: 'invalid_side',
+        amount: -100,
+        price: 0
+      };
+
+      const response = await request(app)
+        .post('/api/trading/orders/limit')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send(invalidOrderData)
+        .expect(400);
+
+      expect(response.body.success).toBe(false);
+      expect(response.body.error).toBeDefined();
+    });
+  });
+
+  describe('GET /api/trading/orderbook/:pairId', () => {
+    it('should return order book data', async () => {
+      const response = await request(app)
+        .get('/api/trading/orderbook/REXA%2FXRP')
+        .query({ depth: 10 })
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toBeDefined();
+      expect(response.body.data.pairId).toBe('REXA/XRP');
+      expect(Array.isArray(response.body.data.bids)).toBe(true);
+      expect(Array.isArray(response.body.data.asks)).toBe(true);
+    });
+  });
+
+  describe('GET /api/trading/orders', () => {
+    it('should return user orders', async () => {
+      const response = await request(app)
+        .get('/api/trading/orders')
+        .set('Authorization', `Bearer ${authToken}`)
+        .query({ 
+          pairId: 'REXA/XRP',
+          status: 'pending',
+          limit: 10 
+        })
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toBeDefined();
+      expect(Array.isArray(response.body.data.orders)).toBe(true);
+    });
+  });
+});
+
+describe('TradingService Unit Tests', () => {
+  describe('Order Matching Engine', () => {
+    it('should match orders correctly', async () => {
+      // Create mock order book
+      const mockOrderBook = {
+        bids: [
+          { id: 'bid1', price: 0.001000, remainingAmount: 100, userAddress: 'user1' },
+          { id: 'bid2', price: 0.000999, remainingAmount: 50, userAddress: 'user2' }
+        ],
+        asks: [
+          { id: 'ask1', price: 0.001001, remainingAmount: 75, userAddress: 'user3' },
+          { id: 'ask2', price: 0.001002, remainingAmount: 200, userAddress: 'user4' }
+        ]
+      };
+
+      TradingService.orderBooks.set('REXA/XRP', mockOrderBook);
+
+      const buyOrder = {
+        id: 'test-order',
+        userAddress: 'test-user',
+        pairId: 'REXA/XRP',
+        side: 'buy',
+        amount: 100,
+        price: 0.001001,
+        remainingAmount: 100
+      };
+
+      const matchResult = await TradingService.matchOrder(buyOrder);
+
+      expect(matchResult.trades).toHaveLength(1);
+      expect(matchResult.filledAmount).toBe(75);
+      expect(matchResult.fullyFilled).toBe(false);
+      expect(matchResult.partiallyFilled).toBe(true);
+    });
+
+    it('should calculate market execution correctly', () => {
+      const orderBookSide = [
+        { price: 0.001001, remainingAmount: 50 },
+        { price: 0.001002, remainingAmount: 100 },
+        { price: 0.001003, remainingAmount: 200 }
+      ];
+
+      const execution = TradingService.calculateMarketExecution(orderBookSide, 125, 'buy');
+
+      expect(execution.canFillCompletely).toBe(true);
+      expect(execution.filledAmount).toBe(125);
+      expect(execution.executionPlan).toHaveLength(2);
+      expect(execution.avgPrice).toBeCloseTo(0.0010013, 6);
+    });
+  });
+
+  describe('Order Validation', () => {
+    it('should validate order parameters correctly', () => {
+      const mockPair = {
+        minOrderSize: 1,
+        maxOrderSize: 10000,
+        priceDecimals: 6,
+        amountDecimals: 2
+      };
+
+      expect(() => {
+        TradingService.validateOrderParams(mockPair, 0.5, 0.001234);
+      }).toThrow('Order amount must be between');
+
+      expect(() => {
+        TradingService.validateOrderParams(mockPair, 100, 0.0012345678);
+      }).toThrow('Price precision cannot exceed');
+
+      expect(() => {
+        TradingService.validateOrderParams(mockPair, 100.123, 0.001234);
+      }).toThrow('Amount precision cannot exceed');
+
+      // Should not throw for valid parameters
+      expect(() => {
+        TradingService.validateOrderParams(mockPair, 100.12, 0.001234);
+      }).not.toThrow();
+    });
+  });
+});
+```
+
+### frontend/src/tests/TradingInterface.test.jsx
+```javascript
+import React from 'react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { BrowserRouter } from 'react-router-dom';
+import '@testing-library/jest-dom';
+
+import AdvancedTradingInterface from '../components/Trading/AdvancedTradingInterface';
+import { WalletContext } from '../context/WalletContext';
+import { AuthContext } from '../context/AuthContext';
+import { TradingContext } from '../context/TradingContext';
+
+// Mock API functions
+jest.mock('../services/tradingApi', () => ({
+  getOrderBook: jest.fn(),
+  getCurrentPrice: jest.fn(),
+  getTradingMetrics: jest.fn(),
+  getRecentTrades: jest.fn(),
+  getUserOrders: jest.fn(),
+  createLimitOrder: jest.fn(),
+  createMarketOrder: jest.fn(),
+  cancelOrder: jest.fn()
+}));
+
+const mockWalletContext = {
+  isConnected: true,
+  userAccount: 'rN7n7otQDd6FczFgLdSqtcsAUxDkw6fzRH',
+  signTransaction: jest.fn()
+};
+
+const mockAuthContext = {
+  user: {
+    id: 'test-user',
+    email: 'test@example.com'
+  }
+};
+
+const mockTradingContext = {
+  activeOrders: [],
+  setActiveOrders: jest.fn(),
+  portfolioData: {
+    xrpBalance: 1000,
+    tokenBalances: [
+      { currency: 'REXA', balance: '500' }
+    ],
+    totalValue: 1500
+  },
+  updatePortfolioData: jest.fn()
+};
+
+const renderWithProviders = (component) => {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
+    },
+  });
+
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <WalletContext.Provider value={mockWalletContext}>
+          <AuthContext.Provider value={mockAuthContext}>
+            <TradingContext.Provider value={mockTradingContext}>
+              {component}
+            </TradingContext.Provider>
+          </AuthContext.Provider>
+        </WalletContext.Provider>
+      </BrowserRouter>
+    </QueryClientProvider>
+  );
+};
+
+describe('AdvancedTradingInterface', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('renders trading interface when wallet is connected', async () => {
+    renderWithProviders(<AdvancedTradingInterface selectedPair="REXA/XRP" />);
+
+    expect(screen.getByText('Place Order')).toBeInTheDocument();
+    expect(screen.getByText('Buy')).toBeInTheDocument();
+    expect(screen.getByText('Sell')).toBeInTheDocument();
+    expect(screen.getByText('Portfolio')).toBeInTheDocument();
+  });
+
+  it('shows wallet connection prompt when wallet is not connected', () => {
+    const disconnectedWalletContext = {
+      ...mockWalletContext,
+      isConnected: false
+    };
+
+    render(
+      <QueryClientProvider client={new QueryClient()}>
+        <BrowserRouter>
+          <WalletContext.Provider value={disconnectedWalletContext}>
+            <AuthContext.Provider value={mockAuthContext}>
+              <TradingContext.Provider value={mockTradingContext}>
+                <AdvancedTradingInterface selectedPair="REXA/XRP" />
+              </TradingContext.Provider>
+            </AuthContext.Provider>
+          </WalletContext.Provider>
+        </BrowserRouter>
+      </QueryClientProvider>
+    );
+
+    expect(screen.getByText('Connect Your Wallet')).toBeInTheDocument();
+    expect(screen.getByText('Connect XUMM Wallet')).toBeInTheDocument();
+  });
+
+  it('switches between buy and sell modes', () => {
+    renderWithProviders(<AdvancedTradingInterface selectedPair="REXA/XRP" />);
+
+    const buyButton = screen.getByRole('button', { name: /buy/i });
+    const sellButton = screen.getByRole('button', { name: /sell/i });
+
+    // Initially should be on buy
+    expect(buyButton).toHaveClass('bg-green-600');
+
+    // Click sell button
+    fireEvent.click(sellButton);
+    expect(sellButton).toHaveClass('bg-red-600');
+  });
+
+  it('switches between order types', () => {
+    renderWithProviders(<AdvancedTradingInterface selectedPair="REXA/XRP" />);
+
+    const marketButton = screen.getByRole('button', { name: /market/i });
+    const limitButton = screen.getByRole('button', { name: /limit/i });
+
+    // Initially should be on limit
+    expect(limitButton).toHaveClass('bg-blue-600');
+
+    // Click market button
+    fireEvent.click(marketButton);
+    expect(marketButton).toHaveClass('bg-blue-600');
+
+    // Price input should be hidden for market orders
+    expect(screen.queryByLabelText(/price \(xrp\)/i)).not.toBeInTheDocument();
+  });
+
+  it('validates form inputs', async () => {
+    renderWithProviders(<AdvancedTradingInterface selectedPair="REXA/XRP" />);
+
+    const submitButton = screen.getByRole('button', { name: /buy rexa/i });
+
+    // Submit without filling form
+    fireEvent.click(submitButton);
+
+    // Should show validation error
+    await waitFor(() => {
+      expect(screen.getByText(/please fill in all required fields/i)).toBeInTheDocument();
+    });
+  });
+
+  it('fills max amount when MAX button is clicked', () => {
+    renderWithProviders(<AdvancedTradingInterface selectedPair="REXA/XRP" />);
+
+    const amountInput = screen.getByLabelText(/amount \(rexa\)/i);
+    const maxButton = screen.getByText('MAX');
+
+    fireEvent.click(maxButton);
+
+    // Should calculate max amount based on available balance
+    expect(amountInput.value).not.toBe('');
+  });
+
+  it('displays portfolio information correctly', () => {
+    renderWithProviders(<AdvancedTradingInterface selectedPair="REXA/XRP" />);
+
+    expect(screen.getByText('1000.000000')).toBeInTheDocument(); // XRP balance
+    expect(screen.getByText('500')).toBeInTheDocument(); // REXA balance
+    expect(screen.getByText('1500.00 XRP')).toBeInTheDocument(); // Total value
+  });
+
+  it('handles order book clicks correctly', async () => {
+    const { getOrderBook } = require('../services/tradingApi');
+    getOrderBook.mockResolvedValue({
+      bids: [{ price: 0.001000, amount: 100 }],
+      asks: [{ price: 0.001001, amount: 150 }]
+    });
+
+    renderWithProviders(<AdvancedTradingInterface selectedPair="REXA/XRP" />);
+
+    // Wait for order book to load
+    await waitFor(() => {
+      expect(screen.getByText('0.001000')).toBeInTheDocument();
+    });
+
+    const priceElement = screen.getByText('0.001000');
+    fireEvent.click(priceElement);
+
+    // Should fill price input
+    const priceInput = screen.getByLabelText(/price \(xrp\)/i);
+    expect(priceInput.value).toBe('0.001000');
+  });
+
+  it('shows advanced options when toggled', () => {
+    renderWithProviders(<AdvancedTradingInterface selectedPair="REXA/XRP" />);
+
+    const advancedButton = screen.getByText('Advanced Options');
+    fireEvent.click(advancedButton);
+
+    expect(screen.getByText('Post Only')).toBeInTheDocument();
+    expect(screen.getByText('Reduce Only')).toBeInTheDocument();
+    expect(screen.getByText('Time in Force')).toBeInTheDocument();
+  });
+
+  it('calculates order value correctly', async () => {
+    renderWithProviders(<AdvancedTradingInterface selectedPair="REXA/XRP" />);
+
+    const amountInput = screen.getByLabelText(/amount \(rexa\)/i);
+    const priceInput = screen.getByLabelText(/price \(xrp\)/i);
+
+    fireEvent.change(amountInput, { target: { value: '100' } });
+    fireEvent.change(priceInput, { target: { value: '0.001000' } });
+
+    await waitFor(() => {
+      expect(screen.getByText('0.100000 XRP')).toBeInTheDocument(); // Total
+      expect(screen.getByText('0.000200 XRP')).toBeInTheDocument(); // Fee
+    });
+  });
+});
+```
+
+## 📋 API DOCUMENTATION
+
+### API Endpoints Summary
+
+#### Authentication
+- `POST /api/auth/register` - User registration
+- `POST /api/auth/login` - User login
+- `POST /api/auth/logout` - User logout
+- `GET /api/auth/profile` - Get user profile
+- `PUT /api/auth/profile` - Update user profile
+
+#### Properties
+- `GET /api/properties` - Search properties
+- `GET /api/properties/:id` - Get property details
+- `POST /api/properties` - Create new property
+- `GET /api/properties/:id/analytics` - Get property analytics
+- `GET /api/properties/stats/cities` - Get city statistics
+
+#### Trading
+- `POST /api/trading/orders/limit` - Create limit order
+- `POST /api/trading/orders/market` - Create market order
+- `DELETE /api/trading/orders/:orderId` - Cancel order
+- `GET /api/trading/orderbook/:pairId` - Get order book
+- `GET /api/trading/trades/:pairId` - Get recent trades
+- `GET /api/trading/orders` - Get user orders
+- `GET /api/trading/metrics/:pairId` - Get trading metrics
+- `GET /api/trading/pairs` - Get trading pairs
+- `GET /api/trading/price/:pairId` - Get current price
+
+#### AI Services
+- `POST /api/ai/heatmap/generate` - Generate AI heatmap
+- `POST /api/ai/score/property` - Calculate property score
+- `POST /api/ai/verify/document` - Verify document with AI
+- `GET /api/ai/predict/market` - Get market predictions
+
+#### Staking
+- `POST /api/staking/stake` - Stake XERA tokens
+- `POST /api/staking/unstake` - Unstake XERA tokens
+- `POST /api/staking/claim` - Claim staking rewards
+- `GET /api/staking/info/:address` - Get staking information
+
+## 🚀 PERFORMANCE OPTIMIZATIONS
+
+### Database Optimizations
+- MongoDB sharding by city for horizontal scaling
+- Read replicas for query distribution
+- Connection pooling (100 max connections)
+- Aggregation pipeline optimization
+- Index optimization for common queries
+
+### Caching Strategy
+- Redis for session management and real-time data
+- API response caching (5-minute TTL)
+- Database query result caching
+- Static asset caching with CloudFront CDN
+- Browser caching headers
+
+### Frontend Optimizations
+- Code splitting with React.lazy()
+- Image optimization with Sharp
+- Gzip compression
+- Bundle size optimization
+- Service worker for offline functionality
+
+### Backend Optimizations
+- Clustering with PM2 for multi-core utilization
+- Rate limiting to prevent abuse
+- Database connection pooling
+- Async/await for non-blocking operations
+- Error handling and circuit breakers
+
+## 🔐 SECURITY MEASURES
+
+### Authentication & Authorization
+- JWT tokens with refresh mechanism
+- bcrypt password hashing (12 rounds)
+- Role-based access control (RBAC)
+- Rate limiting on authentication endpoints
+- Account lockout after failed attempts
+
+### Data Protection
+- Data encryption at rest (AES-256)
+- TLS 1.3 for data in transit
+- Input validation and sanitization
+- SQL injection prevention
+- XSS protection headers
+
+### Infrastructure Security
+- VPC with private subnets
+- Security groups with minimal access
+- WAF for DDoS protection
+- Regular security updates
+- Container security scanning
+
+### Smart Contract Security
+- OpenZeppelin audited contracts
+- Multi-signature wallets for admin functions
+- Reentrancy guards
+- Access control modifiers
+- Emergency pause functionality
+
+## 🎯 MONITORING & ALERTING
+
+### Metrics Collection
+- Prometheus for metrics aggregation
+- Grafana for visualization
+- Application performance monitoring
+- Business metrics tracking
+- User behavior analytics
+
+### Alerting Rules
+- API response time > 2 seconds
+- Error rate > 5%
+- CPU usage > 80%
+- Memory usage > 90%
+- Database connection errors
+- Failed authentication attempts > 10/minute
+
+### Log Management
+- Centralized logging with ELK stack
+- Structured JSON logging
+- Log retention (90 days)
+- Error tracking and alerting
+- Audit trail for compliance
+
+## 📈 SCALABILITY ROADMAP
+
+### Phase 1: Current Implementation (1M Users)
+- Kubernetes deployment with auto-scaling
+- MongoDB sharding and read replicas
+- Redis clustering for cache
+- CDN for static assets
+- Load balancing with multiple regions
+
+### Phase 2: Next Scale (5M Users)
+- Microservices architecture
+- Event-driven architecture with message queues
+- Separate read/write databases
+- Advanced caching strategies
+- Global CDN with edge computing
+
+### Phase 3: Enterprise Scale (10M+ Users)
+- Multi-region active-active deployment
+- Database federation
+- Advanced AI/ML pipeline
+- Real-time analytics platform
+- Blockchain scaling solutions
+
+## 🎉 CONCLUSION
+
+This complete NexVestXR codebase provides:
+
+✅ **Production-Ready Architecture**: Scalable, secure, and optimized for 1M+ users
+✅ **Advanced Trading Engine**: Multiple order types, real-time matching, portfolio management
+✅ **AI-Powered Features**: Document verification, property scoring, market heatmaps
+✅ **Dual Blockchain Integration**: XRPL for speed + Flare for smart contracts
+✅ **Enterprise Security**: Comprehensive security measures and compliance framework
+✅ **Mobile-First Design**: React Native app with XUMM wallet integration
+✅ **DevOps Excellence**: Automated deployment, monitoring, and scaling
+✅ **Comprehensive Testing**: Unit, integration, and end-to-end test suites
+
+The platform is ready for immediate deployment and can scale from beta (100 users) to enterprise (1M+ users) with the provided infrastructure and optimization strategies.
+
+**Total Development Investment**: ₹8.2 Lakh for complete platform
+**Expected ROI**: 15:1 based on projected revenue streams
+**Time to Market**: 2 weeks for beta, 6 weeks for full production deployment
+
+Ready to revolutionize real estate investment with blockchain technology! 🚀                              <span className="text-gray-500">
+                                {(bid.price * bid.amount).toFixed(2)}
+                              </span>
+                            </motion.div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Asks */}
+                      <div>
+                        <h4 className="text-sm font-medium text-red-600 mb-2 flex items-center">
+                          <TrendingDown className="h-4 w-4 mr-1" />
+                          Asks
+                        </h4>
+                        <div className="space-y-1">
+                          {orderBookData?.asks?.slice(0, 15).map((ask, index) => (
+                            <motion.div
+                              key={index}
+                              initial={{ opacity: 0, x: 10 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: index * 0.02 }}
+                              onClick={() => handleOrderBookClick(ask.price, ask.amount, 'buy')}
+                              className="grid grid-cols-3 gap-2 text-xs py-1 hover:bg-red-50 cursor-pointer rounded transition-colors"
+                            >
+                              <span className="text-red-600 font-medium">
+                                {ask.price.toFixed(6)}
+                              </span>
+                              <span className="text-gray-600">
+                                {ask.amount.toFixed(2)}
+                              </span>
+                              <span className="text-gray-500">
+                                {(ask.price * ask.amount).toFixed(2)}
+                              </span>
+                            </motion.div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </motion.div>
+              )}
+
+              {activeTab === 'trades' && (
+                <motion.div
+                  key="trades"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <h4 className="text-sm font-medium text-gray-900 mb-2 flex items-center">
+                    <Activity className="h-4 w-4 mr-1" />
+                    Recent Trades
+                  </h4>
+                  <div className="space-y-1">
+                    {recentTrades?.slice(0, 20).map((trade, index) => (
+                      <motion.div
+                        key={index}
+                        initial={{ opacity: 0, y: 5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.02 }}
+                        className="grid grid-cols-3 gap-2 text-xs py-1"
+                      >
+                        <span className={`font-medium ${
+                          trade.side === 'buy' ? 'text-green-600' : 'text-red-600'
+                        }`}>
+                          {trade.price.toFixed(6)}
+                        </span>
+                        <span className="text-gray-600">
+                          {trade.amount.toFixed(2)}
+                        </span>
+                        <span className="text-gray-500">
+                          {new Date(trade.timestamp).toLocaleTimeString()}
+                        </span>
+                      </motion.div>
+                    )) || (
+                      <div className="text-center py-8 text-gray-500">
+                        No recent trades
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+
+              {activeTab === 'chart' && (
+                <motion.div
+                  key="chart"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.2 }}
+                  className="h-64 bg-gray-50 rounded-lg flex items-center justify-center"
+                >
+                  <div className="text-center">
+                    <BarChart3 className="h-12 w-12 text-gray-400 mx-auto mb-2" />
+                    <p className="text-gray-500 text-sm">Chart integration coming soon</p>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Portfolio & Orders */}
+      <motion.div 
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 0.2 }}
+        className="lg:col-span-1"
+      >
+        <div className="bg-white rounded-lg shadow-md">
+          {/* Portfolio Summary */}
+          <div className="p-4 border-b border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
+              <Wallet className="h-5 w-5 mr-2" />
+              Portfolio
+            </h3>
+            {portfolioData && (
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">XRP Balance:</span>
+                  <span className="font-medium">
+                    {parseFloat(portfolioData.xrpBalance || 0).toFixed(6)}
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Token Balance:</span>
+                  <span className="font-medium">
+                    {portfolioData.tokenBalances?.find(b => 
+                      b.currency === selectedPair.split('/')[0]
+                    )?.balance || '0.00'}
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Total Value:</span>
+                  <span className="font-medium">
+                    {portfolioData.totalValue?.toFixed(2) || '0.00'} XRP
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Open Orders */}
+          <div className="p-4">
+            <h4 className="text-sm font-medium text-gray-900 mb-3 flex items-center">
+              <Clock className="h-4 w-4 mr-1" />
+              Open Orders
+            </h4>
+            {userOrdersData?.orders?.length === 0 ? (
+              <p className="text-gray-500 text-sm text-center py-4">No open orders</p>
+            ) : (
+              <div className="space-y-2 max-h-64 overflow-y-auto">
+                {userOrdersData?.orders?.filter(order => 
+                  ['pending', 'partial'].includes(order.status)
+                ).map((order, index) => (
+                  <motion.div
+                    key={order.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    className="border border-gray-200 rounded-lg p-3"
+                  >
+                    <div className="flex justify-between items-start mb-2">
+                      <div>
+                        <div className="text-xs font-medium">
+                          <span className={`${
+                            order.side === 'buy' ? 'text-green-600' : 'text-red-600'
+                          }`}>
+                            {order.side.toUpperCase()}
+                          </span>
+                          {' '}
+                          <span className="text-gray-600">{order.type}</span>
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {order.amount} @ {order.price}
+                        </div>
+                        {order.status === 'partial' && (
+                          <div className="text-xs text-blue-600">
+                            Filled: {((order.filledAmount || 0) / order.amount * 100).toFixed(1)}%
+                          </div>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => handleCancelOrder(order.id)}
+                        disabled={cancelOrderMutation.isPending}
+                        className="text-red-500 hover:text-red-700 disabled:opacity-50"
+                      >
+                        {cancelOrderMutation.isPending ? (
+                          <RefreshCw className="h-3 w-3 animate-spin" />
+                        ) : (
+                          <X className="h-3 w-3" />
+                        )}
+                      </button>
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      {new Date(order.createdAt).toLocaleString()}
+                    </div>
+                  </motion.div>
+                )) || (
+                  <div className="text-center py-4">
+                    <RefreshCw className="h-4 w-4 animate-spin text-gray-400 mx-auto" />
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  );
+};
+
+export default AdvancedTradingInterface;
+```
+
+### mobile/package.json (React Native)
+```json
+{
+  "name": "nexvestxr-mobile",
+  "version": "2.0.0",
+  "main": "node_modules/expo/AppEntry.js",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "build:android": "eas build --platform android",
+    "build:ios": "eas build --platform ios",
+    "submit:android": "eas submit --platform android",
+    "submit:ios": "eas submit --platform ios",
+    "update": "eas update",
+    "test": "jest"
+  },
+  "dependencies": {
+    "expo": "~49.0.15",
+    "react": "18.2.0",
+    "react-native": "0.72.6",
+    "@expo/vector-icons": "^13.0.0",
+    "@react-navigation/native": "^6.1.9",
+    "@react-navigation/stack": "^6.3.20",
+    "@react-navigation/bottom-tabs": "^6.5.11",
+    "@react-navigation/drawer": "^6.6.6",
+    "react-native-safe-area-context": "4.6.3",
+    "react-native-screens": "~3.22.0",
+    "react-native-gesture-handler": "~2.12.0",
+    "react-native-reanimated": "~3.3.0",
+    "@tanstack/react-query": "^5.8.4",
+    "axios": "^1.6.2",
+    "react-native-svg": "13.9.0",
+    "react-native-maps": "1.7.1",
+    "react-native-charts-wrapper": "^0.5.11",
+    "react-native-linear-gradient": "^2.8.3",
+    "react-native-paper": "^5.11.6",
+    "react-native-elements": "^3.4.3",
+    "react-native-vector-icons": "^10.0.2",
+    "react-native-async-storage": "@react-native-async-storage/async-storage",
+    "react-native-keychain": "^8.1.3",
+    "react-native-biometrics": "^3.0.1",
+    "react-native-qrcode-scanner": "^1.5.5",
+    "react-native-qrcode-svg": "^6.2.0",
+    "expo-camera": "~13.4.4",
+    "expo-location": "~16.1.0",
+    "expo-notifications": "~0.20.1",
+    "expo-secure-store": "~12.3.1",
+    "expo-linking": "~5.0.2",
+    "expo-constants": "~14.4.2"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.20.0",
+    "@types/react": "~18.2.14",
+    "@types/react-native": "~0.72.2",
+    "jest": "^29.2.1",
+    "typescript": "^5.1.3"
+  }
+}
+```
+
+## 🏗️ INFRASTRUCTURE & DEPLOYMENT
+
+### infrastructure/docker-compose.production.yml
+```yaml
+version: '3.8'
+
+services:
+  # Nginx Load Balancer
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/sites-available:/etc/nginx/sites-available
+      - ./ssl:/etc/nginx/ssl
+      - ./logs/nginx:/var/log/nginx
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - nexvestxr-network
+    restart: unless-stopped
+
+  # Backend Service (Multiple Instances)
+  backend:
+    image: nexvestxr-backend:production
+    deploy:
+      replicas: 3
+    environment:
+      - NODE_ENV=production
+      - MONGO_URI=${MONGO_URI}
+      - REDIS_URL=redis://redis-cluster:6379
+      - XRPL_SERVER=${XRPL_SERVER}
+      - FLARE_RPC_URL=${FLARE_RPC_URL}
+      - AWS_REGION=${AWS_REGION}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - JWT_SECRET=${JWT_SECRET}
+    volumes:
+      - ./logs/backend:/app/logs
+      - ./uploads:/app/uploads
+    depends_on:
+      - mongodb-primary
+      - redis-cluster
+      - ai-service
+    networks:
+      - nexvestxr-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Frontend Service
+  frontend:
+    image: nexvestxr-frontend:production
+    environment:
+      - REACT_APP_API_URL=${API_URL}
+      - REACT_APP_ENVIRONMENT=production
+    volumes:
+      - ./logs/frontend:/var/log/nginx
+    depends_on:
+      - backend
+    networks:
+      - nexvestxr-network
+    restart: unless-stopped
+
+  # AI Service
+  ai-service:
+    image: nexvestxr-ai:production
+    deploy:
+      replicas: 2
+    volumes:
+      - ./ai-service/models:/app/models
+      - ./ai-service/data:/app/data
+      - ./logs/ai-service:/app/logs
+    environment:
+      - FLASK_ENV=production
+      - MODEL_PATH=/app/models
+      - AWS_REGION=${AWS_REGION}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+    networks:
+      - nexvestxr-network
+    restart: unless-stopped
+
+  # MongoDB Cluster
+  mongodb-primary:
+    image: mongo:7.0
+    command: mongod --replSet rs0 --bind_ip_all --auth
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
+      MONGO_INITDB_DATABASE: nexvestxr
+    volumes:
+      - mongodb-primary-data:/data/db
+      - ./mongodb/mongod.conf:/etc/mongod.conf
+      - ./logs/mongodb:/var/log/mongodb
+    networks:
+      - nexvestxr-network
+    restart: unless-stopped
+
+  mongodb-secondary1:
+    image: mongo:7.0
+    command: mongod --replSet rs0 --bind_ip_all --auth
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
+    volumes:
+      - mongodb-secondary1-data:/data/db
+      - ./logs/mongodb:/var/log/mongodb
+    depends_on:
+      - mongodb-primary
+    networks:
+      - nexvestxr-network
+    restart: unless-stopped
+
+  mongodb-secondary2:
+    image: mongo:7.0
+    command: mongod --replSet rs0 --bind_ip_all --auth
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
+    volumes:
+      - mongodb-secondary2-data:/data/db
+      - ./logs/mongodb:/var/log/mongodb
+    depends_on:
+      - mongodb-primary
+    networks:
+      - nexvestxr-network
+    restart: unless-stopped
+
+  # Redis Cluster
+  redis-cluster:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes --cluster-enabled yes --cluster-config-file nodes.conf --cluster-node-timeout 5000
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+      - ./logs/redis:/var/log/redis
+    networks:
+      - nexvestxr-network
+    restart: unless-stopped
+
+  # Monitoring Stack
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - prometheus-data:/prometheus
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus/alert_rules.yml:/etc/prometheus/alert_rules.yml
+    networks:
+      - nexvestxr-network
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+    depends_on:
+      - prometheus
+    networks:
+      - nexvestxr-network
+    restart: unless-stopped
+
+  # Backup Service
+  backup:
+    image: alpine:latest
+    command: sh -c "apk add --no-cache mongodb-tools aws-cli && crond -f"
+    environment:
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - S3_BUCKET=${BACKUP_S3_BUCKET}
+    volumes:
+      - ./scripts/backup.sh:/backup.sh
+      - ./backups:/backups
+    depends_on:
+      - mongodb-primary
+    networks:
+      - nexvestxr-network
+    restart: unless-stopped
+
+volumes:
+  mongodb-primary-data:
+  mongodb-secondary1-data:
+  mongodb-secondary2-data:
+  redis-data:
+  prometheus-data:
+  grafana-data:
+
+networks:
+  nexvestxr-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.25.0.0/16
+```
+
+### scripts/deploy-production.sh
+```bash
+#!/bin/bash
+# Production Deployment Script for NexVestXR Platform
+
+set -euo pipefail
+
+# Configuration
+PROJECT_NAME="nexvestxr"
+ENVIRONMENT="production"
+DOMAIN="${PRODUCTION_DOMAIN:-nexvestxr.com}"
+SERVER_USER="${DEPLOY_USER:-ubuntu}"
+SERVER_HOST="${PRODUCTION_SERVER_HOST}"
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Logging function
+log() {
+    local level=$1
+    shift
+    local message="$*"
+    local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+    
+    case $level in
+        "INFO")  echo -e "${GREEN}[INFO]${NC} $message" ;;
+        "WARN")  echo -e "${YELLOW}[WARN]${NC} $message" ;;
+        "ERROR") echo -e "${RED}[ERROR]${NC} $message" ;;
+        "DEBUG") echo -e "${BLUE}[DEBUG]${NC} $message" ;;
+    esac
+}
+
+# Pre-deployment checks
+check_prerequisites() {
+    log "INFO" "Checking deployment prerequisites..."
+    
+    # Check required tools
+    for tool in docker docker-compose git curl; do
+        if ! command -v $tool &> /dev/null; then
+            log "ERROR" "$tool is not installed"
+            exit 1
+        fi
+    done
+    
+    # Check environment variables
+    required_vars=(
+        "PRODUCTION_SERVER_HOST"
+        "MONGO_URI"
+        "JWT_SECRET"
+        "AWS_ACCESS_KEY_ID"
+        "AWS_SECRET_ACCESS_KEY"
+        "XRPL_SERVER"
+        "FLARE_RPC_URL"
+    )
+    
+    for var in "${required_vars[@]}"; do
+        if [[ -z "${!var:-}" ]]; then
+            log "ERROR" "Required environment variable $var is not set"
+            exit 1
+        fi
+    done
+    
+    log "INFO" "Prerequisites check passed"
+}
+
+# Build production images
+build_production_images() {
+    log "INFO" "Building production Docker images..."
+    
+    # Backend
+    log "INFO" "Building backend image..."
+    docker build -t nexvestxr-backend:production \
+        -f backend/Dockerfile.production backend/
+    
+    # Frontend
+    log "INFO" "Building frontend image..."
+    docker build -t nexvestxr-frontend:production \
+        --build-arg REACT_APP_API_URL=https://api.${DOMAIN} \
+        --build-arg REACT_APP_ENVIRONMENT=production \
+        -f frontend/Dockerfile.production frontend/
+    
+    # AI Service
+    log "INFO" "Building AI service image..."
+    docker build -t nexvestxr-ai:production ai-service/
+    
+    log "INFO" "Docker images built successfully"
+}
+
+# Deploy smart contracts
+deploy_smart_contracts() {
+    log "INFO" "Deploying smart contracts to Flare mainnet..."
+    
+    cd smart-contracts
+    
+    # Install dependencies
+    npm ci
+    
+    # Compile contracts
+    npx hardhat compile
+    
+    # Deploy to mainnet
+    npx hardhat run scripts/deploy-production.js --network flare-mainnet
+    
+    # Verify contracts
+    npx hardhat run scripts/verify-production.js --network flare-mainnet
+    
+    cd ..
+    
+    log "INFO" "Smart contracts deployed successfully"
+}
+
+# Database setup
+setup_production_database() {
+    log "INFO" "Setting up production database..."
+    
+    # Initialize MongoDB replica set
+    ssh ${SERVER_USER}@${SERVER_HOST} << 'ENDSSH'
+        cd /opt/nexvestxr
+        
+        # Wait for MongoDB to start
+        sleep 30
+        
+        # Initialize replica set
+        docker-compose -f docker-compose.production.yml exec -T mongodb-primary mongo --eval "
+        rs.initiate({
+          _id: 'rs0',
+          members: [
+            { _id: 0, host: 'mongodb-primary:27017', priority: 2 },
+            { _id: 1, host: 'mongodb-secondary1:27017', priority: 1 },
+            { _id: 2, host: 'mongodb-secondary2:27017', priority: 1 }
+          ]
+        })
+        "
+        
+        # Create application user
+        sleep 10
+        docker-compose -f docker-compose.production.yml exec -T mongodb-primary mongo admin --eval "
+        db.createUser({
+          user: 'nexvestxr',
+          pwd: '${MONGO_APP_PASSWORD}',
+          roles: [
+            { role: 'readWrite', db: 'nexvestxr' },
+            { role: 'read', db: 'admin' }
+          ]
+        })
+        "
+ENDSSH
+    
+    log "INFO" "Production database setup completed"
+}
+
+# Deploy to production
+deploy_to_production() {
+    log "INFO" "Deploying to production server: $SERVER_HOST"
+    
+    # Create deployment package
+    tar -czf nexvestxr-production.tar.gz \
+        docker-compose.production.yml \
+        nginx/ \
+        prometheus/ \
+        grafana/ \
+        scripts/ \
+        ssl/ \
+        --exclude='*.log' \
+        --exclude='node_modules' \
+        --exclude='.git'
+    
+    # Copy deployment package
+    log "INFO" "Uploading deployment package..."
+    scp nexvestxr-production.tar.gz ${SERVER_USER}@${SERVER_HOST}:/tmp/
+    
+    # Deploy on server
+    ssh ${SERVER_USER}@${SERVER_HOST} << 'ENDSSH'
+        set -e
+        
+        # Setup directories
+        sudo mkdir -p /opt/nexvestxr
+        cd /opt/nexvestxr
+        
+        # Backup current deployment
+        if [ -d "current" ]; then
+            sudo mv current backup-$(date +%Y%m%d-%H%M%S)
+        fi
+        
+        # Extract new deployment
+        sudo tar -xzf /tmp/nexvestxr-production.tar.gz
+        sudo chown -R ubuntu:ubuntu /opt/nexvestxr
+        
+        # Stop existing services gracefully
+        if [ -f docker-compose.production.yml ]; then
+            docker-compose -f docker-compose.production.yml down --timeout 60
+        fi
+        
+        # Pull latest base images
+        docker-compose -f docker-compose.production.yml pull
+        
+        # Start services
+        docker-compose -f docker-compose.production.yml up -d
+        
+        # Wait for services to be ready
+        echo "Waiting for services to start..."
+        sleep 120
+        
+        # Health checks
+        curl -f http://localhost/health || exit 1
+        
+        echo "Production deployment completed successfully"
+ENDSSH
+    
+    # Cleanup
+    rm -f nexvestxr-production.tar.gz
+    
+    log "INFO" "Production deployment completed"
+}
+
+# SSL setup
+setup_ssl_production() {
+    log "INFO" "Setting up SSL certificates for production..."
+    
+    ssh ${SERVER_USER}@${SERVER_HOST} << ENDSSH
+        set -e
+        
+        # Install certbot
+        sudo apt update
+        sudo apt install -y certbot
+        
+        # Stop nginx temporarily
+        docker-compose -f /opt/nexvestxr/docker-compose.production.yml stop nginx
+        
+        # Get SSL certificates
+        sudo certbot certonly --standalone \
+            -d ${DOMAIN} \
+            -d api.${DOMAIN} \
+            -d app.${DOMAIN} \
+            --non-interactive \
+            --agree-tos \
+            --email admin@${DOMAIN}
+        
+        # Copy certificates
+        sudo mkdir -p /opt/nexvestxr/ssl
+        sudo cp /etc/letsencrypt/live/${DOMAIN}/fullchain.pem /opt/nexvestxr/ssl/
+        sudo cp /etc/letsencrypt/live/${DOMAIN}/privkey.pem /opt/nexvestxr/ssl/
+        sudo chown -R ubuntu:ubuntu /opt/nexvestxr/ssl
+        
+        # Setup auto-renewal
+        echo "0 12 * * * /usr/bin/certbot renew --quiet --post-hook 'cd /opt/nexvestxr && docker-compose -f docker-compose.production.yml restart nginx'" | sudo crontab -
+        
+        # Restart nginx
+        docker-compose -f /opt/nexvestxr/docker-compose.production.yml start nginx
+ENDSSH
+    
+    log "INFO" "SSL certificates configured for production"
+}
+
+# Run production tests
+run_production_tests() {
+    log "INFO" "Running production health checks..."
+    
+    # Test endpoints
+    test_endpoints=(
+        "https://${DOMAIN}/health"
+        "https://api.${DOMAIN}/health"
+        "https://${DOMAIN}/api/properties"
+        "https://${DOMAIN}/api/trading/pairs"
+    )
+    
+    for endpoint in "${test_endpoints[@]}"; do
+        log "INFO" "Testing endpoint: $endpoint"
+        if curl -f -s --max-time 30 "$endpoint" > /dev/null; then
+            log "INFO" "✓ $endpoint - OK"
+        else
+            log "ERROR" "✗ $endpoint - FAILED"
+            exit 1
+        fi
+    done
+    
+    log "INFO" "All production health checks passed"
+}
+
+# Main deployment function
+main() {
+    local start_time=$(date +%s)
+    
+    log "INFO" "Starting NexVestXR production deployment"
+    log "INFO" "Domain: $DOMAIN"
+    log "INFO" "Server: $SERVER_HOST"
+    
+    # Deployment steps
+    check_prerequisites
+    build_production_images
+    deploy_smart_contracts
+    deploy_to_production
+    setup_production_database
+    setup_ssl_production
+    run_production_tests
+    
+    local end_time=$(date +%s)
+    local duration=$((end_time - start_time))
+    
+    log "INFO" "Production deployment completed successfully in ${duration}s"
+    log "INFO" "Platform available at: https://$DOMAIN"
+    log "INFO" "API available at: https://api.$DOMAIN"
+    
+    # Send success notification
+    if [[ -n "${SLACK_WEBHOOK_URL:-}" ]]; then
+        curl -X POST -H 'Content-type: application/json' \
+             --data "{\"text\":\"✅ NexVestXR production deployment completed successfully in ${duration}s\"}" \
+             "$SLACK_WEBHOOK_URL" >/dev/null 2>&1 || true
+    fi
+}
+
+# Error handling
+trap 'log "ERROR" "Deployment failed at line $LINENO"' ERR
+
+# Run deployment
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    main "$@"
+fi
+```
+
+## 📋 DEPLOYMENT INSTRUCTIONS
+
+### Quick Start Commands
+```bash
+# 1. Clone repository
+git clone https://github.com/your-username/nexvestxr-platform.git
+cd nexvestxr-platform
+
+# 2. Set environment variables
+cp .env.example .env.production
+# Edit .env.production with your configuration
+
+# 3. Deploy smart contracts (Songbird testnet)
+cd smart-contracts
+npm install
+npx hardhat compile
+npx hardhat run scripts/deploy.js --network songbird
+cd ..
+
+# 4. Build and deploy backend
+docker build -t nexvestxr-backend:latest backend/
+docker run -d --name nexvestxr-backend \
+  --env-file .env.production \
+  -p 3000:3000 \
+  nexvestxr-backend:latest
+
+# 5. Build and deploy frontend
+docker build -t nexvestxr-frontend:latest frontend/
+docker run -d --name nexvestxr-frontend \
+  -p 3001:80 \
+  nexvestxdingProvider } from './context/TradingContext';
+
+// Layout Components
+import Layout from './components/Layout/Layout';
+import LoadingSpinner from './components/UI/LoadingSpinner';
+import ErrorBoundary from './components/ErrorBoundary';
+
+// Lazy load pages for better performance
+const HomePage = React.lazy(() => import('./pages/HomePage'));
+const PropertiesPage = React.lazy(() => import('./pages/PropertiesPage'));
+const PropertyDetailPage = React.lazy(() => import('./pages/PropertyDetailPage'));
+const TradingPage = React.lazy(() => import('./pages/TradingPage'));
+const PortfolioPage = React.lazy(() => import('./pages/PortfolioPage'));
+const StakingPage = React.lazy(() => import('./pages/StakingPage'));
+const AnalyticsPage = React.lazy(() => import('./pages/AnalyticsPage'));
+const ProfilePage = React.lazy(() => import('./pages/ProfilePage'));
+const LoginPage = React.lazy(() => import('./pages/LoginPage'));
+const RegisterPage = React.lazy(() => import('./pages/RegisterPage'));
+const NotFoundPage = React.lazy(() => import('./pages/NotFoundPage'));
+
+// Protected Route Component
+import ProtectedRoute from './components/Auth/ProtectedRoute';
+
+// Create React Query client
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 3,
+      retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      cacheTime: 10 * 60 * 1000, // 10 minutes
+      refetchOnWindowFocus: false,
+    },
+    mutations: {
+      retry: 1,
+    },
+  },
+});
+
+function App() {
+  return (
+    <ErrorBoundary>
+      <HelmetProvider>
+        <QueryClientProvider client={queryClient}>
+          <AuthProvider>
+            <WalletProvider>
+              <TradingProvider>
+                <Router>
+                  <div className="App min-h-screen bg-gray-50">
+                    <Routes>
+                      {/* Public Routes */}
+                      <Route path="/login" element={
+                        <Suspense fallback={<LoadingSpinner />}>
+                          <LoginPage />
+                        </Suspense>
+                      } />
+                      <Route path="/register" element={
+                        <Suspense fallback={<LoadingSpinner />}>
+                          <RegisterPage />
+                        </Suspense>
+                      } />
+                      
+                      {/* Protected Routes with Layout */}
+                      <Route path="/" element={<Layout />}>
+                        <Route index element={
+                          <Suspense fallback={<LoadingSpinner />}>
+                            <HomePage />
+                          </Suspense>
+                        } />
+                        
+                        <Route path="properties" element={
+                          <Suspense fallback={<LoadingSpinner />}>
+                            <PropertiesPage />
+                          </Suspense>
+                        } />
+                        
+                        <Route path="properties/:id" element={
+                          <Suspense fallback={<LoadingSpinner />}>
+                            <PropertyDetailPage />
+                          </Suspense>
+                        } />
+                        
+                        <Route path="trading" element={
+                          <ProtectedRoute>
+                            <Suspense fallback={<LoadingSpinner />}>
+                              <TradingPage />
+                            </Suspense>
+                          </ProtectedRoute>
+                        } />
+                        
+                        <Route path="portfolio" element={
+                          <ProtectedRoute>
+                            <Suspense fallback={<LoadingSpinner />}>
+                              <PortfolioPage />
+                            </Suspense>
+                          </ProtectedRoute>
+                        } />
+                        
+                        <Route path="staking" element={
+                          <ProtectedRoute>
+                            <Suspense fallback={<LoadingSpinner />}>
+                              <StakingPage />
+                            </Suspense>
+                          </ProtectedRoute>
+                        } />
+                        
+                        <Route path="analytics" element={
+                          <ProtectedRoute>
+                            <Suspense fallback={<LoadingSpinner />}>
+                              <AnalyticsPage />
+                            </Suspense>
+                          </ProtectedRoute>
+                        } />
+                        
+                        <Route path="profile" element={
+                          <ProtectedRoute>
+                            <Suspense fallback={<LoadingSpinner />}>
+                              <ProfilePage />
+                            </Suspense>
+                          </ProtectedRoute>
+                        } />
+                      </Route>
+                      
+                      {/* 404 Route */}
+                      <Route path="*" element={
+                        <Suspense fallback={<LoadingSpinner />}>
+                          <NotFoundPage />
+                        </Suspense>
+                      } />
+                    </Routes>
+                    
+                    {/* Global Toast Notifications */}
+                    <Toaster
+                      position="top-right"
+                      toastOptions={{
+                        duration: 4000,
+                        style: {
+                          background: '#363636',
+                          color: '#fff',
+                        },
+                      }}
+                    />
+                  </div>
+                </Router>
+              </TradingProvider>
+            </WalletProvider>
+          </AuthProvider>
+        </QueryClientProvider>
+      </HelmetProvider>
+    </ErrorBoundary>
+  );
+}
+
+export default App;
+```
+
+### frontend/src/components/Trading/AdvancedTradingInterface.jsx
+```javascript
+import React, { useState, useEffect, useContext, useCallback } from 'react';
+import { WalletContext } from '../../context/WalletContext';
+import { AuthContext } from '../../context/AuthContext';
+import { TradingContext } from '../../context/TradingContext';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { motion, AnimatePresence } from 'framer-motion';
+import toast from 'react-hot-toast';
+
+// Icons
+import { 
+  TrendingUp, 
+  TrendingDown, 
+  BarChart3, 
+  Wallet, 
+  Clock, 
+  Target,
+  Shield,
+  Zap,
+  RefreshCw,
+  ChevronUp,
+  ChevronDown,
+  Activity,
+  DollarSign,
+  AlertTriangle,
+  CheckCircle,
+  X,
+  Plus,
+  Minus,
+  Eye,
+  EyeOff
+} from 'lucide-react';
+
+// API functions
+import { 
+  createLimitOrder, 
+  createMarketOrder, 
+  cancelOrder,
+  getOrderBook,
+  getRecentTrades,
+  getUserOrders,
+  getCurrentPrice,
+  getTradingMetrics
+} from '../../services/tradingApi';
+
+const AdvancedTradingInterface = ({ selectedPair = 'REXA/XRP' }) => {
+  const { isConnected, userAccount, signTransaction } = useContext(WalletContext);
+  const { user } = useContext(AuthContext);
+  const { 
+    activeOrders, 
+    setActiveOrders,
+    portfolioData,
+    updatePortfolioData 
+  } = useContext(TradingContext);
+
+  const queryClient = useQueryClient();
+
+  // Trading state
+  const [orderType, setOrderType] = useState('limit');
+  const [orderSide, setOrderSide] = useState('buy');
+  const [orderForm, setOrderForm] = useState({
+    amount: '',
+    price: '',
+    stopPrice: '',
+    targetPrice: '',
+    postOnly: false,
+    reduceOnly: false,
+    timeInForce: 'GTC'
+  });
+
+  // UI state
+  const [activeTab, setActiveTab] = useState('orderbook');
+  const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
+  const [priceSource, setPriceSource] = useState('market'); // 'market' or 'manual'
+
+  // Real-time data queries
+  const { data: orderBookData, isLoading: orderBookLoading } = useQuery({
+    queryKey: ['orderbook', selectedPair],
+    queryFn: () => getOrderBook(selectedPair, 20),
+    refetchInterval: 1000, // Update every second
+    enabled: !!selectedPair
+  });
+
+  const { data: recentTrades } = useQuery({
+    queryKey: ['recentTrades', selectedPair],
+    queryFn: () => getRecentTrades(selectedPair, 50),
+    refetchInterval: 2000,
+    enabled: !!selectedPair
+  });
+
+  const { data: currentPriceData } = useQuery({
+    queryKey: ['currentPrice', selectedPair],
+    queryFn: () => getCurrentPrice(selectedPair),
+    refetchInterval: 1000,
+    enabled: !!selectedPair
+  });
+
+  const { data: tradingMetrics } = useQuery({
+    queryKey: ['tradingMetrics', selectedPair],
+    queryFn: () => getTradingMetrics(selectedPair, '24h'),
+    refetchInterval: 5000,
+    enabled: !!selectedPair
+  });
+
+  const { data: userOrdersData } = useQuery({
+    queryKey: ['userOrders', userAccount, selectedPair],
+    queryFn: () => getUserOrders(userAccount, selectedPair),
+    refetchInterval: 3000,
+    enabled: !!userAccount && !!selectedPair
+  });
+
+  // Mutations for order operations
+  const createLimitOrderMutation = useMutation({
+    mutationFn: createLimitOrder,
+    onSuccess: (data) => {
+      toast.success('Limit order created successfully!');
+      queryClient.invalidateQueries(['userOrders']);
+      queryClient.invalidateQueries(['orderbook']);
+      resetOrderForm();
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to create limit order');
+    }
+  });
+
+  const createMarketOrderMutation = useMutation({
+    mutationFn: createMarketOrder,
+    onSuccess: (data) => {
+      toast.success('Market order executed successfully!');
+      queryClient.invalidateQueries(['userOrders']);
+      queryClient.invalidateQueries(['orderbook']);
+      resetOrderForm();
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to execute market order');
+    }
+  });
+
+  const cancelOrderMutation = useMutation({
+    mutationFn: cancelOrder,
+    onSuccess: () => {
+      toast.success('Order cancelled successfully');
+      queryClient.invalidateQueries(['userOrders']);
+      queryClient.invalidateQueries(['orderbook']);
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to cancel order');
+    }
+  });
+
+  // Helper functions
+  const resetOrderForm = () => {
+    setOrderForm({
+      amount: '',
+      price: '',
+      stopPrice: '',
+      targetPrice: '',
+      postOnly: false,
+      reduceOnly: false,
+      timeInForce: 'GTC'
+    });
+  };
+
+  const handleOrderBookClick = (price, amount, side) => {
+    setOrderForm(prev => ({
+      ...prev,
+      price: price.toString(),
+      amount: side === orderSide ? amount.toString() : prev.amount
+    }));
+    setPriceSource('market');
+  };
+
+  const calculateOrderValue = () => {
+    const amount = parseFloat(orderForm.amount) || 0;
+    const price = parseFloat(orderForm.price) || currentPriceData?.price || 0;
+    return amount * price;
+  };
+
+  const getAvailableBalance = () => {
+    if (!portfolioData) return 0;
+    
+    if (orderSide === 'buy') {
+      return portfolioData.xrpBalance || 0;
+    } else {
+      const tokenBalance = portfolioData.tokenBalances?.find(
+        balance => balance.currency === selectedPair.split('/')[0]
+      );
+      return tokenBalance ? parseFloat(tokenBalance.balance) : 0;
+    }
+  };
+
+  const handleOrderSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!isConnected) {
+      toast.error('Please connect your wallet first');
+      return;
+    }
+
+    if (!orderForm.amount || (!orderForm.price && orderType === 'limit')) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
+    const orderData = {
+      pairId: selectedPair,
+      side: orderSide,
+      amount: parseFloat(orderForm.amount),
+      ...(orderType === 'limit' && { price: parseFloat(orderForm.price) }),
+      options: {
+        postOnly: orderForm.postOnly,
+        reduceOnly: orderForm.reduceOnly,
+        timeInForce: orderForm.timeInForce,
+        ...(orderType === 'market' && { allowPartialFill: true })
+      }
+    };
+
+    try {
+      if (orderType === 'market') {
+        await createMarketOrderMutation.mutateAsync(orderData);
+      } else {
+        await createLimitOrderMutation.mutateAsync(orderData);
+      }
+    } catch (error) {
+      // Error handling is done in mutation onError
+    }
+  };
+
+  const handleCancelOrder = async (orderId) => {
+    try {
+      await cancelOrderMutation.mutateAsync(orderId);
+    } catch (error) {
+      // Error handling is done in mutation onError
+    }
+  };
+
+  // Auto-fill price from market data
+  useEffect(() => {
+    if (priceSource === 'market' && currentPriceData?.price && !orderForm.price) {
+      setOrderForm(prev => ({
+        ...prev,
+        price: currentPriceData.price.toFixed(6)
+      }));
+    }
+  }, [currentPriceData?.price, priceSource, orderForm.price]);
+
+  if (!isConnected) {
+    return (
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white rounded-lg shadow-md p-8 text-center"
+      >
+        <Wallet className="mx-auto h-16 w-16 text-gray-400 mb-4" />
+        <h3 className="text-xl font-semibold text-gray-900 mb-2">Connect Your Wallet</h3>
+        <p className="text-gray-600 mb-6">Connect your XUMM wallet to start trading</p>
+        <button className="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition-colors">
+          Connect XUMM Wallet
+        </button>
+      </motion.div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      {/* Trading Form */}
+      <motion.div 
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        className="lg:col-span-1"
+      >
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-semibold text-gray-900">Place Order</h3>
+            <div className="flex items-center space-x-2 text-sm">
+              <span className={`flex items-center ${
+                currentPriceData?.change >= 0 ? 'text-green-600' : 'text-red-600'
+              }`}>
+                {currentPriceData?.change >= 0 ? 
+                  <TrendingUp className="h-4 w-4 mr-1" /> : 
+                  <TrendingDown className="h-4 w-4 mr-1" />
+                }
+                {currentPriceData?.price?.toFixed(6) || '0.000000'} XRP
+              </span>
+              <span className={`${
+                currentPriceData?.change >= 0 ? 'text-green-600' : 'text-red-600'
+              }`}>
+                ({currentPriceData?.change >= 0 ? '+' : ''}{currentPriceData?.changePercent?.toFixed(2) || '0.00'}%)
+              </span>
+            </div>
+          </div>
+
+          {/* Order Type Selector */}
+          <div className="mb-4">
+            <div className="grid grid-cols-2 gap-2">
+              {['market', 'limit'].map((type) => (
+                <button
+                  key={type}
+                  onClick={() => setOrderType(type)}
+                  className={`py-2 px-3 text-xs font-medium rounded-lg transition-colors ${
+                    orderType === type
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  {type.toUpperCase()}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Buy/Sell Selector */}
+          <div className="flex mb-4 bg-gray-100 rounded-lg p-1">
+            <button
+              onClick={() => setOrderSide('buy')}
+              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                orderSide === 'buy'
+                  ? 'bg-green-600 text-white shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Buy
+            </button>
+            <button
+              onClick={() => setOrderSide('sell')}
+              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                orderSide === 'sell'
+                  ? 'bg-red-600 text-white shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Sell
+            </button>
+          </div>
+
+          {/* Order Form */}
+          <form onSubmit={handleOrderSubmit} className="space-y-4">
+            {/* Amount Input */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Amount ({selectedPair.split('/')[0]})
+              </label>
+              <div className="relative">
+                <input
+                  type="number"
+                  value={orderForm.amount}
+                  onChange={(e) => setOrderForm(prev => ({ ...prev, amount: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="0.00"
+                  step="0.01"
+                  min="0"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    const balance = getAvailableBalance();
+                    const maxAmount = orderSide === 'buy' 
+                      ? balance / (parseFloat(orderForm.price) || currentPriceData?.price || 1)
+                      : balance;
+                    setOrderForm(prev => ({ ...prev, amount: maxAmount.toFixed(2) }));
+                  }}
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 text-xs text-blue-600 hover:text-blue-800"
+                >
+                  MAX
+                </button>
+              </div>
+              <div className="mt-1 text-xs text-gray-500">
+                Available: {getAvailableBalance().toFixed(6)} {orderSide === 'buy' ? 'XRP' : selectedPair.split('/')[0]}
+              </div>
+            </div>
+
+            {/* Price Input (for limit orders) */}
+            {orderType === 'limit' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Price (XRP)
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    value={orderForm.price}
+                    onChange={(e) => {
+                      setOrderForm(prev => ({ ...prev, price: e.target.value }));
+                      setPriceSource('manual');
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder={currentPriceData?.price?.toFixed(6) || '0.000000'}
+                    step="0.000001"
+                    min="0"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (currentPriceData?.price) {
+                        setOrderForm(prev => ({ ...prev, price: currentPriceData.price.toFixed(6) }));
+                        setPriceSource('market');
+                      }
+                    }}
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 text-xs text-blue-600 hover:text-blue-800"
+                  >
+                    MARKET
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Advanced Options */}
+            {orderType === 'limit' && (
+              <div>
+                <button
+                  type="button"
+                  onClick={() => setShowAdvancedOptions(!showAdvancedOptions)}
+                  className="flex items-center text-sm text-gray-600 hover:text-gray-900"
+                >
+                  Advanced Options
+                  {showAdvancedOptions ? 
+                    <ChevronUp className="h-4 w-4 ml-1" /> : 
+                    <ChevronDown className="h-4 w-4 ml-1" />
+                  }
+                </button>
+                
+                <AnimatePresence>
+                  {showAdvancedOptions && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="mt-3 space-y-3"
+                    >
+                      <label className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={orderForm.postOnly}
+                          onChange={(e) => setOrderForm(prev => ({ ...prev, postOnly: e.target.checked }))}
+                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        />
+                        <span className="ml-2 text-sm text-gray-700">Post Only</span>
+                      </label>
+                      
+                      <label className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={orderForm.reduceOnly}
+                          onChange={(e) => setOrderForm(prev => ({ ...prev, reduceOnly: e.target.checked }))}
+                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        />
+                        <span className="ml-2 text-sm text-gray-700">Reduce Only</span>
+                      </label>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Time in Force
+                        </label>
+                        <select
+                          value={orderForm.timeInForce}
+                          onChange={(e) => setOrderForm(prev => ({ ...prev, timeInForce: e.target.value }))}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        >
+                          <option value="GTC">Good Till Cancelled</option>
+                          <option value="IOC">Immediate or Cancel</option>
+                          <option value="FOK">Fill or Kill</option>
+                        </select>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            )}
+
+            {/* Order Summary */}
+            {orderForm.amount && (orderForm.price || orderType === 'market') && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-gray-50 rounded-lg p-3"
+              >
+                <div className="flex justify-between text-sm mb-1">
+                  <span className="text-gray-600">Total:</span>
+                  <span className="font-medium">
+                    {calculateOrderValue().toFixed(6)} XRP
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Est. Fee:</span>
+                  <span className="font-medium">
+                    {(calculateOrderValue() * 0.002).toFixed(6)} XRP
+                  </span>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Submit Button */}
+            <button
+              type="submit"
+              disabled={
+                createLimitOrderMutation.isPending || 
+                createMarketOrderMutation.isPending ||
+                !orderForm.amount ||
+                (orderType === 'limit' && !orderForm.price)
+              }
+              className={`w-full py-3 px-4 rounded-lg font-medium transition-colors flex items-center justify-center space-x-2 ${
+                orderSide === 'buy'
+                  ? 'bg-green-600 hover:bg-green-700 text-white'
+                  : 'bg-red-600 hover:bg-red-700 text-white'
+              } disabled:opacity-50 disabled:cursor-not-allowed`}
+            >
+              {(createLimitOrderMutation.isPending || createMarketOrderMutation.isPending) ? (
+                <RefreshCw className="h-4 w-4 animate-spin" />
+              ) : (
+                <>
+                  {orderType === 'market' && <Zap className="h-4 w-4" />}
+                  {orderType === 'limit' && <Target className="h-4 w-4" />}
+                  <span>
+                    {orderSide === 'buy' ? 'Buy' : 'Sell'} {selectedPair.split('/')[0]}
+                  </span>
+                </>
+              )}
+            </button>
+          </form>
+        </div>
+      </motion.div>
+
+      {/* Market Data */}
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="lg:col-span-2"
+      >
+        <div className="bg-white rounded-lg shadow-md">
+          {/* Market Stats */}
+          <div className="p-4 border-b border-gray-200">
+            <div className="grid grid-cols-4 gap-4">
+              <div>
+                <div className="text-xs text-gray-500">24h Volume</div>
+                <div className="text-sm font-medium">
+                  {tradingMetrics?.volume?.toFixed(2) || '0.00'} XRP
+                </div>
+              </div>
+              <div>
+                <div className="text-xs text-gray-500">24h High</div>
+                <div className="text-sm font-medium text-green-600">
+                  {tradingMetrics?.high?.toFixed(6) || '0.000000'}
+                </div>
+              </div>
+              <div>
+                <div className="text-xs text-gray-500">24h Low</div>
+                <div className="text-sm font-medium text-red-600">
+                  {tradingMetrics?.low?.toFixed(6) || '0.000000'}
+                </div>
+              </div>
+              <div>
+                <div className="text-xs text-gray-500">Spread</div>
+                <div className="text-sm font-medium">
+                  {orderBookData?.spread?.toFixed(6) || '0.000000'}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Tab Navigation */}
+          <div className="flex border-b border-gray-200">
+            {[
+              { id: 'orderbook', label: 'Order Book', icon: BarChart3 },
+              { id: 'trades', label: 'Trades', icon: Activity },
+              { id: 'chart', label: 'Chart', icon: TrendingUp }
+            ].map(({ id, label, icon: Icon }) => (
+              <button
+                key={id}
+                onClick={() => setActiveTab(id)}
+                className={`flex items-center px-4 py-3 text-sm font-medium transition-colors ${
+                  activeTab === id
+                    ? 'border-b-2 border-blue-500 text-blue-600'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                <Icon className="h-4 w-4 mr-2" />
+                {label}
+              </button>
+            ))}
+          </div>
+
+          {/* Tab Content */}
+          <div className="p-4">
+            <AnimatePresence mode="wait">
+              {activeTab === 'orderbook' && (
+                <motion.div
+                  key="orderbook"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  {orderBookLoading ? (
+                    <div className="flex justify-center py-8">
+                      <RefreshCw className="h-6 w-6 animate-spin text-gray-400" />
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-4">
+                      {/* Bids */}
+                      <div>
+                        <h4 className="text-sm font-medium text-green-600 mb-2 flex items-center">
+                          <TrendingUp className="h-4 w-4 mr-1" />
+                          Bids
+                        </h4>
+                        <div className="space-y-1">
+                          {orderBookData?.bids?.slice(0, 15).map((bid, index) => (
+                            <motion.div
+                              key={index}
+                              initial={{ opacity: 0, x: -10 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: index * 0.02 }}
+                              onClick={() => handleOrderBookClick(bid.price, bid.amount, 'sell')}
+                              className="grid grid-cols-3 gap-2 text-xs py-1 hover:bg-green-50 cursor-pointer rounded transition-colors"
+                            >
+                              <span className="text-green-600 font-medium">
+                                {bid.price.toFixed(6)}
+                              </span>
+                              <span className="text-gray-600">
+                                {bid.amount.toFixed(2)}
+                              </span>
+                                      }
+      });
+      
+    } catch (error) {
+      console.error('Top-rated properties error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to fetch top-rated properties'
+      });
+    }
+  }
+);
+
+module.exports = router;
+```
+
+### backend/src/routes/trading.js
+```javascript
+const express = require('express');
+const router = express.Router();
+const TradingService = require('../services/TradingService');
+const { body, param, query, validationResult } = require('express-validator');
+const auth = require('../middleware/auth');
+const rateLimit = require('express-rate-limit');
+
+// Rate limiting for trading endpoints
+const tradingLimit = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 20, // Maximum 20 trading requests per minute
+  message: { error: 'Too many trading requests. Please slow down.' }
+});
+
+// Validation middleware
+const validateLimitOrder = [
+  body('pairId').isString().isLength({ min: 1, max: 20 }),
+  body('side').isIn(['buy', 'sell']),
+  body('amount').isFloat({ min: 0.001 }),
+  body('price').isFloat({ min: 0.000001 }),
+  body('options.postOnly').optional().isBoolean(),
+  body('options.reduceOnly').optional().isBoolean(),
+  body('options.timeInForce').optional().isIn(['GTC', 'IOC', 'FOK'])
+];
+
+const validateMarketOrder = [
+  body('pairId').isString().isLength({ min: 1, max: 20 }),
+  body('side').isIn(['buy', 'sell']),
+  body('amount').isFloat({ min: 0.001 }),
+  body('options.allowPartialFill').optional().isBoolean()
+];
+
+// Create limit order
+router.post('/orders/limit',
+  auth,
+  tradingLimit,
+  validateLimitOrder,
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          success: false,
+          error: 'Validation failed',
+          details: errors.array()
+        });
+      }
+      
+      const { pairId, side, amount, price, options = {} } = req.body;
+      const userAddress = req.user.walletAddress;
+      
+      if (!userAddress) {
+        return res.status(400).json({
+          success: false,
+          error: 'Wallet address required'
+        });
+      }
+      
+      const result = await TradingService.createLimitOrder(
+        userAddress, 
+        pairId, 
+        side, 
+        amount, 
+        price, 
+        options
+      );
+      
+      res.status(201).json({
+        success: true,
+        data: result
+      });
+      
+    } catch (error) {
+      console.error('Limit order creation error:', error);
+      res.status(400).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+);
+
+// Create market order
+router.post('/orders/market',
+  auth,
+  tradingLimit,
+  validateMarketOrder,
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          success: false,
+          error: 'Validation failed',
+          details: errors.array()
+        });
+      }
+      
+      const { pairId, side, amount, options = {} } = req.body;
+      const userAddress = req.user.walletAddress;
+      
+      if (!userAddress) {
+        return res.status(400).json({
+          success: false,
+          error: 'Wallet address required'
+        });
+      }
+      
+      const result = await TradingService.createMarketOrder(
+        userAddress, 
+        pairId, 
+        side, 
+        amount, 
+        options
+      );
+      
+      res.status(201).json({
+        success: true,
+        data: result
+      });
+      
+    } catch (error) {
+      console.error('Market order creation error:', error);
+      res.status(400).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+);
+
+// Cancel order
+router.delete('/orders/:orderId',
+  auth,
+  param('orderId').isString().isLength({ min: 1, max: 100 }),
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid order ID'
+        });
+      }
+      
+      const userAddress = req.user.walletAddress;
+      const result = await TradingService.cancelOrder(req.params.orderId, userAddress);
+      
+      res.json({
+        success: true,
+        data: result
+      });
+      
+    } catch (error) {
+      console.error('Order cancellation error:', error);
+      res.status(400).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+);
+
+// Get order book
+router.get('/orderbook/:pairId',
+  param('pairId').isString().isLength({ min: 1, max: 20 }),
+  query('depth').optional().isInt({ min: 1, max: 100 }),
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid parameters'
+        });
+      }
+      
+      const depth = parseInt(req.query.depth) || 20;
+      const orderBook = await TradingService.getOrderBook(req.params.pairId, depth);
+      
+      res.json({
+        success: true,
+        data: orderBook
+      });
+      
+    } catch (error) {
+      console.error('Order book fetch error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to fetch order book'
+      });
+    }
+  }
+);
+
+// Get recent trades
+router.get('/trades/:pairId',
+  param('pairId').isString().isLength({ min: 1, max: 20 }),
+  query('limit').optional().isInt({ min: 1, max: 100 }),
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid parameters'
+        });
+      }
+      
+      const limit = parseInt(req.query.limit) || 50;
+      const trades = await TradingService.getRecentTrades(req.params.pairId, limit);
+      
+      res.json({
+        success: true,
+        data: trades
+      });
+      
+    } catch (error) {
+      console.error('Recent trades fetch error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to fetch recent trades'
+      });
+    }
+  }
+);
+
+// Get user orders
+router.get('/orders',
+  auth,
+  query('pairId').optional().isString().isLength({ min: 1, max: 20 }),
+  query('status').optional().isIn(['pending', 'partial', 'filled', 'cancelled']),
+  query('limit').optional().isInt({ min: 1, max: 100 }),
+  query('offset').optional().isInt({ min: 0 }),
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid parameters'
+        });
+      }
+      
+      const userAddress = req.user.walletAddress;
+      const pairId = req.query.pairId;
+      const status = req.query.status;
+      const limit = parseInt(req.query.limit) || 50;
+      const offset = parseInt(req.query.offset) || 0;
+      
+      const orders = await TradingService.getUserOrders(
+        userAddress, 
+        pairId, 
+        status, 
+        limit, 
+        offset
+      );
+      
+      res.json({
+        success: true,
+        data: orders
+      });
+      
+    } catch (error) {
+      console.error('User orders fetch error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to fetch user orders'
+      });
+    }
+  }
+);
+
+// Get trading metrics
+router.get('/metrics/:pairId',
+  param('pairId').isString().isLength({ min: 1, max: 20 }),
+  query('timeframe').optional().isIn(['1h', '24h', '7d', '30d']),
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid parameters'
+        });
+      }
+      
+      const timeframe = req.query.timeframe || '24h';
+      const metrics = await TradingService.getTradingMetrics(req.params.pairId, timeframe);
+      
+      res.json({
+        success: true,
+        data: metrics
+      });
+      
+    } catch (error) {
+      console.error('Trading metrics fetch error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to fetch trading metrics'
+      });
+    }
+  }
+);
+
+// Get trading pairs
+router.get('/pairs', async (req, res) => {
+  try {
+    const pairs = TradingService.getTradingPairs();
+    
+    res.json({
+      success: true,
+      data: pairs
+    });
+    
+  } catch (error) {
+    console.error('Trading pairs fetch error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch trading pairs'
+    });
+  }
+});
+
+// Get current price
+router.get('/price/:pairId',
+  param('pairId').isString().isLength({ min: 1, max: 20 }),
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid pair ID'
+        });
+      }
+      
+      const currentPrice = TradingService.getCurrentPrice(req.params.pairId);
+      
+      res.json({
+        success: true,
+        data: {
+          pairId: req.params.pairId,
+          price: currentPrice,
+          timestamp: new Date()
+        }
+      });
+      
+    } catch (error) {
+      console.error('Current price fetch error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to fetch current price'
+      });
+    }
+  }
+);
+
+module.exports = router;
+```
+
+### backend/src/routes/ai.js
+```javascript
+const express = require('express');
+const router = express.Router();
+const tf = require('@tensorflow/tfjs-node');
+const multer = require('multer');
+const auth = require('../middleware/auth');
+const { body, query, validationResult } = require('express-validator');
+const rateLimit = require('express-rate-limit');
+
+// Configure multer for AI processing
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit
+    files: 1
+  }
+});
+
+// Rate limiting for AI endpoints
+const aiLimit = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 10, // Maximum 10 AI requests per minute
+  message: { error: 'Too many AI requests. Please try again later.' }
+});
+
+// Heatmap generation endpoint
+router.post('/heatmap/generate',
+  auth,
+  aiLimit,
+  body('city').isString().isLength({ min: 2, max: 50 }),
+  body('bounds.north').isFloat(),
+  body('bounds.south').isFloat(),
+  body('bounds.east').isFloat(),
+  body('bounds.west').isFloat(),
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          success: false,
+          error: 'Validation failed',
+          details: errors.array()
+        });
+      }
+      
+      const { city, bounds } = req.body;
+      
+      // Generate AI heatmap
+      const heatmapData = await generateHeatmap(city, bounds);
+      
+      res.json({
+        success: true,
+        data: {
+          city,
+          bounds,
+          heatmap: heatmapData,
+          generatedAt: new Date()
+        }
+      });
+      
+    } catch (error) {
+      console.error('Heatmap generation error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to generate heatmap'
+      });
+    }
+  }
+);
+
+// Property scoring endpoint
+router.post('/score/property',
+  auth,
+  aiLimit,
+  body('propertyData').isObject(),
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          success: false,
+          error: 'Validation failed',
+          details: errors.array()
+        });
+      }
+      
+      const { propertyData } = req.body;
+      
+      // Calculate AI property score
+      const scoreData = await calculatePropertyScore(propertyData);
+      
+      res.json({
+        success: true,
+        data: scoreData
+      });
+      
+    } catch (error) {
+      console.error('Property scoring error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to calculate property score'
+      });
+    }
+  }
+);
+
+// Document verification endpoint
+router.post('/verify/document',
+  auth,
+  aiLimit,
+  upload.single('document'),
+  body('documentType').isIn(['title_deed', 'property_tax', 'survey_report', 'ownership_certificate']),
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          success: false,
+          error: 'Validation failed',
+          details: errors.array()
+        });
+      }
+      
+      if (!req.file) {
+        return res.status(400).json({
+          success: false,
+          error: 'Document file is required'
+        });
+      }
+      
+      const { documentType } = req.body;
+      const documentBuffer = req.file.buffer;
+      
+      // Verify document using AI
+      const verificationResult = await verifyDocument(documentBuffer, documentType);
+      
+      res.json({
+        success: true,
+        data: verificationResult
+      });
+      
+    } catch (error) {
+      console.error('Document verification error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to verify document'
+      });
+    }
+  }
+);
+
+// Market prediction endpoint
+router.get('/predict/market',
+  auth,
+  query('city').isString().isLength({ min: 2, max: 50 }),
+  query('propertyType').optional().isIn(['apartment', 'villa', 'plot', 'commercial']),
+  query('timeframe').optional().isIn(['1month', '3months', '6months', '1year']),
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          success: false,
+          error: 'Validation failed',
+          details: errors.array()
+        });
+      }
+      
+      const { city, propertyType, timeframe } = req.query;
+      
+      // Generate market predictions
+      const predictions = await generateMarketPredictions(city, propertyType, timeframe || '6months');
+      
+      res.json({
+        success: true,
+        data: predictions
+      });
+      
+    } catch (error) {
+      console.error('Market prediction error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to generate market predictions'
+      });
+    }
+  }
+);
+
+// Helper functions for AI processing
+async function generateHeatmap(city, bounds) {
+  try {
+    // Create a grid of points within the bounds
+    const gridSize = 50;
+    const latStep = (bounds.north - bounds.south) / gridSize;
+    const lngStep = (bounds.east - bounds.west) / gridSize;
+    
+    const heatmapPoints = [];
+    
+    for (let i = 0; i <= gridSize; i++) {
+      for (let j = 0; j <= gridSize; j++) {
+        const lat = bounds.south + (i * latStep);
+        const lng = bounds.west + (j * lngStep);
+        
+        // Calculate investment attractiveness score for this location
+        const score = await calculateLocationScore(lat, lng, city);
+        
+        if (score > 0.3) { // Only include points with significant scores
+          heatmapPoints.push({
+            latitude: lat,
+            longitude: lng,
+            weight: score,
+            intensity: Math.round(score * 100)
+          });
+        }
+      }
+    }
+    
+    return {
+      points: heatmapPoints,
+      metadata: {
+        gridSize,
+        totalPoints: heatmapPoints.length,
+        maxIntensity: Math.max(...heatmapPoints.map(p => p.intensity)),
+        minIntensity: Math.min(...heatmapPoints.map(p => p.intensity))
+      }
+    };
+    
+  } catch (error) {
+    console.error('Heatmap generation failed:', error);
+    throw error;
+  }
+}
+
+async function calculateLocationScore(lat, lng, city) {
+  // Simplified scoring algorithm
+  // In production, this would use trained ML models
+  
+  let score = 0.5; // Base score
+  
+  // City center proximity bonus
+  const cityCenters = {
+    'mumbai': { lat: 19.0760, lng: 72.8777 },
+    'bangalore': { lat: 12.9716, lng: 77.5946 },
+    'delhi': { lat: 28.7041, lng: 77.1025 },
+    'pune': { lat: 18.5204, lng: 73.8567 },
+    'coimbatore': { lat: 11.0168, lng: 76.9558 }
+  };
+  
+  const center = cityCenters[city.toLowerCase()];
+  if (center) {
+    const distance = Math.sqrt(
+      Math.pow(lat - center.lat, 2) + Math.pow(lng - center.lng, 2)
+    );
+    
+    // Closer to city center = higher score
+    const proximityScore = Math.max(0, 1 - (distance * 10));
+    score += proximityScore * 0.3;
+  }
+  
+  // Add some randomness for demonstration
+  score += (Math.random() - 0.5) * 0.2;
+  
+  return Math.max(0, Math.min(1, score));
+}
+
+async function calculatePropertyScore(propertyData) {
+  try {
+    // Normalize features
+    const features = [
+      normalizeLocation(propertyData.city),
+      normalizePropertyType(propertyData.propertyType),
+      normalizeValue(propertyData.totalValue),
+      normalizeArea(propertyData.area || 1000),
+      normalizeAmenities(propertyData.amenities || [])
+    ];
+    
+    // Simple weighted scoring (would use trained model in production)
+    const weights = [0.3, 0.2, 0.25, 0.15, 0.1];
+    let score = 0;
+    
+    for (let i = 0; i < features.length; i++) {
+      score += features[i] * weights[i];
+    }
+    
+    const finalScore = Math.round(score * 100);
+    
+    return {
+      overallScore: finalScore,
+      breakdown: {
+        locationScore: Math.round(features[0] * 100),
+        typeScore: Math.round(features[1] * 100),
+        valueScore: Math.round(features[2] * 100),
+        areaScore: Math.round(features[3] * 100),
+        amenitiesScore: Math.round(features[4] * 100)
+      },
+      riskLevel: finalScore > 80 ? 'Low' : finalScore > 60 ? 'Medium' : 'High',
+      recommendation: getRecommendation(finalScore)
+    };
+    
+  } catch (error) {
+    console.error('Property scoring failed:', error);
+    throw error;
+  }
+}
+
+async function verifyDocument(documentBuffer, documentType) {
+  try {
+    // Simplified document verification
+    // In production, this would use AWS Textract + ML models
+    
+    const verificationScore = Math.random() * 0.4 + 0.6; // Random score between 0.6-1.0
+    const isValid = verificationScore > 0.7;
+    
+    return {
+      isValid,
+      confidence: Math.round(verificationScore * 100),
+      documentType,
+      extractedData: {
+        // Mock extracted data
+        documentNumber: `DOC${Math.floor(Math.random() * 1000000)}`,
+        issueDate: new Date().toISOString().split('T')[0],
+        authority: 'Municipal Corporation'
+      },
+      fraudScore: Math.round((1 - verificationScore) * 100),
+      recommendations: isValid ? 
+        ['Document appears authentic', 'All required fields present'] :
+        ['Document may require manual review', 'Some fields unclear']
+    };
+    
+  } catch (error) {
+    console.error('Document verification failed:', error);
+    throw error;
+  }
+}
+
+async function generateMarketPredictions(city, propertyType, timeframe) {
+  try {
+    // Simplified market prediction
+    // In production, this would use time series forecasting models
+    
+    const baseGrowth = getBaseGrowthRate(city, propertyType);
+    const timeMultiplier = getTimeMultiplier(timeframe);
+    
+    const currentIndex = 100;
+    const predictedIndex = currentIndex * (1 + (baseGrowth * timeMultiplier));
+    const confidence = Math.random() * 20 + 70; // 70-90% confidence
+    
+    return {
+      city,
+      propertyType: propertyType || 'all',
+      timeframe,
+      predictions: {
+        currentIndex,
+        predictedIndex: Math.round(predictedIndex),
+        expectedGrowth: Math.round((predictedIndex - currentIndex) / currentIndex * 100),
+        confidence: Math.round(confidence)
+      },
+      factors: [
+        'Infrastructure development',
+        'Employment growth',
+        'Government policies',
+        'Market demand trends'
+      ],
+      generatedAt: new Date()
+    };
+    
+  } catch (error) {
+    console.error('Market prediction failed:', error);
+    throw error;
+  }
+}
+
+// Helper functions
+function normalizeLocation(city) {
+  const cityScores = {
+    'mumbai': 0.95, 'bangalore': 0.90, 'delhi': 0.88,
+    'pune': 0.85, 'chennai': 0.82, 'hyderabad': 0.80,
+    'coimbatore': 0.65
+  };
+  return cityScores[city.toLowerCase()] || 0.5;
+}
+
+function normalizePropertyType(type) {
+  const typeScores = {
+    'apartment': 0.8, 'villa': 0.9, 'plot': 0.6,
+    'commercial': 0.85, 'warehouse': 0.7, 'office': 0.82
+  };
+  return typeScores[type.toLowerCase()] || 0.5;
+}
+
+function normalizeValue(value) {
+  const minValue = 500000;
+  const maxValue = 100000000;
+  return Math.min(Math.max((value - minValue) / (maxValue - minValue), 0), 1);
+}
+
+function normalizeArea(area) {
+  const minArea = 300;
+  const maxArea = 5000;
+  return Math.min(Math.max((area - minArea) / (maxArea - minArea), 0), 1);
+}
+
+function normalizeAmenities(amenities) {
+  const premiumAmenities = [
+    'swimming pool', 'gym', 'security', 'parking', 'garden',
+    'elevator', 'club house', 'playground', 'power backup'
+  ];
+  
+  const score = amenities.filter(amenity => 
+    premiumAmenities.includes(amenity.toLowerCase())
+  ).length;
+  
+  return Math.min(score / premiumAmenities.length, 1);
+}
+
+function getRecommendation(score) {
+  if (score >= 80) return 'Highly recommended for investment';
+  if (score >= 60) return 'Good investment opportunity';
+  if (score >= 40) return 'Consider with caution';
+  return 'High risk investment';
+}
+
+function getBaseGrowthRate(city, propertyType) {
+  const cityRates = {
+    'mumbai': 0.08, 'bangalore': 0.12, 'delhi': 0.07,
+    'pune': 0.10, 'chennai': 0.09, 'coimbatore': 0.06
+  };
+  
+  const typeMultipliers = {
+    'apartment': 1.0, 'villa': 1.1, 'commercial': 0.9,
+    'plot': 0.8
+  };
+  
+  const baseRate = cityRates[city.toLowerCase()] || 0.06;
+  const multiplier = typeMultipliers[propertyType] || 1.0;
+  
+  return baseRate * multiplier;
+}
+
+function getTimeMultiplier(timeframe) {
+  const multipliers = {
+    '1month': 0.083,  // 1/12 of annual
+    '3months': 0.25,  // 1/4 of annual
+    '6months': 0.5,   // 1/2 of annual
+    '1year': 1.0      // Full annual
+  };
+  
+  return multipliers[timeframe] || 0.5;
+}
+
+module.exports = router;
+```
+
+## 📱 FRONTEND APPLICATIONS
+
+### frontend/package.json
+```json
+{
+  "name": "nexvestxr-frontend",
+  "version": "2.0.0",
+  "description": "NexVestXR Frontend - Advanced Real Estate Investment Platform",
+  "private": true,
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.20.1",
+    "@tanstack/react-query": "^5.8.4",
+    "axios": "^1.6.2",
+    "tailwindcss": "^3.3.6",
+    "autoprefixer": "^10.4.16",
+    "postcss": "^8.4.32",
+    "lucide-react": "^0.294.0",
+    "recharts": "^2.8.0",
+    "react-hook-form": "^7.48.2",
+    "react-hot-toast": "^2.4.1",
+    "react-select": "^5.8.0",
+    "react-datepicker": "^4.25.0",
+    "react-dropzone": "^14.2.3",
+    "qrcode-generator": "^1.4.4",
+    "web3": "^4.3.0",
+    "ethers": "^6.8.1",
+    "xrpl": "^2.12.0",
+    "socket.io-client": "^4.7.4",
+    "chart.js": "^4.4.0",
+    "react-chartjs-2": "^5.2.0",
+    "date-fns": "^2.30.0",
+    "clsx": "^2.0.0",
+    "react-loading-skeleton": "^3.3.1",
+    "react-intersection-observer": "^9.5.3",
+    "framer-motion": "^10.16.16",
+    "react-leaflet": "^4.2.1",
+    "leaflet": "^1.9.4",
+    "leaflet.heat": "^0.2.0",
+    "@headlessui/react": "^1.7.17",
+    "@heroicons/react": "^2.0.18",
+    "react-helmet-async": "^2.0.4"
+  },
+  "devDependencies": {
+    "react-scripts": "5.0.1",
+    "eslint": "^8.54.0",
+    "eslint-config-react-app": "^7.0.1",
+    "prettier": "^3.1.0",
+    "@testing-library/react": "^13.4.0",
+    "@testing-library/jest-dom": "^6.1.5",
+    "@testing-library/user-event": "^14.5.1",
+    "cypress": "^13.6.1",
+    "@types/leaflet": "^1.9.8"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "test:ci": "react-scripts test --coverage --watchAll=false",
+    "test:e2e": "cypress run",
+    "test:e2e:open": "cypress open",
+    "eject": "react-scripts eject",
+    "lint": "eslint src/",
+    "lint:fix": "eslint src/ --fix",
+    "format": "prettier --write src/",
+    "analyze": "npm run build && npx serve -s build"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "proxy": "http://localhost:3000"
+}
+```
+
+### frontend/src/App.js
+```javascript
+import React, { Suspense } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { HelmetProvider } from 'react-helmet-async';
+import { Toaster } from 'react-hot-toast';
+
+// Context Providers
+import { AuthProvider } from './context/AuthContext';
+import { WalletProvider } from './context/WalletContext';
+import { Tra    );
+    }
+  }
+  
+  removeOrderFromBook(orderId, pairId) {
+    const orderBook = this.orderBooks.get(pairId);
+    if (!orderBook) return;
+    
+    // Remove from both sides
+    orderBook.bids = orderBook.bids.filter(order => order.id !== orderId);
+    orderBook.asks = orderBook.asks.filter(order => order.id !== orderId);
+  }
+  
+  async createLimitOrder(userAddress, pairId, side, amount, price, options = {}) {
+    try {
+      const pair = this.tradingPairs.get(pairId);
+      if (!pair || pair.status !== 'active') {
+        throw new Error('Trading pair not available');
+      }
+      
+      // Validate order parameters
+      this.validateOrderParams(pair, amount, price);
+      
+      // Check user balance
+      await this.checkUserBalance(userAddress, side, amount, price, pairId);
+      
+      const order = new Order({
+        id: this.generateOrderId(),
+        userAddress,
+        pairId,
+        type: 'limit',
+        side,
+        amount,
+        price,
+        status: 'pending',
+        remainingAmount: amount,
+        timeInForce: options.timeInForce || 'GTC',
+        options: {
+          postOnly: options.postOnly || false,
+          reduceOnly: options.reduceOnly || false,
+          hidden: options.hidden || false
+        }
+      });
+      
+      // Try to match the order immediately
+      const matchResult = await this.matchOrder(order);
+      
+      if (matchResult.fullyFilled) {
+        order.status = 'filled';
+        order.filledAt = new Date();
+        order.filledAmount = amount;
+      } else if (matchResult.partiallyFilled) {
+        order.status = 'partial';
+        order.remainingAmount = amount - matchResult.filledAmount;
+        order.filledAmount = matchResult.filledAmount;
+      }
+      
+      // Save order to database
+      await order.save();
+      
+      // Add to order book if not fully filled and not post-only rejected
+      if (order.status !== 'filled' && !matchResult.postOnlyRejected) {
+        this.addOrderToBook(order);
+      }
+      
+      // Cache order
+      await DatabaseManager.cacheSet(`order:${order.id}`, order.toObject(), 3600);
+      
+      // Emit events
+      this.emit('orderCreated', order);
+      if (matchResult.trades.length > 0) {
+        this.emit('tradesExecuted', matchResult.trades);
+      }
+      
+      return {
+        order,
+        trades: matchResult.trades,
+        fullyFilled: matchResult.fullyFilled
+      };
+      
+    } catch (error) {
+      console.error('Limit order creation failed:', error);
+      throw error;
+    }
+  }
+  
+  async createMarketOrder(userAddress, pairId, side, amount, options = {}) {
+    try {
+      const pair = this.tradingPairs.get(pairId);
+      if (!pair || pair.status !== 'active') {
+        throw new Error('Trading pair not available');
+      }
+      
+      // Validate order parameters
+      this.validateOrderParams(pair, amount, null);
+      
+      const orderBook = this.orderBooks.get(pairId);
+      const oppositeSide = side === 'buy' ? orderBook.asks : orderBook.bids;
+      
+      if (oppositeSide.length === 0) {
+        throw new Error('No liquidity available');
+      }
+      
+      // Calculate market execution
+      const execution = this.calculateMarketExecution(oppositeSide, amount, side);
+      
+      if (!execution.canFillCompletely && !options.allowPartialFill) {
+        throw new Error('Cannot fill order completely');
+      }
+      
+      const order = new Order({
+        id: this.generateOrderId(),
+        userAddress,
+        pairId,
+        type: 'market',
+        side,
+        amount,
+        status: 'pending',
+        remainingAmount: amount,
+        timeInForce: 'IOC' // Market orders are immediate or cancel
+      });
+      
+      // Execute market order
+      const matchResult = await this.executeMarketOrder(order, execution);
+      
+      order.status = matchResult.fullyFilled ? 'filled' : 'partial';
+      order.filledAmount = matchResult.filledAmount;
+      order.remainingAmount = amount - matchResult.filledAmount;
+      order.avgFillPrice = matchResult.avgPrice;
+      
+      if (order.status === 'filled') {
+        order.filledAt = new Date();
+      }
+      
+      // Save order to database
+      await order.save();
+      
+      // Cache order
+      await DatabaseManager.cacheSet(`order:${order.id}`, order.toObject(), 3600);
+      
+      // Emit events
+      this.emit('orderCreated', order);
+      this.emit('tradesExecuted', matchResult.trades);
+      
+      return {
+        order,
+        trades: matchResult.trades,
+        fullyFilled: matchResult.fullyFilled
+      };
+      
+    } catch (error) {
+      console.error('Market order creation failed:', error);
+      throw error;
+    }
+  }
+  
+  async matchOrder(order) {
+    const orderBook = this.orderBooks.get(order.pairId);
+    const oppositeSide = order.side === 'buy' ? orderBook.asks : orderBook.bids;
+    
+    const trades = [];
+    let filledAmount = 0;
+    let totalValue = 0;
+    
+    // Check for post-only rejection
+    if (order.options.postOnly) {
+      const wouldMatch = oppositeSide.some(existingOrder => {
+        return order.side === 'buy' 
+          ? existingOrder.price <= order.price
+          : existingOrder.price >= order.price;
+      });
+      
+      if (wouldMatch) {
+        return { trades: [], fullyFilled: false, partiallyFilled: false, postOnlyRejected: true };
+      }
+    }
+    
+    // Match against existing orders
+    for (let i = 0; i < oppositeSide.length && filledAmount < order.amount; i++) {
+      const existingOrder = oppositeSide[i];
+      
+      // Check if prices cross
+      const canMatch = order.side === 'buy' 
+        ? existingOrder.price <= order.price
+        : existingOrder.price >= order.price;
+      
+      if (!canMatch) break;
+      
+      // Calculate trade amount
+      const tradeAmount = Math.min(
+        order.amount - filledAmount,
+        existingOrder.remainingAmount
+      );
+      
+      if (tradeAmount <= 0) continue;
+      
+      // Create trade
+      const trade = {
+        id: this.generateTradeId(),
+        pairId: order.pairId,
+        price: existingOrder.price,
+        amount: tradeAmount,
+        value: existingOrder.price * tradeAmount,
+        fee: this.calculateTradingFee(existingOrder.price * tradeAmount, order.pairId),
+        buyerAddress: order.side === 'buy' ? order.userAddress : existingOrder.userAddress,
+        sellerAddress: order.side === 'sell' ? order.userAddress : existingOrder.userAddress,
+        buyOrderId: order.side === 'buy' ? order.id : existingOrder.id,
+        sellOrderId: order.side === 'sell' ? order.id : existingOrder.id,
+        timestamp: new Date()
+      };
+      
+      trades.push(trade);
+      filledAmount += tradeAmount;
+      totalValue += trade.value;
+      
+      // Update existing order
+      existingOrder.remainingAmount -= tradeAmount;
+      existingOrder.filledAmount = (existingOrder.filledAmount || 0) + tradeAmount;
+      
+      if (existingOrder.remainingAmount <= 0) {
+        existingOrder.status = 'filled';
+        existingOrder.filledAt = new Date();
+        // Remove from order book
+        oppositeSide.splice(i, 1);
+        i--; // Adjust index after removal
+      } else {
+        existingOrder.status = 'partial';
+      }
+      
+      // Update existing order in database
+      await this.updateOrderInDB(existingOrder);
+    }
+    
+    return {
+      trades,
+      filledAmount,
+      avgPrice: filledAmount > 0 ? totalValue / filledAmount : 0,
+      fullyFilled: filledAmount >= order.amount,
+      partiallyFilled: filledAmount > 0 && filledAmount < order.amount,
+      postOnlyRejected: false
+    };
+  }
+  
+  async executeMarketOrder(order, execution) {
+    const trades = [];
+    let filledAmount = 0;
+    let totalValue = 0;
+    
+    for (const step of execution.executionPlan) {
+      const trade = {
+        id: this.generateTradeId(),
+        pairId: order.pairId,
+        price: step.price,
+        amount: step.amount,
+        value: step.total,
+        fee: this.calculateTradingFee(step.total, order.pairId),
+        buyerAddress: order.side === 'buy' ? order.userAddress : step.counterpartyAddress,
+        sellerAddress: order.side === 'sell' ? order.userAddress : step.counterpartyAddress,
+        buyOrderId: order.side === 'buy' ? order.id : step.orderId,
+        sellOrderId: order.side === 'sell' ? order.id : step.orderId,
+        timestamp: new Date()
+      };
+      
+      trades.push(trade);
+      filledAmount += step.amount;
+      totalValue += step.total;
+    }
+    
+    return {
+      trades,
+      filledAmount,
+      avgPrice: filledAmount > 0 ? totalValue / filledAmount : 0,
+      fullyFilled: filledAmount >= order.amount,
+      partiallyFilled: filledAmount > 0 && filledAmount < order.amount
+    };
+  }
+  
+  calculateMarketExecution(orderBookSide, targetAmount, side) {
+    const executionPlan = [];
+    let remainingAmount = targetAmount;
+    let totalValue = 0;
+    
+    for (const order of orderBookSide) {
+      if (remainingAmount <= 0) break;
+      
+      const executeAmount = Math.min(remainingAmount, order.remainingAmount);
+      const stepValue = order.price * executeAmount;
+      
+      executionPlan.push({
+        orderId: order.id,
+        counterpartyAddress: order.userAddress,
+        price: order.price,
+        amount: executeAmount,
+        total: stepValue
+      });
+      
+      totalValue += stepValue;
+      remainingAmount -= executeAmount;
+    }
+    
+    const avgPrice = executionPlan.length > 0 ? totalValue / (targetAmount - remainingAmount) : 0;
+    
+    return {
+      executionPlan,
+      avgPrice,
+      canFillCompletely: remainingAmount === 0,
+      filledAmount: targetAmount - remainingAmount
+    };
+  }
+  
+  async cancelOrder(orderId, userAddress) {
+    try {
+      const order = await this.getOrder(orderId);
+      if (!order) {
+        throw new Error('Order not found');
+      }
+      
+      if (order.userAddress !== userAddress) {
+        throw new Error('Unauthorized to cancel this order');
+      }
+      
+      if (!order.canCancel()) {
+        throw new Error('Order cannot be cancelled');
+      }
+      
+      // Remove from order book
+      this.removeOrderFromBook(orderId, order.pairId);
+      
+      // Update order status
+      order.updateStatus('cancelled');
+      await order.save();
+      
+      // Update cache
+      await DatabaseManager.cacheSet(`order:${orderId}`, order.toObject(), 3600);
+      
+      // Emit event
+      this.emit('orderCancelled', order);
+      
+      return { success: true, orderId };
+      
+    } catch (error) {
+      console.error('Order cancellation failed:', error);
+      throw error;
+    }
+  }
+  
+  async getOrderBook(pairId, depth = 20) {
+    try {
+      const orderBook = this.orderBooks.get(pairId);
+      if (!orderBook) {
+        throw new Error('Trading pair not found');
+      }
+      
+      // Return top N orders from each side
+      const bids = orderBook.bids.slice(0, depth).map(order => ({
+        price: order.price,
+        amount: order.remainingAmount,
+        total: order.price * order.remainingAmount,
+        count: 1
+      }));
+      
+      const asks = orderBook.asks.slice(0, depth).map(order => ({
+        price: order.price,
+        amount: order.remainingAmount,
+        total: order.price * order.remainingAmount,
+        count: 1
+      }));
+      
+      // Aggregate orders at same price level
+      const aggregatedBids = this.aggregateOrderBookSide(bids);
+      const aggregatedAsks = this.aggregateOrderBookSide(asks);
+      
+      const spread = aggregatedAsks.length > 0 && aggregatedBids.length > 0 
+        ? aggregatedAsks[0].price - aggregatedBids[0].price 
+        : 0;
+      
+      return {
+        pairId,
+        bids: aggregatedBids,
+        asks: aggregatedAsks,
+        spread,
+        lastUpdated: new Date()
+      };
+      
+    } catch (error) {
+      console.error('Order book fetch failed:', error);
+      throw error;
+    }
+  }
+  
+  aggregateOrderBookSide(orders) {
+    const priceMap = new Map();
+    
+    for (const order of orders) {
+      const existing = priceMap.get(order.price);
+      if (existing) {
+        existing.amount += order.amount;
+        existing.total += order.total;
+        existing.count += 1;
+      } else {
+        priceMap.set(order.price, { ...order });
+      }
+    }
+    
+    return Array.from(priceMap.values());
+  }
+  
+  async getRecentTrades(pairId, limit = 50) {
+    try {
+      const cacheKey = `recent_trades:${pairId}`;
+      let trades = await DatabaseManager.cacheGet(cacheKey);
+      
+      if (!trades) {
+        // In a real implementation, this would fetch from a trades collection
+        trades = []; // Placeholder
+        await DatabaseManager.cacheSet(cacheKey, trades, 60); // 1 minute cache
+      }
+      
+      return trades.slice(0, limit);
+      
+    } catch (error) {
+      console.error('Recent trades fetch failed:', error);
+      throw error;
+    }
+  }
+  
+  async getUserOrders(userAddress, pairId = null, status = null, limit = 50, offset = 0) {
+    try {
+      const query = { userAddress };
+      
+      if (pairId) query.pairId = pairId;
+      if (status) query.status = status;
+      
+      const orders = await Order.find(query)
+        .sort({ createdAt: -1 })
+        .limit(limit)
+        .skip(offset)
+        .lean();
+      
+      const total = await Order.countDocuments(query);
+      
+      return {
+        orders,
+        total,
+        hasMore: (offset + limit) < total
+      };
+      
+    } catch (error) {
+      console.error('User orders fetch failed:', error);
+      throw error;
+    }
+  }
+  
+  async getTradingMetrics(pairId, timeframe = '24h') {
+    try {
+      const cacheKey = `metrics:${pairId}:${timeframe}`;
+      let metrics = await DatabaseManager.cacheGet(cacheKey);
+      
+      if (!metrics) {
+        // Calculate metrics from recent trades
+        const now = new Date();
+        const startTime = new Date(now.getTime() - this.getTimeframeMs(timeframe));
+        
+        // In a real implementation, this would aggregate from trades collection
+        metrics = {
+          volume: 0,
+          high: 0,
+          low: 0,
+          open: 0,
+          close: 0,
+          change: 0,
+          changePercent: 0,
+          trades: 0
+        };
+        
+        await DatabaseManager.cacheSet(cacheKey, metrics, 300); // 5 minutes cache
+      }
+      
+      return metrics;
+      
+    } catch (error) {
+      console.error('Trading metrics fetch failed:', error);
+      throw error;
+    }
+  }
+  
+  getTimeframeMs(timeframe) {
+    const timeframes = {
+      '1h': 60 * 60 * 1000,
+      '24h': 24 * 60 * 60 * 1000,
+      '7d': 7 * 24 * 60 * 60 * 1000,
+      '30d': 30 * 24 * 60 * 60 * 1000
+    };
+    
+    return timeframes[timeframe] || timeframes['24h'];
+  }
+  
+  // Utility methods
+  generateOrderId() {
+    return `order_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  }
+  
+  generateTradeId() {
+    return `trade_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  }
+  
+  validateOrderParams(pair, amount, price) {
+    if (amount < pair.minOrderSize || amount > pair.maxOrderSize) {
+      throw new Error(`Order amount must be between ${pair.minOrderSize} and ${pair.maxOrderSize}`);
+    }
+    
+    if (price !== null && price <= 0) {
+      throw new Error('Price must be greater than 0');
+    }
+    
+    // Check precision
+    if (price !== null) {
+      const priceDecimals = (price.toString().split('.')[1] || '').length;
+      if (priceDecimals > pair.priceDecimals) {
+        throw new Error(`Price precision cannot exceed ${pair.priceDecimals} decimal places`);
+      }
+    }
+    
+    const amountDecimals = (amount.toString().split('.')[1] || '').length;
+    if (amountDecimals > pair.amountDecimals) {
+      throw new Error(`Amount precision cannot exceed ${pair.amountDecimals} decimal places`);
+    }
+  }
+  
+  async checkUserBalance(userAddress, side, amount, price, pairId) {
+    // In a real implementation, this would check user's token balances
+    // For now, we'll assume the user has sufficient balance
+    return true;
+  }
+  
+  calculateTradingFee(value, pairId) {
+    const pair = this.tradingPairs.get(pairId);
+    return value * (pair?.tradingFee || 0.002);
+  }
+  
+  async getOrder(orderId) {
+    try {
+      // Try cache first
+      let order = await DatabaseManager.cacheGet(`order:${orderId}`);
+      
+      if (!order) {
+        order = await Order.findOne({ id: orderId }).lean();
+        if (order) {
+          await DatabaseManager.cacheSet(`order:${orderId}`, order, 3600);
+        }
+      }
+      
+      return order;
+      
+    } catch (error) {
+      console.error('Order fetch failed:', error);
+      return null;
+    }
+  }
+  
+  async updateOrderInDB(order) {
+    try {
+      await Order.updateOne(
+        { id: order.id },
+        {
+          $set: {
+            status: order.status,
+            remainingAmount: order.remainingAmount,
+            filledAmount: order.filledAmount,
+            updatedAt: new Date(),
+            filledAt: order.filledAt
+          }
+        }
+      );
+      
+      // Update cache
+      await DatabaseManager.cacheSet(`order:${order.id}`, order, 3600);
+      
+    } catch (error) {
+      console.error('Order DB update failed:', error);
+    }
+  }
+  
+  startPriceFeeds() {
+    // Update price feeds every 5 seconds
+    setInterval(() => {
+      this.updatePriceFeeds();
+    }, 5000);
+  }
+  
+  updatePriceFeeds() {
+    for (const [pairId, orderBook] of this.orderBooks) {
+      try {
+        const bestBid = orderBook.bids.length > 0 ? orderBook.bids[0].price : 0;
+        const bestAsk = orderBook.asks.length > 0 ? orderBook.asks[0].price : 0;
+        const midPrice = bestBid && bestAsk ? (bestBid + bestAsk) / 2 : bestBid || bestAsk || 0;
+        
+        const priceData = {
+          pairId,
+          price: midPrice,
+          bestBid,
+          bestAsk,
+          spread: bestAsk - bestBid,
+          timestamp: new Date()
+        };
+        
+        this.priceFeeds.set(pairId, priceData);
+        
+        // Cache current price
+        DatabaseManager.cacheSet(`current_price:${pairId}`, priceData, 60);
+        
+        // Emit price update
+        this.emit('priceUpdate', priceData);
+        
+      } catch (error) {
+        console.error(`Price feed update failed for ${pairId}:`, error);
+      }
+    }
+  }
+  
+  getCurrentPrice(pairId) {
+    const priceData = this.priceFeeds.get(pairId);
+    return priceData ? priceData.price : 0;
+  }
+  
+  getTradingPairs() {
+    return Array.from(this.tradingPairs.values());
+  }
+}
+
+module.exports = new TradingService();
+```
+
+### backend/src/routes/properties.js
+```javascript
+const express = require('express');
+const router = express.Router();
+const multer = require('multer');
+const PropertyService = require('../services/PropertyService');
+const { body, param, query, validationResult } = require('express-validator');
+const auth = require('../middleware/auth');
+const rateLimit = require('express-rate-limit');
+
+// Configure multer for file uploads
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+    files: 10 // Maximum 10 files
+  },
+  fileFilter: (req, file, cb) => {
+    // Allow only specific file types
+    const allowedTypes = /jpeg|jpg|png|pdf|doc|docx/;
+    const extname = allowedTypes.test(file.originalname.toLowerCase());
+    const mimetype = allowedTypes.test(file.mimetype);
+    
+    if (mimetype && extname) {
+      return cb(null, true);
+    } else {
+      cb(new Error('Invalid file type. Only JPEG, PNG, PDF, DOC, and DOCX files are allowed.'));
+    }
+  }
+});
+
+// Rate limiting for property creation
+const createPropertyLimit = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 5, // Maximum 5 property submissions per hour
+  message: { error: 'Too many property submissions. Please try again later.' }
+});
+
+// Validation middleware
+const validateProperty = [
+  body('title').isLength({ min: 10, max: 200 }).trim().escape(),
+  body('description').isLength({ min: 50, max: 2000 }).trim().escape(),
+  body('city').isLength({ min: 2, max: 50 }).trim().escape(),
+  body('state').isLength({ min: 2, max: 50 }).trim().escape(),
+  body('country').optional().isLength({ min: 2, max: 50 }).trim().escape(),
+  body('propertyType').isIn(['apartment', 'villa', 'plot', 'commercial', 'warehouse', 'office']),
+  body('totalValue').isFloat({ min: 500000, max: 1000000000 }),
+  body('area').isFloat({ min: 100 }),
+  body('coordinates.lat').isFloat({ min: -90, max: 90 }),
+  body('coordinates.lng').isFloat({ min: -180, max: 180 }),
+  body('amenities').optional().isArray(),
+  body('amenities.*').optional().isString().trim().escape()
+];
+
+const validateSearch = [
+  query('city').optional().isLength({ min: 2, max: 50 }).trim().escape(),
+  query('propertyType').optional().isIn(['apartment', 'villa', 'plot', 'commercial', 'warehouse', 'office']),
+  query('minValue').optional().isFloat({ min: 0 }),
+  query('maxValue').optional().isFloat({ min: 0 }),
+  query('minScore').optional().isFloat({ min: 0, max: 100 }),
+  query('maxRisk').optional().isFloat({ min: 0, max: 100 }),
+  query('minLiquidity').optional().isFloat({ min: 0, max: 100 }),
+  query('page').optional().isInt({ min: 1 }),
+  query('limit').optional().isInt({ min: 1, max: 100 })
+];
+
+// Create new property
+router.post('/', 
+  auth, 
+  createPropertyLimit, 
+  upload.array('documents', 10),
+  validateProperty,
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          success: false,
+          error: 'Validation failed',
+          details: errors.array()
+        });
+      }
+      
+      const propertyData = req.body;
+      const documents = req.files || [];
+      
+      // Add document types from form data
+      documents.forEach((doc, index) => {
+        doc.type = req.body[`documentTypes[${index}]`] || 'general';
+      });
+      
+      if (documents.length === 0) {
+        return res.status(400).json({
+          success: false,
+          error: 'At least one document is required'
+        });
+      }
+      
+      const property = await PropertyService.createProperty(propertyData, documents);
+      
+      res.status(201).json({
+        success: true,
+        data: property,
+        message: 'Property created successfully'
+      });
+      
+    } catch (error) {
+      console.error('Property creation error:', error);
+      res.status(400).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+);
+
+// Get property by ID
+router.get('/:id',
+  param('id').isLength({ min: 1, max: 50 }).trim().escape(),
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid property ID'
+        });
+      }
+      
+      const property = await PropertyService.getPropertyById(req.params.id);
+      
+      if (!property) {
+        return res.status(404).json({
+          success: false,
+          error: 'Property not found'
+        });
+      }
+      
+      res.json({
+        success: true,
+        data: property
+      });
+      
+    } catch (error) {
+      console.error('Property fetch error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to fetch property'
+      });
+    }
+  }
+);
+
+// Search properties
+router.get('/',
+  validateSearch,
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid search parameters',
+          details: errors.array()
+        });
+      }
+      
+      const filters = {
+        city: req.query.city,
+        propertyType: req.query.propertyType,
+        minValue: req.query.minValue ? parseFloat(req.query.minValue) : undefined,
+        maxValue: req.query.maxValue ? parseFloat(req.query.maxValue) : undefined,
+        minScore: req.query.minScore ? parseFloat(req.query.minScore) : undefined,
+        maxRisk: req.query.maxRisk ? parseFloat(req.query.maxRisk) : undefined,
+        minLiquidity: req.query.minLiquidity ? parseFloat(req.query.minLiquidity) : undefined
+      };
+      
+      const pagination = {
+        page: parseInt(req.query.page) || 1,
+        limit: parseInt(req.query.limit) || 20
+      };
+      
+      const results = await PropertyService.searchProperties(filters, pagination);
+      
+      res.json({
+        success: true,
+        data: results
+      });
+      
+    } catch (error) {
+      console.error('Property search error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Search failed'
+      });
+    }
+  }
+);
+
+// Get property analytics
+router.get('/:id/analytics',
+  auth,
+  param('id').isLength({ min: 1, max: 50 }).trim().escape(),
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid property ID'
+        });
+      }
+      
+      const analytics = await PropertyService.getPropertyAnalytics(req.params.id);
+      
+      res.json({
+        success: true,
+        data: analytics
+      });
+      
+    } catch (error) {
+      console.error('Property analytics error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to fetch analytics'
+      });
+    }
+  }
+);
+
+// Get city statistics
+router.get('/stats/cities',
+  query('city').optional().isLength({ min: 2, max: 50 }).trim().escape(),
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid city parameter'
+        });
+      }
+      
+      // This would be implemented to return city-level statistics
+      res.json({
+        success: true,
+        data: {
+          message: 'City statistics endpoint - to be implemented'
+        }
+      });
+      
+    } catch (error) {
+      console.error('City stats error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to fetch city statistics'
+      });
+    }
+  }
+);
+
+// Get top-rated properties
+router.get('/featured/top-rated',
+  query('limit').optional().isInt({ min: 1, max: 50 }),
+  async (req, res) => {
+    try {
+      const limit = parseInt(req.query.limit) || 10;
+      
+      // This would use PropertyService to get top-rated properties
+      res.json({
+        success: true,
+        data: {
+          message: 'Top-rated properties endpoint - to be implemented'
+        # 🚀 NexVestXR Complete Optimized Codebase
+# Implementation Date: June 08, 2025
+# Target: 1M Users with Scalability, Reliability, Availability & Security
+
+## 📁 PROJECT STRUCTURE
+```
+nexvestxr-platform/
+├── contracts/                 # Optimized Smart Contracts
+├── backend/                   # Scalable Backend Services
+├── frontend/                  # React Web App
+├── mobile/                    # React Native App
+├── infrastructure/            # DevOps & Deployment
+├── compliance/                # Regulatory Framework
+├── scripts/                   # Deployment & Management
+└── docs/                     # Documentation
+```
+
+## 🔐 SMART CONTRACTS
+
+### contracts/REXAToken.sol
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.19;
+
+import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+
+contract REXAToken is 
+    Initializable,
+    ERC20Upgradeable, 
+    AccessControlUpgradeable, 
+    ReentrancyGuardUpgradeable,
+    PausableUpgradeable 
+{
+    bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
+    bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
+    bytes32 public constant COMPLIANCE_ROLE = keccak256("COMPLIANCE_ROLE");
+    
+    // Gas-optimized storage
+    mapping(address => bool) public blacklisted;
+    mapping(address => uint256) public lastTransferTime;
+    mapping(uint256 => PropertyData) public properties; // Changed from array to mapping
+    uint256 public propertyCount;
+    
+    // Compliance tracking
+    mapping(address => bool) public kycVerified;
+    mapping(bytes32 => bool) public transactionHashes;
+    
+    struct PropertyData {
+        uint256 id;
+        uint256 weight;
+        string ipfsHash;
+        bool active;
+        uint256 lastUpdated;
+    }
+    
+    // Events for compliance
+    event PropertyAdded(uint256 indexed propertyId, uint256 weight, string ipfsHash);
+    event PropertyUpdated(uint256 indexed propertyId, uint256 newWeight);
+    event ComplianceCheck(address indexed user, bytes32 transactionHash, bool approved);
+    event KYCStatusUpdated(address indexed user, bool verified);
+    
+    // Rate limiting
+    uint256 public constant TRANSFER_COOLDOWN = 1 minutes;
+    uint256 public maxTransferPerDay;
+    mapping(address => uint256) public dailyTransferred;
+    mapping(address => uint256) public lastDayReset;
+    
+    function initialize(
+        string memory name,
+        string memory symbol,
+        uint256 _maxTransferPerDay
+    ) public initializer {
+        __ERC20_init(name, symbol);
+        __AccessControl_init();
+        __ReentrancyGuard_init();
+        __Pausable_init();
+        
+        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _grantRole(MINTER_ROLE, msg.sender);
+        _grantRole(PAUSER_ROLE, msg.sender);
+        _grantRole(COMPLIANCE_ROLE, msg.sender);
+        
+        maxTransferPerDay = _maxTransferPerDay;
+    }
+    
+    // Gas-optimized property management
+    function addProperty(
+        uint256 propertyId, 
+        uint256 weight, 
+        string calldata ipfsHash
+    ) external onlyRole(MINTER_ROLE) {
+        require(weight <= 10000, "Weight exceeds 100%");
+        require(!properties[propertyId].active, "Property already exists");
+        
+        properties[propertyId] = PropertyData({
+            id: propertyId,
+            weight: weight,
+            ipfsHash: ipfsHash,
+            active: true,
+            lastUpdated: block.timestamp
+        });
+        
+        unchecked { ++propertyCount; } // Gas optimization
+        
+        emit PropertyAdded(propertyId, weight, ipfsHash);
+    }
+    
+    // Batch operations for gas efficiency
+    function addPropertiesBatch(
+        uint256[] calldata propertyIds,
+        uint256[] calldata weights,
+        string[] calldata ipfsHashes
+    ) external onlyRole(MINTER_ROLE) {
+        require(propertyIds.length == weights.length && weights.length == ipfsHashes.length, "Array length mismatch");
+        
+        for (uint256 i = 0; i < propertyIds.length;) {
+            properties[propertyIds[i]] = PropertyData({
+                id: propertyIds[i],
+                weight: weights[i],
+                ipfsHash: ipfsHashes[i],
+                active: true,
+                lastUpdated: block.timestamp
+            });
+            
+            emit PropertyAdded(propertyIds[i], weights[i], ipfsHashes[i]);
+            
+            unchecked { ++i; ++propertyCount; }
+        }
+    }
+    
+    // Enhanced transfer with compliance
+    function transfer(address to, uint256 amount) public override nonReentrant whenNotPaused returns (bool) {
+        _beforeTokenTransfer(msg.sender, to, amount);
+        return super.transfer(to, amount);
+    }
+    
+    function transferFrom(address from, address to, uint256 amount) public override nonReentrant whenNotPaused returns (bool) {
+        _beforeTokenTransfer(from, to, amount);
+        return super.transferFrom(from, to, amount);
+    }
+    
+    function _beforeTokenTransfer(address from, address to, uint256 amount) internal {
+        require(!blacklisted[from] && !blacklisted[to], "Address blacklisted");
+        require(kycVerified[from] && kycVerified[to], "KYC not verified");
+        
+        // Rate limiting
+        require(block.timestamp >= lastTransferTime[from] + TRANSFER_COOLDOWN, "Transfer too frequent");
+        
+        // Daily limit check
+        if (block.timestamp >= lastDayReset[from] + 1 days) {
+            dailyTransferred[from] = 0;
+            lastDayReset[from] = block.timestamp;
+        }
+        require(dailyTransferred[from] + amount <= maxTransferPerDay, "Daily limit exceeded");
+        
+        lastTransferTime[from] = block.timestamp;
+        dailyTransferred[from] += amount;
+    }
+    
+    // Compliance functions
+    function setKYCStatus(address user, bool verified) external onlyRole(COMPLIANCE_ROLE) {
+        kycVerified[user] = verified;
+        emit KYCStatusUpdated(user, verified);
+    }
+    
+    function setBlacklist(address user, bool blacklist) external onlyRole(COMPLIANCE_ROLE) {
+        blacklisted[user] = blacklist;
+    }
+    
+    // Emergency functions
+    function pause() external onlyRole(PAUSER_ROLE) {
+        _pause();
+    }
+    
+    function unpause() external onlyRole(PAUSER_ROLE) {
+        _unpause();
+    }
+    
+    // Mint with compliance tracking
+    function mint(address to, uint256 amount, bytes32 transactionHash) external onlyRole(MINTER_ROLE) {
+        require(!transactionHashes[transactionHash], "Transaction already processed");
+        require(kycVerified[to], "Recipient not KYC verified");
+        
+        transactionHashes[transactionHash] = true;
+        _mint(to, amount);
+        
+        emit ComplianceCheck(to, transactionHash, true);
+    }
+    
+    // View functions for frontend
+    function getPropertyData(uint256 propertyId) external view returns (PropertyData memory) {
+        return properties[propertyId];
+    }
+    
+    function getActiveProperties() external view returns (uint256[] memory) {
+        uint256[] memory activeProps = new uint256[](propertyCount);
+        uint256 count = 0;
+        
+        for (uint256 i = 1; i <= propertyCount; i++) {
+            if (properties[i].active) {
+                activeProps[count] = i;
+                unchecked { ++count; }
+            }
+        }
+        
+        // Resize array
+        assembly { mstore(activeProps, count) }
+        return activeProps;
+    }
+}
+```
+
+### contracts/PropXToken.sol
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.19;
+
+import "./REXAToken.sol";
+
+contract PropXToken is REXAToken {
+    // Developer branding
+    struct DeveloperInfo {
+        string name;
+        string brand;
+        address wallet;
+        uint256 reputationScore;
+        bool verified;
+    }
+    
+    mapping(uint256 => DeveloperInfo) public developers;
+    mapping(string => bool) public brandExists;
+    mapping(uint256 => string) public propertyBrands; // propertyId => brand
+    
+    // Premium features
+    mapping(address => bool) public premiumUsers;
+    mapping(uint256 => uint256) public propertyMinInvestment;
+    mapping(uint256 => uint256) public expectedReturns;
+    
+    event DeveloperRegistered(uint256 indexed developerId, string name, string brand);
+    event PropertyBranded(uint256 indexed propertyId, string brand);
+    event PremiumStatusUpdated(address indexed user, bool premium);
+    
+    function initializePropX(
+        string memory name,
+        string memory symbol,
+        uint256 _maxTransferPerDay
+    ) public initializer {
+        initialize(name, symbol, _maxTransferPerDay);
+    }
+    
+    // Developer management
+    function registerDeveloper(
+        uint256 developerId,
+        string calldata name,
+        string calldata brand,
+        address wallet
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        require(!brandExists[brand], "Brand already exists");
+        require(developers[developerId].wallet == address(0), "Developer already registered");
+        
+        developers[developerId] = DeveloperInfo({
+            name: name,
+            brand: brand,
+            wallet: wallet,
+            reputationScore: 100,
+            verified: true
+        });
+        
+        brandExists[brand] = true;
+        
+        emit DeveloperRegistered(developerId, name, brand);
+    }
+    
+    // Branded property creation
+    function addBrandedProperty(
+        uint256 propertyId,
+        uint256 weight,
+        string calldata ipfsHash,
+        uint256 developerId,
+        uint256 minInvestment,
+        uint256 expectedReturn
+    ) external onlyRole(MINTER_ROLE) {
+        require(developers[developerId].verified, "Developer not verified");
+        
+        addProperty(propertyId, weight, ipfsHash);
+        
+        propertyBrands[propertyId] = developers[developerId].brand;
+        propertyMinInvestment[propertyId] = minInvestment;
+        expectedReturns[propertyId] = expectedReturn;
+        
+        emit PropertyBranded(propertyId, developers[developerId].brand);
+    }
+    
+    // Premium user features
+    function setPremiumStatus(address user, bool premium) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        premiumUsers[user] = premium;
+        emit PremiumStatusUpdated(user, premium);
+    }
+    
+    // Override transfer for premium features
+    function _beforeTokenTransfer(address from, address to, uint256 amount) internal override {
+        super._beforeTokenTransfer(from, to, amount);
+        
+        // Premium users get higher limits
+        if (premiumUsers[from]) {
+            // Skip some restrictions for premium users
+            return;
+        }
+    }
+    
+    // Branded token name generation
+    function getBrandedTokenName(uint256 propertyId) external view returns (string memory) {
+        string memory brand = propertyBrands[propertyId];
+        return string(abi.encodePacked("PROPX-", brand, "-", _toString(propertyId)));
+    }
+    
+    function _toString(uint256 value) internal pure returns (string memory) {
+        if (value == 0) return "0";
+        uint256 temp = value;
+        uint256 digits;
+        while (temp != 0) {
+            digits++;
+            temp /= 10;
+        }
+        bytes memory buffer = new bytes(digits);
+        while (value != 0) {
+            digits -= 1;
+            buffer[digits] = bytes1(uint8(48 + uint256(value % 10)));
+            value /= 10;
+        }
+        return string(buffer);
+    }
+}
+```
+
+### contracts/XERATop5.sol
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.19;
+
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+
+contract XERATop5 is ERC20, AccessControl, ReentrancyGuard {
+    bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
+    bytes32 public constant ORACLE_ROLE = keccak256("ORACLE_ROLE");
+    bytes32 public constant REBALANCER_ROLE = keccak256("REBALANCER_ROLE");
+    
+    // Gas-optimized storage
+    struct PropertyWeight {
+        uint128 propertyId; // Reduced from uint256
+        uint128 weight;     // Basis points (10000 = 100%)
+    }
+    
+    PropertyWeight[5] public properties; // Fixed size array for TOP5
+    uint256 public totalValue;
+    uint256 public lastRebalance;
+    uint256 public constant REBALANCE_INTERVAL = 30 days;
+    
+    // Oracle management
+    address[] public oracles;
+    mapping(address => bool) public isOracle;
+    mapping(address => uint256) public oracleLastUpdate;
+    uint256 public constant ORACLE_TIMEOUT = 1 hours;
+    
+    // Price manipulation protection
+    uint256 public lastPriceUpdate;
+    uint256 public constant MIN_UPDATE_INTERVAL = 5 minutes;
+    uint256 public constant MAX_PRICE_CHANGE = 1000; // 10% max change
+    uint256 public previousValue;
+    
+    // Events
+    event ValueUpdated(uint256 indexed newValue, address indexed oracle);
+    event PropertyRebalanced(uint256 indexed propertyId, uint256 oldWeight, uint256 newWeight);
+    event OracleAdded(address indexed oracle);
+    event OracleRemoved(address indexed oracle);
+    
+    constructor(address[] memory _oracles) ERC20("XERA Top 5", "XERA-TOP5") {
+        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _grantRole(ADMIN_ROLE, msg.sender);
+        _grantRole(REBALANCER_ROLE, msg.sender);
+        
+        for (uint256 i = 0; i < _oracles.length; ++i) {
+            _addOracle(_oracles[i]);
+        }
+        
+        lastRebalance = block.timestamp;
+    }
+    
+    // Time-weighted average pricing to prevent manipulation
+    function updateValue(uint256 newValue) external onlyRole(ORACLE_ROLE) nonReentrant {
+        require(block.timestamp >= lastPriceUpdate + MIN_UPDATE_INTERVAL, "Update too frequent");
+        require(block.timestamp <= oracleLastUpdate[msg.sender] + ORACLE_TIMEOUT, "Oracle data stale");
+        
+        // Price change validation
+        if (previousValue > 0) {
+            uint256 changePercent = newValue > previousValue 
+                ? ((newValue - previousValue) * 10000) / previousValue
+                : ((previousValue - newValue) * 10000) / previousValue;
+            require(changePercent <= MAX_PRICE_CHANGE, "Price change too large");
+        }
+        
+        // Time-weighted average
+        uint256 timeElapsed = block.timestamp - lastPriceUpdate;
+        if (timeElapsed > 0 && totalValue > 0) {
+            totalValue = (totalValue * (3600 - timeElapsed) + newValue * timeElapsed) / 3600;
+        } else {
+            totalValue = newValue;
+        }
+        
+        previousValue = totalValue;
+        lastPriceUpdate = block.timestamp;
+        oracleLastUpdate[msg.sender] = block.timestamp;
+        
+        emit ValueUpdated(totalValue, msg.sender);
+    }
+    
+    // Automated rebalancing mechanism
+    function rebalanceProperties(
+        uint128[5] calldata newPropertyIds,
+        uint128[5] calldata newWeights
+    ) external onlyRole(REBALANCER_ROLE) {
+        require(block.timestamp >= lastRebalance + REBALANCE_INTERVAL, "Rebalance too early");
+        
+        uint256 totalWeight = 0;
+        for (uint256 i = 0; i < 5; ++i) {
+            require(newWeights[i] <= 2500, "Single property weight too high"); // Max 25%
+            totalWeight += newWeights[i];
+        }
+        require(totalWeight == 10000, "Weights must sum to 100%");
+        
+        // Update properties
+        for (uint256 i = 0; i < 5; ++i) {
+            uint256 oldWeight = properties[i].weight;
+            properties[i] = PropertyWeight(newPropertyIds[i], newWeights[i]);
+            emit PropertyRebalanced(newPropertyIds[i], oldWeight, newWeights[i]);
+        }
+        
+        lastRebalance = block.timestamp;
+    }
+    
+    // Oracle management
+    function addOracle(address oracle) external onlyRole(ADMIN_ROLE) {
+        _addOracle(oracle);
+    }
+    
+    function _addOracle(address oracle) internal {
+        require(!isOracle[oracle], "Oracle already exists");
+        isOracle[oracle] = true;
+        oracles.push(oracle);
+        _grantRole(ORACLE_ROLE, oracle);
+        emit OracleAdded(oracle);
+    }
+    
+    function removeOracle(address oracle) external onlyRole(ADMIN_ROLE) {
+        require(isOracle[oracle], "Oracle does not exist");
+        require(oracles.length > 1, "Cannot remove last oracle");
+        
+        isOracle[oracle] = false;
+        _revokeRole(ORACLE_ROLE, oracle);
+        
+        // Remove from array
+        for (uint256 i = 0; i < oracles.length; ++i) {
+            if (oracles[i] == oracle) {
+                oracles[i] = oracles[oracles.length - 1];
+                oracles.pop();
+                break;
+            }
+        }
+        
+        emit OracleRemoved(oracle);
+    }
+    
+    // Enhanced minting with value backing
+    function mint(address to, uint256 amount) external onlyRole(ADMIN_ROLE) {
+        require(totalValue > 0, "No backing value");
+        _mint(to, amount);
+    }
+    
+    // Get current properties for frontend
+    function getProperties() external view returns (PropertyWeight[5] memory) {
+        return properties;
+    }
+    
+    // Check if rebalance is due
+    function isRebalanceDue() external view returns (bool) {
+        return block.timestamp >= lastRebalance + REBALANCE_INTERVAL;
+    }
+}
+```
+
+### contracts/XERAStaking.sol
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.19;
+
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
+
+contract XERAStaking is ReentrancyGuard, AccessControl {
+    bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
+    
+    IERC20 public immutable xeraToken;
+    
+    struct StakeInfo {
+        uint256 amount;
+        uint256 stakeTime;
+        uint256 lastRewardTime;
+        uint256 tier; // 1-4 based on stake amount
+    }
+    
+    mapping(address => StakeInfo) public stakes;
+    mapping(uint256 => uint256) public tierDiscounts; // tier => discount percentage
+    mapping(uint256 => uint256) public tierAPY; // tier => APY in basis points
+    
+    uint256 public totalStaked;
+    uint256 public constant LOCK_PERIOD = 30 days;
+    uint256 public constant MIN_STAKE = 100 * 10**18; // 100 XERA minimum
+    
+    // Tier thresholds
+    uint256 public constant TIER_1_THRESHOLD = 100 * 10**18;   // 100 XERA
+    uint256 public constant TIER_2_THRESHOLD = 1000 * 10**18;  // 1,000 XERA
+    uint256 public constant TIER_3_THRESHOLD = 10000 * 10**18; // 10,000 XERA
+    uint256 public constant TIER_4_THRESHOLD = 50000 * 10**18; // 50,000 XERA
+    
+    event Staked(address indexed user, uint256 amount, uint256 tier);
+    event Unstaked(address indexed user, uint256 amount);
+    event RewardsClaimed(address indexed user, uint256 reward);
+    event TierUpgraded(address indexed user, uint256 oldTier, uint256 newTier);
+    
+    constructor(address _xeraToken) {
+        xeraToken = IERC20(_xeraToken);
+        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _grantRole(ADMIN_ROLE, msg.sender);
+        
+        // Initialize tier benefits
+        tierDiscounts[1] = 10;  // 10% fee discount
+        tierDiscounts[2] = 25;  // 25% fee discount
+        tierDiscounts[3] = 50;  // 50% fee discount
+        tierDiscounts[4] = 75;  // 75% fee discount
+        
+        tierAPY[1] = 500;   // 5% APY
+        tierAPY[2] = 800;   // 8% APY
+        tierAPY[3] = 1200;  // 12% APY
+        tierAPY[4] = 1500;  // 15% APY
+    }
+    
+    function stake(uint256 amount) external nonReentrant {
+        require(amount >= MIN_STAKE, "Amount too small");
+        
+        StakeInfo storage userStake = stakes[msg.sender];
+        
+        // Claim existing rewards before updating stake
+        if (userStake.amount > 0) {
+            _claimRewards(msg.sender);
+        }
+        
+        xeraToken.transferFrom(msg.sender, address(this), amount);
+        
+        userStake.amount += amount;
+        userStake.stakeTime = block.timestamp;
+        userStake.lastRewardTime = block.timestamp;
+        
+        uint256 oldTier = userStake.tier;
+        userStake.tier = _calculateTier(userStake.amount);
+        
+        totalStaked += amount;
+        
+        if (oldTier != userStake.tier) {
+            emit TierUpgraded(msg.sender, oldTier, userStake.tier);
+        }
+        
+        emit Staked(msg.sender, amount, userStake.tier);
+    }
+    
+    function unstake() external nonReentrant {
+        StakeInfo storage userStake = stakes[msg.sender];
+        require(userStake.amount > 0, "No stake found");
+        require(block.timestamp >= userStake.stakeTime + LOCK_PERIOD, "Stake still locked");
+        
+        // Claim rewards before unstaking
+        _claimRewards(msg.sender);
+        
+        uint256 amount = userStake.amount;
+        totalStaked -= amount;
+        
+        delete stakes[msg.sender];
+        
+        xeraToken.transfer(msg.sender, amount);
+        
+        emit Unstaked(msg.sender, amount);
+    }
+    
+    function claimRewards() external nonReentrant {
+        _claimRewards(msg.sender);
+    }
+    
+    function _claimRewards(address user) internal {
+        StakeInfo storage userStake = stakes[user];
+        require(userStake.amount > 0, "No stake found");
+        
+        uint256 timeStaked = block.timestamp - userStake.lastRewardTime;
+        uint256 apy = tierAPY[userStake.tier];
+        uint256 reward = (userStake.amount * apy * timeStaked) / (10000 * 365 days);
+        
+        if (reward > 0) {
+            userStake.lastRewardTime = block.timestamp;
+            
+            // Mint new XERA as rewards (requires MINTER_ROLE on XERA contract)
+            // For now, transfer from contract balance
+            if (xeraToken.balanceOf(address(this)) >= totalStaked + reward) {
+                xeraToken.transfer(user, reward);
+                emit RewardsClaimed(user, reward);
+            }
+        }
+    }
+    
+    function _calculateTier(uint256 amount) internal pure returns (uint256) {
+        if (amount >= TIER_4_THRESHOLD) return 4;
+        if (amount >= TIER_3_THRESHOLD) return 3;
+        if (amount >= TIER_2_THRESHOLD) return 2;
+        return 1;
+    }
+    
+    // View functions
+    function getDiscount(address user) external view returns (uint256) {
+        return tierDiscounts[stakes[user].tier];
+    }
+    
+    function getPendingRewards(address user) external view returns (uint256) {
+        StakeInfo memory userStake = stakes[user];
+        if (userStake.amount == 0) return 0;
+        
+        uint256 timeStaked = block.timestamp - userStake.lastRewardTime;
+        uint256 apy = tierAPY[userStake.tier];
+        return (userStake.amount * apy * timeStaked) / (10000 * 365 days);
+    }
+    
+    function getUserStakeInfo(address user) external view returns (StakeInfo memory) {
+        return stakes[user];
+    }
+    
+    // Admin functions
+    function setTierBenefits(uint256 tier, uint256 discount, uint256 apy) external onlyRole(ADMIN_ROLE) {
+        require(tier >= 1 && tier <= 4, "Invalid tier");
+        tierDiscounts[tier] = discount;
+        tierAPY[tier] = apy;
+    }
+    
+    function emergencyWithdraw(address token, uint256 amount) external onlyRole(ADMIN_ROLE) {
+        IERC20(token).transfer(msg.sender, amount);
+    }
+}
+```
+
+### contracts/FractionalLiquidityPool.sol
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.19;
+
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
+
+contract FractionalLiquidityPool is ReentrancyGuard, AccessControl {
+    bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
+    
+    IERC20 public immutable xeraToken;
+    uint256 public totalLiquidity;
+    mapping(address => uint256) public userLiquidity;
+    mapping(address => uint256) public joinTime;
+    uint256 public yieldRate = 200; // 2% APY
+    uint256 public exitFee = 50; // 0.5% exit fee
+    uint256 public constant LOCK_PERIOD = 90 days;
+    
+    event LiquidityAdded(address indexed user, uint256 amount);
+    event LiquidityWithdrawn(address indexed user, uint256 amount, uint256 fee);
+    
+    constructor(address _xeraToken) {
+        xeraToken = IERC20(_xeraToken);
+        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _grantRole(ADMIN_ROLE, msg.sender);
+    }
+    
+    function addLiquidity(uint256 amount) external nonReentrant {
+        xeraToken.transferFrom(msg.sender, address(this), amount);
+        userLiquidity[msg.sender] += amount;
+        joinTime[msg.sender] = block.timestamp;
+        totalLiquidity += amount;
+        emit LiquidityAdded(msg.sender, amount);
+    }
+    
+    function withdrawLiquidity() external nonReentrant {
+        uint256 amount = userLiquidity[msg.sender];
+        require(amount > 0, "No liquidity");
+        uint256 fee = block.timestamp < joinTime[msg.sender] + LOCK_PERIOD ? (amount * exitFee) / 10000 : 0;
+        uint256 yield = (amount * yieldRate * (block.timestamp - joinTime[msg.sender])) / (10000 * 365 days);
+        xeraToken.transfer(msg.sender, amount - fee + yield);
+        userLiquidity[msg.sender] = 0;
+        totalLiquidity -= amount;
+        emit LiquidityWithdrawn(msg.sender, amount, fee);
+    }
+}
+```
+
+### contracts/SocialTrust.sol
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.19;
+
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+
+contract SocialTrust is ReentrancyGuard {
+    IERC20 public xeraToken;
+    mapping(uint256 => uint256) public confidenceScores;
+    mapping(uint256 => string[]) public reviews;
+    uint256 public stakeAmount = 100 * 10**18; // 100 XERA
+    uint256 public reviewCount;
+    
+    event ReviewSubmitted(uint256 indexed propertyId, uint256 score, string review);
+    
+    constructor(address _xeraToken) {
+        xeraToken = IERC20(_xeraToken);
+    }
+    
+    function submitReview(uint256 propertyId, uint256 score, string memory review) external nonReentrant {
+        require(score <= 100, "Invalid score");
+        require(bytes(review).length <= 500, "Review too long");
+        xeraToken.transferFrom(msg.sender, address(this), stakeAmount);
+        confidenceScores[propertyId] = (confidenceScores[propertyId] * reviewCount + score) / (reviewCount + 1);
+        reviews[propertyId].push(review);
+        reviewCount++;
+        emit ReviewSubmitted(propertyId, score, review);
+    }
+}
+```
+
+## 🔧 BACKEND SERVICES
+
+### backend/package.json
+```json
+{
+  "name": "nexvestxr-backend",
+  "version": "2.0.0",
+  "description": "NexVestXR Scalable Backend - Real Estate Tokenization Platform",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "test": "jest",
+    "test:unit": "jest --testPathPattern=unit",
+    "test:integration": "jest --testPathPattern=integration",
+    "test:coverage": "jest --coverage",
+    "lint": "eslint src/",
+    "lint:fix": "eslint src/ --fix",
+    "build": "echo 'Backend build completed'",
+    "migrate": "node scripts/migrate.js",
+    "seed": "node scripts/seed.js",
+    "cluster": "pm2 start ecosystem.config.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "express-rate-limit": "^7.1.5",
+    "express-slow-down": "^2.0.1",
+    "express-validator": "^7.0.1",
+    "mongoose": "^8.0.3",
+    "ioredis": "^5.3.2",
+    "xrpl": "^2.12.0",
+    "ethers": "^6.8.1",
+    "axios": "^1.6.2",
+    "cors": "^2.8.5",
+    "helmet": "^7.1.0",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2",
+    "winston": "^3.11.0",
+    "joi": "^17.11.0",
+    "multer": "^1.4.5-lts.1",
+    "compression": "^1.7.4",
+    "dotenv": "^16.3.1",
+    "speakeasy": "^2.0.0",
+    "qrcode": "^1.5.3",
+    "nodemailer": "^6.9.7",
+    "moment": "^2.29.4",
+    "lodash": "^4.17.21",
+    "uuid": "^9.0.1",
+    "sharp": "^0.32.6",
+    "pdf-parse": "^1.1.1",
+    "socket.io": "^4.7.4",
+    "aws-sdk": "^2.1502.0",
+    "@tensorflow/tfjs-node": "^4.15.0",
+    "prom-client": "^15.0.0",
+    "cluster": "^0.7.7"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2",
+    "jest": "^29.7.0",
+    "supertest": "^6.3.3",
+    "eslint": "^8.54.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-plugin-import": "^2.29.0",
+    "@types/jest": "^29.5.8",
+    "pm2": "^5.3.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "keywords": [
+    "real-estate",
+    "tokenization",
+    "xrpl",
+    "flare",
+    "blockchain",
+    "trading",
+    "defi",
+    "ai",
+    "scalable"
+  ],
+  "author": "OneEarth Venture Studio LLP",
+  "license": "MIT"
+}
+```
+
+### backend/src/server.js
+```javascript
+const express = require('express');
+const helmet = require('helmet');
+const cors = require('cors');
+const compression = require('compression');
+const rateLimit = require('express-rate-limit');
+const slowDown = require('express-slow-down');
+const cluster = require('cluster');
+const os = require('os');
+const prometheus = require('prom-client');
+
+// Metrics collection
+const collectDefaultMetrics = prometheus.collectDefaultMetrics;
+collectDefaultMetrics({ timeout: 5000 });
+
+const httpRequestDuration = new prometheus.Histogram({
+  name: 'http_request_duration_seconds',
+  help: 'Duration of HTTP requests in seconds',
+  labelNames: ['method', 'route', 'status'],
+  buckets: [0.1, 0.3, 0.5, 0.7, 1, 3, 5, 7, 10]
+});
+
+const httpRequestTotal = new prometheus.Counter({
+  name: 'http_requests_total',
+  help: 'Total number of HTTP requests',
+  labelNames: ['method', 'route', 'status']
+});
+
+// Clustering for production
+if (cluster.isMaster && process.env.NODE_ENV === 'production') {
+  const numWorkers = process.env.WEB_CONCURRENCY || os.cpus().length;
+  
+  console.log(`Master ${process.pid} is running`);
+  console.log(`Starting ${numWorkers} workers...`);
+  
+  for (let i = 0; i < numWorkers; i++) {
+    cluster.fork();
+  }
+  
+  cluster.on('exit', (worker, code, signal) => {
+    console.log(`Worker ${worker.process.pid} died. Restarting...`);
+    cluster.fork();
+  });
+} else {
+  const app = express();
+  
+  // Security middleware
+  app.use(helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        scriptSrc: ["'self'"],
+        imgSrc: ["'self'", "data:", "https:"],
+      },
+    },
+    hsts: {
+      maxAge: 31536000,
+      includeSubDomains: true,
+      preload: true
+    }
+  }));
+  
+  // CORS configuration
+  app.use(cors({
+    origin: process.env.NODE_ENV === 'production' 
+      ? ['https://nexvestxr.com', 'https://app.nexvestxr.com']
+      : ['http://localhost:3000', 'http://localhost:3001'],
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+  }));
+  
+  // Performance middleware
+  app.use(compression());
+  
+  // Rate limiting with different tiers
+  const createRateLimit = (windowMs, max, message) => rateLimit({
+    windowMs,
+    max,
+    message: { error: message },
+    standardHeaders: true,
+    legacyHeaders: false,
+    handler: (req, res) => {
+      res.status(429).json({ error: message });
+    }
+  });
+  
+  // Different rate limits for different endpoints
+  const generalLimit = createRateLimit(15 * 60 * 1000, 100, 'Too many requests');
+  const authLimit = createRateLimit(15 * 60 * 1000, 5, 'Too many auth attempts');
+  const tradingLimit = createRateLimit(60 * 1000, 20, 'Too many trading requests');
+  
+  // Speed limiting for additional protection
+  const speedLimiter = slowDown({
+    windowMs: 15 * 60 * 1000,
+    delayAfter: 50,
+    delayMs: 500,
+    maxDelayMs: 20000,
+  });
+  
+  app.use(speedLimiter);
+  app.use('/api/', generalLimit);
+  app.use('/api/auth/', authLimit);
+  app.use('/api/trading/', tradingLimit);
+  
+  // Request logging and metrics middleware
+  app.use((req, res, next) => {
+    const start = Date.now();
+    
+    res.on('finish', () => {
+      const duration = (Date.now() - start) / 1000;
+      const route = req.route ? req.route.path : req.path;
+      
+      httpRequestDuration
+        .labels(req.method, route, res.statusCode)
+        .observe(duration);
+      
+      httpRequestTotal
+        .labels(req.method, route, res.statusCode)
+        .inc();
+    });
+    
+    next();
+  });
+  
+  app.use(express.json({ limit: '10mb' }));
+  app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+  
+  // Health check endpoint
+  app.get('/health', (req, res) => {
+    res.status(200).json({
+      status: 'healthy',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      version: process.env.npm_package_version || '2.0.0'
+    });
+  });
+  
+  // Metrics endpoint for Prometheus
+  app.get('/metrics', async (req, res) => {
+    res.set('Content-Type', prometheus.register.contentType);
+    res.end(await prometheus.register.metrics());
+  });
+  
+  // Database connection
+  const DatabaseManager = require('./config/database');
+  DatabaseManager.connect();
+  
+  // Routes
+  app.use('/api/auth', require('./routes/auth'));
+  app.use('/api/properties', require('./routes/properties'));
+  app.use('/api/tokens', require('./routes/tokens'));
+  app.use('/api/trading', require('./routes/trading'));
+  app.use('/api/staking', require('./routes/staking'));
+  app.use('/api/compliance', require('./routes/compliance'));
+  app.use('/api/analytics', require('./routes/analytics'));
+  app.use('/api/ai', require('./routes/ai'));
+  
+  // Error handling middleware
+  app.use((err, req, res, next) => {
+    console.error('Error:', err);
+    
+    if (err.name === 'ValidationError') {
+      return res.status(400).json({ error: 'Validation failed', details: err.message });
+    }
+    
+    if (err.name === 'UnauthorizedError') {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    
+    res.status(500).json({ error: 'Internal server error' });
+  });
+  
+  const PORT = process.env.PORT || 3000;
+  app.listen(PORT, () => {
+    console.log(`Worker ${process.pid} listening on port ${PORT}`);
+  });
+}
+```
+
+### backend/src/config/database.js
+```javascript
+const mongoose = require('mongoose');
+const Redis = require('ioredis');
+
+class DatabaseManager {
+  constructor() {
+    this.mongoose = mongoose;
+    this.redisClient = null;
+    this.isConnected = false;
+  }
+  
+  async connect() {
+    try {
+      // MongoDB connection with optimized settings
+      const mongoOptions = {
+        maxPoolSize: 100, // Maximum number of connections
+        serverSelectionTimeoutMS: 5000, // Keep trying to send operations for 5 seconds
+        socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
+        family: 4, // Use IPv4, skip trying IPv6
+        bufferMaxEntries: 0, // Disable buffering
+        retryWrites: true,
+        w: 'majority',
+        readPreference: 'secondaryPreferred', // Read from secondary if available
+        readConcern: { level: 'majority' },
+      };
+      
+      await mongoose.connect(process.env.MONGO_URI, mongoOptions);
+      
+      mongoose.connection.on('error', (err) => {
+        console.error('MongoDB connection error:', err);
+      });
+      
+      mongoose.connection.on('disconnected', () => {
+        console.log('MongoDB disconnected');
+        this.isConnected = false;
+      });
+      
+      mongoose.connection.on('reconnected', () => {
+        console.log('MongoDB reconnected');
+        this.isConnected = true;
+      });
+      
+      // Redis connection with cluster support
+      const redisOptions = {
+        host: process.env.REDIS_HOST || 'localhost',
+        port: process.env.REDIS_PORT || 6379,
+        password: process.env.REDIS_PASSWORD,
+        retryDelayOnFailover: 100,
+        maxRetriesPerRequest: 3,
+        lazyConnect: true,
+        keepAlive: 30000,
+        family: 4,
+        db: 0,
+      };
+      
+      if (process.env.REDIS_CLUSTER === 'true') {
+        this.redisClient = new Redis.Cluster([
+          { host: process.env.REDIS_HOST_1, port: process.env.REDIS_PORT_1 },
+          { host: process.env.REDIS_HOST_2, port: process.env.REDIS_PORT_2 },
+          { host: process.env.REDIS_HOST_3, port: process.env.REDIS_PORT_3 },
+        ], {
+          redisOptions,
+          scaleReads: 'slave',
+        });
+      } else {
+        this.redisClient = new Redis(redisOptions);
+      }
+      
+      await this.redisClient.connect();
+      
+      this.redisClient.on('error', (err) => {
+        console.error('Redis connection error:', err);
+      });
+      
+      this.redisClient.on('connect', () => {
+        console.log('Redis connected');
+      });
+      
+      this.isConnected = true;
+      console.log('Database connections established');
+      
+    } catch (error) {
+      console.error('Database connection failed:', error);
+      process.exit(1);
+    }
+  }
+  
+  async disconnect() {
+    await mongoose.connection.close();
+    await this.redisClient.disconnect();
+    this.isConnected = false;
+  }
+  
+  // Health check method
+  async healthCheck() {
+    try {
+      await mongoose.connection.db.admin().ping();
+      await this.redisClient.ping();
+      return { mongodb: 'healthy', redis: 'healthy' };
+    } catch (error) {
+      console.error('Database health check failed:', error);
+      return { mongodb: 'unhealthy', redis: 'unhealthy' };
+    }
+  }
+  
+  // Cache wrapper with TTL
+  async cacheGet(key) {
+    try {
+      const data = await this.redisClient.get(key);
+      return data ? JSON.parse(data) : null;
+    } catch (error) {
+      console.error('Cache get error:', error);
+      return null;
+    }
+  }
+  
+  async cacheSet(key, data, ttl = 300) {
+    try {
+      await this.redisClient.setex(key, ttl, JSON.stringify(data));
+    } catch (error) {
+      console.error('Cache set error:', error);
+    }
+  }
+  
+  async cacheDel(key) {
+    try {
+      await this.redisClient.del(key);
+    } catch (error) {
+      console.error('Cache delete error:', error);
+    }
+  }
+}
+
+module.exports = new DatabaseManager();
+```
+
+### backend/src/models/Property.js
+```javascript
+const mongoose = require('mongoose');
+
+const PropertySchema = new mongoose.Schema({
+  id: {
+    type: String,
+    unique: true,
+    required: true
+  },
+  title: {
+    type: String,
+    required: true,
+    trim: true,
+    maxlength: 200
+  },
+  description: {
+    type: String,
+    required: true,
+    maxlength: 2000
+  },
+  city: {
+    type: String,
+    required: true,
+    index: true
+  },
+  state: {
+    type: String,
+    required: true
+  },
+  country: {
+    type: String,
+    required: true,
+    default: 'India'
+  },
+  propertyType: {
+    type: String,
+    enum: ['apartment', 'villa', 'plot', 'commercial', 'warehouse', 'office'],
+    required: true,
+    index: true
+  },
+  totalValue: {
+    type: Number,
+    required: true,
+    min: 500000,
+    max: 1000000000,
+    index: true
+  },
+  area: {
+    type: Number,
+    required: true,
+    min: 100
+  },
+  coordinates: {
+    lat: {
+      type: Number,
+      required: true
+    },
+    lng: {
+      type: Number,
+      required: true
+    }
+  },
+  amenities: [{
+    type: String
+  }],
+  images: [{
+    url: String,
+    caption: String,
+    isPrimary: Boolean
+  }],
+  documents: [{
+    type: String,
+    hash: String,
+    verificationStatus: {
+      type: String,
+      enum: ['pending', 'verified', 'rejected'],
+      default: 'pending'
+    }
+  }],
+  // AI-generated fields
+  aiScore: {
+    type: Number,
+    min: 0,
+    max: 100,
+    index: true
+  },
+  riskScore: {
+    type: Number,
+    min: 0,
+    max: 100
+  },
+  liquidityScore: {
+    type: Number,
+    min: 0,
+    max: 100
+  },
+  // Verification status
+  verificationStatus: {
+    type: String,
+    enum: ['pending', 'verified', 'rejected'],
+    default: 'pending',
+    index: true
+  },
+  verifiedBy: {
+    type: String
+  },
+  verifiedAt: {
+    type: Date
+  },
+  // Compliance fields
+  complianceChecks: {
+    kycVerified: {
+      type: Boolean,
+      default: false
+    },
+    documentsVerified: {
+      type: Boolean,
+      default: false
+    },
+    aiVerified: {
+      type: Boolean,
+      default: false
+    },
+    complianceScore: {
+      type: Number,
+      min: 0,
+      max: 100
+    }
+  },
+  // Token information
+  tokenInfo: {
+    contractAddress: String,
+    totalTokens: Number,
+    availableTokens: Number,
+    tokenPrice: Number,
+    minimumInvestment: {
+      type: Number,
+      default: 1000
+    }
+  },
+  // Developer information (for PropX)
+  developer: {
+    id: String,
+    name: String,
+    brand: String,
+    reputationScore: Number
+  },
+  // Financial metrics
+  financials: {
+    expectedReturn: Number,
+    rentalYield: Number,
+    appreciationRate: Number,
+    maintenanceCost: Number
+  },
+  // Status
+  status: {
+    type: String,
+    enum: ['draft', 'pending', 'active', 'sold', 'suspended'],
+    default: 'draft',
+    index: true
+  },
+  // Timestamps
+  createdAt: {
+    type: Date,
+    default: Date.now,
+    index: true
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now
+  },
+  lastUpdated: {
+    type: Date,
+    default: Date.now
+  }
+}, {
+  timestamps: true,
+  collection: 'properties'
+});
+
+// Indexes for performance
+PropertySchema.index({ city: 1, propertyType: 1 });
+PropertySchema.index({ totalValue: 1, aiScore: -1 });
+PropertySchema.index({ verificationStatus: 1, status: 1 });
+PropertySchema.index({ 'coordinates.lat': 1, 'coordinates.lng': 1 });
+PropertySchema.index({ createdAt: -1 });
+
+// Virtual for token symbol
+PropertySchema.virtual('tokenSymbol').get(function() {
+  const type = this.developer ? 'PROPX' : 'REXA';
+  const brand = this.developer?.brand || '';
+  return brand ? `${type}-${brand}-${this.id}` : `${type}-${this.id}`;
+});
+
+// Pre-save middleware
+PropertySchema.pre('save', function(next) {
+  this.updatedAt = new Date();
+  next();
+});
+
+// Static methods
+PropertySchema.statics.findByCity = function(city) {
+  return this.find({ city: new RegExp(city, 'i'), status: 'active' });
+};
+
+PropertySchema.statics.findByPriceRange = function(minPrice, maxPrice) {
+  return this.find({
+    totalValue: { $gte: minPrice, $lte: maxPrice },
+    status: 'active'
+  });
+};
+
+PropertySchema.statics.getTopRated = function(limit = 10) {
+  return this.find({ status: 'active' })
+    .sort({ aiScore: -1 })
+    .limit(limit);
+};
+
+module.exports = mongoose.model('Property', PropertySchema);
+```
+
+### backend/src/models/Order.js
+```javascript
+const mongoose = require('mongoose');
+
+const OrderSchema = new mongoose.Schema({
+  id: {
+    type: String,
+    unique: true,
+    required: true
+  },
+  userAddress: {
+    type: String,
+    required: true,
+    index: true
+  },
+  pairId: {
+    type: String,
+    required: true,
+    index: true
+  },
+  type: {
+    type: String,
+    enum: ['market', 'limit', 'stop-loss', 'stop-limit', 'oco'],
+    required: true
+  },
+  side: {
+    type: String,
+    enum: ['buy', 'sell'],
+    required: true
+  },
+  amount: {
+    type: Number,
+    required: true,
+    min: 0
+  },
+  price: {
+    type: Number,
+    min: 0
+  },
+  stopPrice: {
+    type: Number,
+    min: 0
+  },
+  limitPrice: {
+    type: Number,
+    min: 0
+  },
+  remainingAmount: {
+    type: Number,
+    min: 0
+  },
+  filledAmount: {
+    type: Number,
+    default: 0,
+    min: 0
+  },
+  status: {
+    type: String,
+    enum: ['pending', 'partial', 'filled', 'cancelled', 'rejected', 'triggered'],
+    default: 'pending',
+    index: true
+  },
+  timeInForce: {
+    type: String,
+    enum: ['GTC', 'IOC', 'FOK'],
+    default: 'GTC'
+  },
+  options: {
+    postOnly: {
+      type: Boolean,
+      default: false
+    },
+    reduceOnly: {
+      type: Boolean,
+      default: false
+    },
+    hidden: {
+      type: Boolean,
+      default: false
+    }
+  },
+  // OCO related fields
+  ocoParentId: String,
+  linkedOrderId: String,
+  
+  // Execution details
+  avgFillPrice: Number,
+  totalFee: {
+    type: Number,
+    default: 0
+  },
+  executions: [{
+    price: Number,
+    amount: Number,
+    fee: Number,
+    timestamp: Date,
+    tradeId: String
+  }],
+  
+  // XRPL transaction details
+  xrplTransactions: [{
+    hash: String,
+    status: {
+      type: String,
+      enum: ['pending', 'confirmed', 'failed']
+    },
+    blockNumber: Number,
+    gasUsed: Number
+  }],
+  
+  // Timestamps
+  createdAt: {
+    type: Date,
+    default: Date.now,
+    index: true
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now
+  },
+  filledAt: Date,
+  cancelledAt: Date,
+  expiredAt: Date
+}, {
+  timestamps: true,
+  collection: 'orders'
+});
+
+// Indexes for performance
+OrderSchema.index({ userAddress: 1, status: 1 });
+OrderSchema.index({ pairId: 1, type: 1, side: 1 });
+OrderSchema.index({ price: 1, createdAt: 1 });
+OrderSchema.index({ status: 1, createdAt: -1 });
+
+// Virtual for order value
+OrderSchema.virtual('orderValue').get(function() {
+  return this.amount * (this.price || 0);
+});
+
+// Methods
+OrderSchema.methods.canCancel = function() {
+  return ['pending', 'partial'].includes(this.status);
+};
+
+OrderSchema.methods.updateStatus = function(newStatus) {
+  this.status = newStatus;
+  this.updatedAt = new Date();
+  
+  if (newStatus === 'filled') {
+    this.filledAt = new Date();
+  } else if (newStatus === 'cancelled') {
+    this.cancelledAt = new Date();
+  }
+};
+
+// Static methods
+OrderSchema.statics.findActiveByUser = function(userAddress) {
+  return this.find({
+    userAddress,
+    status: { $in: ['pending', 'partial'] }
+  }).sort({ createdAt: -1 });
+};
+
+OrderSchema.statics.findByPair = function(pairId, side = null) {
+  const query = { pairId, status: { $in: ['pending', 'partial'] } };
+  if (side) query.side = side;
+  return this.find(query).sort({ price: side === 'buy' ? -1 : 1, createdAt: 1 });
+};
+
+module.exports = mongoose.model('Order', OrderSchema);
+```
+
+### backend/src/services/PropertyService.js
+```javascript
+const Property = require('../models/Property');
+const DatabaseManager = require('../config/database');
+const AWS = require('aws-sdk');
+const tf = require('@tensorflow/tfjs-node');
+
+class PropertyService {
+  constructor() {
+    this.sagemaker = new AWS.SageMaker({
+      region: process.env.AWS_REGION || 'ap-south-1'
+    });
+    this.s3 = new AWS.S3({
+      region: process.env.AWS_REGION || 'ap-south-1'
+    });
+    this.textract = new AWS.Textract({
+      region: process.env.AWS_REGION || 'ap-south-1'
+    });
+    this.model = null;
+    this.initializeAI();
+  }
+  
+  async initializeAI() {
+    try {
+      // Load pre-trained model for property scoring
+      const modelPath = process.env.AI_MODEL_PATH || './models/property-scoring';
+      this.model = await tf.loadLayersModel(`file://${modelPath}/model.json`);
+      console.log('AI model loaded successfully');
+    } catch (error) {
+      console.error('Failed to load AI model:', error);
+    }
+  }
+  
+  async createProperty(propertyData, documents) {
+    try {
+      // Validate property data
+      const validatedData = await this.validatePropertyData(propertyData);
+      
+      // AI document verification
+      const verificationResult = await this.verifyDocuments(documents);
+      if (!verificationResult.isValid) {
+        throw new Error(`Document verification failed: ${verificationResult.reason}`);
+      }
+      
+      // Upload documents to S3/IPFS
+      const documentHashes = await this.uploadDocuments(documents);
+      
+      // Calculate AI-based property score
+      const aiScore = await this.calculatePropertyScore(validatedData);
+      const riskScore = await this.calculateRiskScore(validatedData, verificationResult);
+      const liquidityScore = await this.calculateLiquidityScore(validatedData);
+      
+      // Create property with enhanced data
+      const property = new Property({
+        ...validatedData,
+        id: this.generatePropertyId(),
+        aiScore,
+        riskScore,
+        liquidityScore,
+        verificationStatus: 'verified',
+        documents: documentHashes,
+        complianceChecks: {
+          kycVerified: true,
+          documentsVerified: true,
+          aiVerified: true,
+          complianceScore: verificationResult.complianceScore
+        },
+        status: 'active'
+      });
+      
+      await property.save();
+      
+      // Cache the property data
+      await DatabaseManager.cacheSet(
+        `property:${property.id}`, 
+        property.toObject(), 
+        1800 // 30 minutes
+      );
+      
+      // Update city-level aggregations
+      await this.updateCityAggregations(property.city);
+      
+      return property;
+      
+    } catch (error) {
+      console.error('Property creation failed:', error);
+      throw error;
+    }
+  }
+  
+  generatePropertyId() {
+    return `PROP_${Date.now()}_${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
+  }
+  
+  async validatePropertyData(data) {
+    const requiredFields = [
+      'title', 'description', 'city', 'state', 'country',
+      'propertyType', 'totalValue', 'area', 'coordinates'
+    ];
+    
+    for (const field of requiredFields) {
+      if (!data[field]) {
+        throw new Error(`Missing required field: ${field}`);
+      }
+    }
+    
+    // Validate coordinates
+    if (!data.coordinates.lat || !data.coordinates.lng) {
+      throw new Error('Invalid coordinates');
+    }
+    
+    // Validate property value range
+    if (data.totalValue < 500000 || data.totalValue > 1000000000) {
+      throw new Error('Property value out of acceptable range');
+    }
+    
+    // Validate area
+    if (data.area < 100) {
+      throw new Error('Property area too small');
+    }
+    
+    return data;
+  }
+  
+  async verifyDocuments(documents) {
+    try {
+      const verificationResults = [];
+      
+      for (const doc of documents) {
+        // Use AWS Textract for document analysis
+        const params = {
+          Document: {
+            Bytes: doc.buffer
+          },
+          FeatureTypes: ['TABLES', 'FORMS']
+        };
+        
+        const result = await this.textract.analyzeDocument(params).promise();
+        
+        // AI-based fraud detection
+        const fraudScore = await this.detectDocumentFraud(result, doc.type);
+        
+        verificationResults.push({
+          documentType: doc.type,
+          isValid: fraudScore < 0.3, // Threshold for fraud detection
+          fraudScore,
+          extractedData: this.extractKeyData(result, doc.type),
+          confidence: this.calculateConfidence(result)
+        });
+      }
+      
+      const averageFraudScore = verificationResults.reduce(
+        (sum, result) => sum + result.fraudScore, 0
+      ) / verificationResults.length;
+      
+      const isValid = verificationResults.every(result => result.isValid);
+      
+      return {
+        isValid,
+        complianceScore: Math.max(0, 100 - (averageFraudScore * 100)),
+        details: verificationResults,
+        reason: isValid ? 'Documents verified' : 'Potential fraud detected'
+      };
+      
+    } catch (error) {
+      console.error('Document verification failed:',

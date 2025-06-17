@@ -1,0 +1,146 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.19;
+
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
+
+contract XERAStaking is ReentrancyGuard, AccessControl {
+    bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
+    
+    IERC20 public immutable xeraToken;
+    
+    struct StakeInfo {
+        uint256 amount;
+        uint256 stakeTime;
+        uint256 lastRewardTime;
+        uint256 tier;
+        uint256 tradingVolume; // Added for dynamic discounts
+    }
+    
+    mapping(address => StakeInfo) public stakes;
+    mapping(uint256 => uint256) public tierDiscounts;
+    mapping(uint256 => uint256) public tierAPY;
+    
+    uint256 public totalStaked;
+    uint256 public constant LOCK_PERIOD = 30 days;
+    uint256 public constant MIN_STAKE = 100 * 10**18;
+    uint256 public constant VOLUME_DISCOUNT_MULTIPLIER = 5; // 0.05% discount per 1000 XERA traded
+    
+    uint256 public constant TIER_1_THRESHOLD = 100 * 10**18;
+    uint256 public constant TIER_2_THRESHOLD = 1000 * 10**18;
+    uint256 public constant TIER_3_THRESHOLD = 10000 * 10**18;
+    uint256 public constant TIER_4_THRESHOLD = 50000 * 10**18;
+    
+    event Staked(address indexed user, uint256 amount, uint256 tier);
+    event Unstaked(address indexed user, uint256 amount);
+    event RewardsClaimed(address indexed user, uint256 reward);
+    event TierUpgraded(address indexed user, uint256 oldTier, uint256 newTier);
+    event TradingVolumeUpdated(address indexed user, uint256 volume);
+    
+    constructor(address _xeraToken) {
+        xeraToken = IERC20(_xeraToken);
+        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _grantRole(ADMIN_ROLE, msg.sender);
+        
+        tierDiscounts[1] = 10;
+        tierDiscounts[2] = 25;
+        tierDiscounts[3] = 50;
+        tierDiscounts[4] = 75;
+        
+        tierAPY[1] = 500;
+        tierAPY[2] = 800;
+        tierAPY[3] = 1200;
+        tierAPY[4] = 1500;
+    }
+    
+    function updateTradingVolume(address user, uint256 volume) external onlyRole(ADMIN_ROLE) {
+        stakes[user].tradingVolume += volume;
+        emit TradingVolumeUpdated(user, volume);
+    }
+    
+    function stake(uint256 amount) external nonReentrant {
+        require(amount >= MIN_STAKE, "Amount too small");
+        StakeInfo storage userStake = stakes[msg.sender];
+        if (userStake.amount > 0) {
+            _claimRewards(msg.sender);
+        }
+        xeraToken.transferFrom(msg.sender, address(this), amount);
+        userStake.amount += amount;
+        userStake.stakeTime = block.timestamp;
+        userStake.lastRewardTime = block.timestamp;
+        uint256 oldTier = userStake.tier;
+        userStake.tier = _calculateTier(userStake.amount);
+        totalStaked += amount;
+        if (oldTier != userStake.tier) {
+            emit TierUpgraded(msg.sender, oldTier, userStake.tier);
+        }
+        emit Staked(msg.sender, amount, userStake.tier);
+    }
+    
+    function unstake() external nonReentrant {
+        StakeInfo storage userStake = stakes[msg.sender];
+        require(userStake.amount > 0, "No stake found");
+        require(block.timestamp >= userStake.stakeTime + LOCK_PERIOD, "Stake still locked");
+        _claimRewards(msg.sender);
+        uint256 amount = userStake.amount;
+        totalStaked -= amount;
+        delete stakes[msg.sender];
+        xeraToken.transfer(msg.sender, amount);
+        emit Unstaked(msg.sender, amount);
+    }
+    
+    function claimRewards() external nonReentrant {
+        _claimRewards(msg.sender);
+    }
+    
+    function _claimRewards(address user) internal {
+        StakeInfo storage userStake = stakes[user];
+        require(userStake.amount > 0, "No stake found");
+        uint256 timeStaked = block.timestamp - userStake.lastRewardTime;
+        uint256 apy = tierAPY[userStake.tier];
+        uint256 reward = (userStake.amount * apy * timeStaked) / (10000 * 365 days);
+        if (reward > 0) {
+            userStake.lastRewardTime = block.timestamp;
+            if (xeraToken.balanceOf(address(this)) >= totalStaked + reward) {
+                xeraToken.transfer(user, reward);
+                emit RewardsClaimed(user, reward);
+            }
+        }
+    }
+    
+    function _calculateTier(uint256 amount) internal pure returns (uint256) {
+        if (amount >= TIER_4_THRESHOLD) return 4;
+        if (amount >= TIER_3_THRESHOLD) return 3;
+        if (amount >= TIER_2_THRESHOLD) return 2;
+        return 1;
+    }
+    
+    function getDiscount(address user) external view returns (uint256) {
+        uint256 baseDiscount = tierDiscounts[stakes[user].tier];
+        uint256 volumeBonus = (stakes[user].tradingVolume / (1000 * 10**18)) * VOLUME_DISCOUNT_MULTIPLIER;
+        return baseDiscount + volumeBonus > 100 ? 100 : baseDiscount + volumeBonus;
+    }
+    
+    function getPendingRewards(address user) external view returns (uint256) {
+        StakeInfo memory userStake = stakes[user];
+        if (userStake.amount == 0) return 0;
+        uint256 timeStaked = block.timestamp - userStake.lastRewardTime;
+        uint256 apy = tierAPY[userStake.tier];
+        return (userStake.amount * apy * timeStaked) / (10000 * 365 days);
+    }
+    
+    function getUserStakeInfo(address user) external view returns (StakeInfo memory) {
+        return stakes[user];
+    }
+    
+    function setTierBenefits(uint256 tier, uint256 discount, uint256 apy) external onlyRole(ADMIN_ROLE) {
+        require(tier >= 1 && tier <= 4, "Invalid tier");
+        tierDiscounts[tier] = discount;
+        tierAPY[tier] = apy;
+    }
+    
+    function emergencyWithdraw(address token, uint256 amount) external onlyRole(ADMIN_ROLE) {
+        IERC20(token).transfer(msg.sender, amount);
+    }
+}
