@@ -1,0 +1,74 @@
+{
+  "network": "hardhat",
+  "chainId": 31337,
+  "timestamp": "2025-06-17T16:03:48.394Z",
+  "deployer": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+  "contracts": {
+    "uaeCompliance": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+    "uaeOracle": "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
+    "classifier": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
+    "uaeXERA": "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9",
+    "propxFactory": "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9",
+    "uaePropertyToken": "0x5FC8d32690cc91D4c39d9d3abcBD16989F875707",
+    "uaeStaking": "0x0165878A594ca255338adfa4d48449f69242Eb8F"
+  },
+  "dualTokenSystem": {
+    "classifier": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
+    "xeraToken": "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9",
+    "propxFactory": "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9",
+    "features": {
+      "xeraCityPools": [
+        "Dubai",
+        "Abu Dhabi",
+        "Sharjah",
+        "Ajman"
+      ],
+      "xeraStakingTiers": [
+        "Bronze (1K)",
+        "Silver (5K)",
+        "Gold (25K)",
+        "Platinum (100K)",
+        "Diamond (500K)"
+      ],
+      "propxPremiumDevelopers": [
+        "EMAAR",
+        "ALDAR",
+        "MERAAS",
+        "NAKHEEL",
+        "DAMAC"
+      ],
+      "classificationThreshold": "5,000,000 AED",
+      "supportedCurrencies": [
+        "AED",
+        "USD",
+        "EUR",
+        "GBP",
+        "SAR",
+        "QAR",
+        "KWD"
+      ],
+      "complianceStandards": [
+        "RERA",
+        "DLD",
+        "ADRA"
+      ]
+    },
+    "investmentTiers": {
+      "retail": {
+        "min": "25,000 AED",
+        "max": "500,000 AED",
+        "kyc": "STANDARD"
+      },
+      "premium": {
+        "min": "500,000 AED",
+        "max": "2,000,000 AED",
+        "kyc": "ENHANCED"
+      },
+      "institutional": {
+        "min": "2,000,000 AED",
+        "max": "unlimited",
+        "kyc": "COMPREHENSIVE"
+      }
+    }
+  }
+}

@@ -1733,6 +1733,132 @@
       "artifacts": [
         "UAEPriceOracle"
       ]
+    },
+    "/Users/keerthirao/Documents/GitHub/projects/nexvestxr-v2-dual-token/smart-contracts/contracts/UAE/UAEXERAToken.sol": {
+      "lastModificationDate": 1750176176349,
+      "contentHash": "6662f58f9c0dfd716d346ce8ad74e626",
+      "sourceName": "contracts/UAE/UAEXERAToken.sol",
+      "solcConfig": {
+        "version": "0.8.19",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "@openzeppelin/contracts/token/ERC20/ERC20.sol",
+        "@openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol",
+        "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol",
+        "@openzeppelin/contracts/security/ReentrancyGuard.sol",
+        "@openzeppelin/contracts/security/Pausable.sol",
+        "@openzeppelin/contracts/access/AccessControl.sol",
+        "@openzeppelin/contracts/utils/math/SafeMath.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.19"
+      ],
+      "artifacts": [
+        "UAEXERAToken"
+      ]
+    },
+    "/Users/keerthirao/Documents/GitHub/projects/nexvestxr-v2-dual-token/smart-contracts/contracts/UAE/UAEDualTokenClassifier.sol": {
+      "lastModificationDate": 1750175943636,
+      "contentHash": "ffccf1cd018385cf04f3a194e618a476",
+      "sourceName": "contracts/UAE/UAEDualTokenClassifier.sol",
+      "solcConfig": {
+        "version": "0.8.19",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "@openzeppelin/contracts/access/Ownable.sol",
+        "@openzeppelin/contracts/security/Pausable.sol",
+        "@openzeppelin/contracts/utils/math/SafeMath.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.19"
+      ],
+      "artifacts": [
+        "UAEDualTokenClassifier"
+      ]
+    },
+    "/Users/keerthirao/Documents/GitHub/projects/nexvestxr-v2-dual-token/smart-contracts/contracts/UAE/UAEPROPXFactory.sol": {
+      "lastModificationDate": 1750176090054,
+      "contentHash": "2aa2fffee7c0dc8a1195fbbc0cd172db",
+      "sourceName": "contracts/UAE/UAEPROPXFactory.sol",
+      "solcConfig": {
+        "version": "0.8.19",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "@openzeppelin/contracts/access/AccessControl.sol",
+        "@openzeppelin/contracts/security/ReentrancyGuard.sol",
+        "@openzeppelin/contracts/utils/math/SafeMath.sol",
+        "./UAEDualTokenClassifier.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.19"
+      ],
+      "artifacts": [
+        "IUAEPROPX",
+        "UAEPROPXFactory"
+      ]
     }
   }
 }
