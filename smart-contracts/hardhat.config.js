@@ -5,6 +5,42 @@ require("hardhat-gas-reporter");
 require("solidity-coverage");
 require("@nomiclabs/hardhat-etherscan");
 
+// UAE-specific deployment task
+task('deploy-uae', 'Deploy UAE property tokenization contracts')
+  .addParam('network', 'The network to deploy to')
+  .setAction(async (taskArgs, hre) => {
+    console.log(`🚀 Deploying UAE contracts to ${taskArgs.network}...`);
+    const deployScript = require('./deploy/deploy-uae-contracts.js');
+    await deployScript();
+  });
+
+// Task to setup demo UAE property
+task('setup-demo-property', 'Setup a demo UAE property for testing')
+  .addParam('contract', 'The deployed contract address')
+  .setAction(async (taskArgs, hre) => {
+    const UAEPropertyToken = await hre.ethers.getContractFactory('UAEPropertyToken');
+    const contract = UAEPropertyToken.attach(taskArgs.contract);
+    
+    console.log('🏢 Setting up demo property...');
+    
+    // Add demo property
+    const tx = await contract.listProperty(
+      'RERA-DXB-2024-001',
+      'DLD-001-2024-DOWNTOWN',
+      'Burj Khalifa District, Downtown Dubai',
+      'Downtown Dubai',
+      'Dubai',
+      ethers.utils.parseEther('10000000'), // 10M AED
+      10000, // 10,000 tokens
+      0, // APARTMENT
+      '0x' + '0'.repeat(40), // Demo developer
+      90 // 90 days funding period
+    );
+    
+    await tx.wait();
+    console.log('✅ Demo property listed');
+  });
+
 module.exports = {
   solidity: {
     version: "0.8.19",
@@ -47,6 +83,20 @@ module.exports = {
       accounts: process.env.XRPL_TESTNET_PRIVATE_KEY ? [process.env.XRPL_TESTNET_PRIVATE_KEY] : [],
       chainId: 1440001,
       gasPrice: 10000000000,
+    },
+    // Polygon Mumbai for UAE testing
+    mumbai: {
+      url: process.env.MUMBAI_RPC_URL || "https://rpc-mumbai.maticvigil.com",
+      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
+      chainId: 80001,
+      gasPrice: 35000000000, // 35 gwei
+    },
+    // Polygon Mainnet for UAE production
+    polygon: {
+      url: process.env.POLYGON_RPC_URL || "https://polygon-rpc.com",
+      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
+      chainId: 137,
+      gasPrice: 35000000000, // 35 gwei
     },
   },
   defaultNetwork: "hardhat",

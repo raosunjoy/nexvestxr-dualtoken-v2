@@ -1,6 +1,6 @@
 {
-  "name": "NexVestXRMobile",
-  "version": "0.0.1",
+  "name": "PropExchangeUAE",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "android": "react-native run-android",
@@ -54,7 +54,10 @@
     "react-native-url-polyfill": "^2.0.0",
     "crypto-js": "^4.2.0",
     "ethers": "^6.13.4",
-    "web3": "^4.14.0"
+    "web3": "^4.14.0",
+    "react-i18next": "^13.5.0",
+    "i18next": "^23.7.6",
+    "react-native-localize": "^3.0.4"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
