@@ -1,10 +1,14 @@
 # Table of Contents
 
-## Getting Started
+## Overview
 * [Introduction](README.md)
-* [Quick Start Guide](getting-started/quick-start.md)
-* [System Requirements](getting-started/requirements.md)
-* [Installation Guide](getting-started/installation.md)
+* [Platform Architecture](architecture.md)
+* [Technology Stack](technology-stack.md)
+
+## Market Implementations
+* [🇮🇳 Indian Market](indian-market.md)
+* [🇦🇪 UAE Market](uae-market.md)
+* [Dual Token System](dual-token-system.md)
 
 ## User Guide
 * [Overview](user-guide/README.md)

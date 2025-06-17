@@ -1,15 +1,19 @@
-# PropXchange UAE - Developer Documentation
+# 🚀 NexVestXR V2 Dual Token Platform
 
-Welcome to the comprehensive documentation for PropXchange UAE, the revolutionary real estate tokenization platform designed specifically for the UAE market.
+**The World's First Dual-Blockchain Real Estate Tokenization Platform**
 
 ## 🏗️ Platform Overview
 
-PropXchange UAE is a sophisticated dual-token real estate platform that enables:
-- **Property Tokenization** with AED as the primary currency
-- **Multi-Currency Support** for international investors
-- **Arabic Localization** with RTL layout support
-- **Advanced Trading** with professional-grade tools
-- **UAE Compliance** with RERA, DLD, and ADGM integration
+NexVestXR V2 is a revolutionary dual-token real estate tokenization platform that bridges traditional property investment with modern blockchain technology. The platform integrates **XERA (XRPL)** and **PROPX (Flare Network)** tokens to serve both small developers/landowners and premium institutional developers.
+
+### Key Markets
+- **🇮🇳 Indian Market**: Complete implementation with city pools and premium developers
+- **🇦🇪 UAE Market**: Full dual token integration with AED-based pricing and compliance
+
+### Dual Token Architecture
+- **XERA Token**: Diversified property pools with governance and staking
+- **PROPX Token**: Individual premium property tokenization
+- **Automatic Classification**: Smart routing based on property value and location
 
 ## 🚀 Quick Start
 
