@@ -52,6 +52,8 @@
 * [Notification Services](platform-services/notifications.md)
 * [Oracle Services](platform-services/oracles.md)
 * [Compliance Services](platform-services/compliance.md)
+* [API Integration Services](platform-services/api-integration.md)
+* [Customer Support & Ticketing](platform-services/customer-support.md)
 
 ## Architecture
 * [System Overview](architecture/README.md)
