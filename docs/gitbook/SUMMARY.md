@@ -69,6 +69,16 @@
 * [Build & Deployment](mobile/build-deployment.md)
 * [Testing](mobile/testing.md)
 
+## AI & Machine Learning
+* [Overview](ai/README.md)
+* [TensorFlow.js Integration](ai/tensorflow-integration.md)
+* [Location Heatmap Service](ai/location-heatmap.md)
+* [Property Scoring Service](ai/property-scoring.md)
+* [Computer Vision Analysis](ai/computer-vision.md)
+* [Training Data & Models](ai/training-models.md)
+* [Performance Optimization](ai/performance.md)
+* [Testing AI Services](ai/testing.md)
+
 ## Blockchain & Smart Contracts
 * [Overview](blockchain/README.md)
 * [Smart Contract Architecture](blockchain/smart-contracts.md)
@@ -107,6 +117,7 @@
 * [Overview](deployment/README.md)
 * [CI/CD Pipeline](deployment/cicd.md)
 * [AWS Infrastructure](deployment/aws.md)
+* [AWS AI/ML Deployment](deployment/aws-ai-deployment.md)
 * [Environment Management](deployment/environments.md)
 * [Monitoring & Alerting](deployment/monitoring.md)
 * [Backup & Recovery](deployment/backup.md)
