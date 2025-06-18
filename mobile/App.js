@@ -16,6 +16,7 @@ import WalletScreen from './src/screens/WalletScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
 import TokenizeScreen from './src/screens/TokenizeScreen';
 import PropertyDetailsScreen from './src/screens/PropertyDetailsScreen';
+import AIAnalyticsScreen from './src/screens/AIAnalyticsScreen';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -28,8 +29,8 @@ function MainTabs() {
           let iconName;
           if (route.name === 'Home') iconName = 'home-outline';
           else if (route.name === 'Trading') iconName = 'trending-up-outline';
+          else if (route.name === 'AI Analytics') iconName = 'analytics-outline';
           else if (route.name === 'Wallet') iconName = 'wallet-outline';
-          else if (route.name === 'Tokenize') iconName = 'cash-outline';
           else if (route.name === 'Profile') iconName = 'person-outline';
           return <Icon name={iconName} size={size} color={color} />;
         },
@@ -52,8 +53,8 @@ function MainTabs() {
     >
       <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="Trading" component={TradingScreen} />
+      <Tab.Screen name="AI Analytics" component={AIAnalyticsScreen} />
       <Tab.Screen name="Wallet" component={WalletScreen} />
-      <Tab.Screen name="Tokenize" component={TokenizeScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );
@@ -79,6 +80,21 @@ function App() {
                 },
                 headerTintColor: colors.text,
                 headerTitle: 'Property Details',
+                headerTitleStyle: {
+                  fontWeight: 'bold',
+                },
+              }} 
+            />
+            <Stack.Screen 
+              name="Tokenize" 
+              component={TokenizeScreen} 
+              options={{ 
+                headerShown: true,
+                headerStyle: {
+                  backgroundColor: colors.primary,
+                },
+                headerTintColor: colors.text,
+                headerTitle: 'Tokenize Property',
                 headerTitleStyle: {
                   fontWeight: 'bold',
                 },

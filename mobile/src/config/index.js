@@ -108,6 +108,13 @@ export const config = {
     // AI Services
     AI_ANALYZE_DOCUMENT: '/analyze-document',
     AI_HEALTH: '/health',
+    AI_PROPERTY_ANALYSIS: '/api/ai/property-analysis',
+    AI_LOCATION_HEATMAP: '/api/ai/location-heatmap',
+    AI_PROPERTY_SCORING: '/api/ai/property-scoring',
+    AI_RISK_ASSESSMENT: '/api/ai/risk-assessment',
+    AI_MARKET_TRENDS: '/api/ai/market-trends',
+    AI_INVESTMENT_SCORE: '/api/ai/investment-score',
+    AI_MODEL_UPDATE: '/api/ai/model-update',
     
     // Notifications
     NOTIFICATIONS: '/api/notifications',
@@ -136,6 +143,9 @@ export const config = {
     NOTIFICATIONS_ENABLED: 'notifications_enabled',
     THEME_PREFERENCE: 'theme_preference',
     LAST_SYNC: 'last_sync',
+    AI_CACHE: 'ai_cache',
+    AI_MODEL_VERSIONS: 'ai_model_versions',
+    HEATMAP_CACHE: 'heatmap_cache',
   },
   
   // Error Codes

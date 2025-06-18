@@ -57,7 +57,13 @@
     "web3": "^4.14.0",
     "react-i18next": "^13.5.0",
     "i18next": "^23.7.6",
-    "react-native-localize": "^3.0.4"
+    "react-native-localize": "^3.0.4",
+    "@tensorflow/tfjs": "^4.21.0",
+    "@tensorflow/tfjs-react-native": "^1.0.0",
+    "@tensorflow/tfjs-platform-react-native": "^1.0.0",
+    "react-native-maps": "^1.18.0",
+    "react-native-heatmap": "^1.2.0",
+    "@react-native-mapbox-gl/maps": "^8.6.0"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
