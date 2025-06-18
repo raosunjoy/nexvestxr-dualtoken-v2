@@ -42,6 +42,17 @@
 * [WebSocket Events](api/websockets.md)
 * [Error Handling](api/error-handling.md)
 
+## Platform Services
+* [Services Overview](platform-services/README.md)
+* [Authentication Service](platform-services/authentication.md)
+* [Payment Processing](platform-services/payment-processing.md)
+* [Dual Token Management](platform-services/dual-token-management.md)
+* [Property Management](platform-services/property-management.md)
+* [Trading & Exchange](platform-services/trading-exchange.md)
+* [Notification Services](platform-services/notifications.md)
+* [Oracle Services](platform-services/oracles.md)
+* [Compliance Services](platform-services/compliance.md)
+
 ## Architecture
 * [System Overview](architecture/README.md)
 * [Frontend Architecture](architecture/frontend.md)
