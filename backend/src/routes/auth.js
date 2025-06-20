@@ -20,10 +20,44 @@ const User = mongoose.model('User');
 // User registration
 router.post('/register', async (req, res) => {
   try {
-    const { username, email, password } = req.body;
+    const { 
+      username, 
+      email, 
+      password, 
+      firstName, 
+      lastName, 
+      phone, 
+      investorType, 
+      kycLevel, 
+      country, 
+      nationality,
+      emiratesId,
+      role 
+    } = req.body;
     
     if (!username || !email || !password) {
-      return res.status(400).json({ error: 'Username, email, and password are required' });
+      return res.status(400).json({ 
+        success: false,
+        error: 'Username, email, and password are required' 
+      });
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ 
+        success: false,
+        error: 'Invalid email format' 
+      });
+    }
+
+    // Validate password strength (at least 8 characters, 1 uppercase, 1 lowercase, 1 number, 1 special char)
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    if (!passwordRegex.test(password)) {
+      return res.status(400).json({ 
+        success: false,
+        error: 'Password must be at least 8 characters with uppercase, lowercase, number, and special character' 
+      });
     }
 
     // Check if user already exists
@@ -32,20 +66,36 @@ router.post('/register', async (req, res) => {
     });
     
     if (existingUser) {
-      return res.status(400).json({ error: 'User already exists' });
+      return res.status(400).json({ 
+        success: false,
+        error: 'User already exists' 
+      });
     }
 
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create user
-    const user = new User({
+    // Create user with all fields
+    const userData = {
       username,
       email,
-      password: hashedPassword
-    });
+      password: hashedPassword,
+      firstName: firstName || '',
+      lastName: lastName || '',
+      phone: phone || '',
+      investorType: investorType || 'individual',
+      kycLevel: kycLevel || 'none',
+      country: country || '',
+      nationality: nationality || '',
+      emiratesId: emiratesId || '',
+      role: role || 'user'
+    };
+
+    logger.info('Creating user with data:', userData);
+    const user = new User(userData);
 
     await user.save();
+    logger.info('User saved successfully:', { userId: user._id });
 
     // Generate JWT token
     const token = jwt.sign(
@@ -68,8 +118,12 @@ router.post('/register', async (req, res) => {
     });
 
   } catch (error) {
-    logger.error('Registration failed', { error: error.message });
-    res.status(500).json({ error: 'Registration failed', details: error.message });
+    logger.error('Registration failed', { error: error.message, stack: error.stack });
+    res.status(500).json({ 
+      success: false,
+      error: 'Registration failed', 
+      details: error.message 
+    });
   }
 });
 
@@ -79,19 +133,28 @@ router.post('/login', async (req, res) => {
     const { email, password } = req.body;
     
     if (!email || !password) {
-      return res.status(400).json({ error: 'Email and password are required' });
+      return res.status(400).json({ 
+        success: false,
+        error: 'Email and password are required' 
+      });
     }
 
     // Find user
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+      return res.status(401).json({ 
+        success: false,
+        error: 'Invalid credentials' 
+      });
     }
 
     // Check password
     const isValidPassword = await bcrypt.compare(password, user.password);
     if (!isValidPassword) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+      return res.status(401).json({ 
+        success: false,
+        error: 'Invalid credentials' 
+      });
     }
 
     // Generate JWT token

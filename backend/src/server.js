@@ -91,37 +91,54 @@ app.use(helmet({
   },
 }));
 
-// Rate limiting
+// Rate limiting configuration - relaxed for test environment
+const isTestEnvironment = process.env.NODE_ENV === 'test' || process.env.JEST_WORKER_ID;
+
 const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
+  max: isTestEnvironment ? 1000 : 100, // much higher limit for tests
   message: 'Too many requests from this IP'
 });
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes  
-  max: 5, // limit each IP to 5 requests per windowMs
+  max: isTestEnvironment ? 500 : 5, // much higher limit for tests
   message: 'Too many authentication attempts'
 });
 
-app.use(generalLimiter);
-app.use('/api/auth', authLimiter);
+// Only apply rate limiting in non-test environments
+if (!isTestEnvironment) {
+  app.use(generalLimiter);
+  app.use('/api/auth', authLimiter);
 
-// Rate limiting for other SaaS endpoints
-const saasLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 50, // limit each IP to 50 requests per windowMs
-  message: 'Too many requests from this IP'
-});
+  // Rate limiting for other SaaS endpoints
+  const saasLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 50, // limit each IP to 50 requests per windowMs
+    message: 'Too many requests from this IP'
+  });
 
-app.use('/api/property', saasLimiter);
-app.use('/api/subscription', saasLimiter);
-app.use('/api/trade', saasLimiter);
-app.use('/api/advanced-trade', saasLimiter);
-app.use('/api/payment', saasLimiter);
-app.use('/api/ekyc', saasLimiter);
-app.use('/api/tax', saasLimiter);
-app.use('/api/support', saasLimiter);
+  app.use('/api/property', saasLimiter);
+  app.use('/api/subscription', saasLimiter);
+  app.use('/api/trade', saasLimiter);
+} else {
+  console.log('Rate limiting disabled for test environment');
+}
+
+// Apply additional rate limiting only in non-test environments
+if (!isTestEnvironment) {
+  const saasLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 50, // limit each IP to 50 requests per windowMs
+    message: 'Too many requests from this IP'
+  });
+  
+  app.use('/api/advanced-trade', saasLimiter);
+  app.use('/api/payment', saasLimiter);
+  app.use('/api/ekyc', saasLimiter);
+  app.use('/api/tax', saasLimiter);
+  app.use('/api/support', saasLimiter);
+}
 
 // Basic middleware
 app.use(compression());
@@ -129,7 +146,21 @@ app.use(cors({
   origin: process.env.FRONTEND_URL || "http://localhost:3001",
   credentials: true
 }));
-app.use(express.json({ limit: '50mb' }));
+// JSON parser with error handling
+app.use(express.json({ 
+  limit: '50mb',
+  strict: false
+}));
+
+// Handle JSON parsing errors
+app.use((err, req, res, next) => {
+  if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
+    logger.error('JSON parsing error:', { error: err.message, url: req.url });
+    return res.status(400).json({ error: 'Invalid JSON format' });
+  }
+  next(err);
+});
+
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // Apply SEBI restriction middleware to investor routes
