@@ -15,15 +15,19 @@ const router = express.Router();
 // Create a new property
 router.post('/', authenticateToken, async (req, res) => {
   try {
-    const { name, location, totalValue, propertyType, expectedROI, documents } = req.body;
+    const { name, location, totalValue, propertyType, expectedROI, documents, tokenCode, totalSupply } = req.body;
     const userId = req.user.id;
 
-    const propertyId = `PROP_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const propertyId = req.body.propertyId || `PROP_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const generatedTokenCode = tokenCode || `TOKEN_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
     const property = new Property({
       propertyId,
+      tokenCode: generatedTokenCode,
       name,
       location,
       totalValue,
+      totalSupply,
       propertyType,
       expectedROI,
       developer: userId,

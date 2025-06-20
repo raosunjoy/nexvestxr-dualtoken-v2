@@ -34,6 +34,7 @@ const supportMetricsRoutes = require('./routes/supportMetrics');
 const userMetricsRoutes = require('./routes/userMetrics');
 const notificationsRoutes = require('./routes/notifications');
 const dualTokenRoutes = require('./routes/dualToken');
+const adminRoutes = require('./routes/admin');
 // const uaeRoutes = require('./routes/uaeRoutes');
 
 // Import middleware
@@ -225,6 +226,7 @@ app.use('/support-metrics', supportMetricsRoutes);
 app.use('/api/user-metrics', userMetricsRoutes);
 app.use('/api/notifications', notificationsRoutes);
 app.use('/api/dual-token', dualTokenRoutes);
+app.use('/api/admin', adminRoutes);
 // app.use('/api/uae', uaeRoutes);
 
 // KYC status endpoints

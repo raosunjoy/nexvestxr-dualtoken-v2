@@ -139,7 +139,7 @@ describe('DualTokenDashboard Component', () => {
 
       render(<DualTokenDashboard userAddress={mockUserAddress} />);
 
-      expect(screen.getByText(/loading/i)).toBeInTheDocument();
+      expect(document.querySelector('.animate-spin')).toBeInTheDocument();
     });
   });
 

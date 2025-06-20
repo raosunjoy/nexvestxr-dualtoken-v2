@@ -10,7 +10,13 @@ jest.mock('axios');
 
 // Mock react-i18next after import
 jest.mock('react-i18next', () => ({
-  useTranslation: jest.fn()
+  useTranslation: () => ({
+    t: (key) => key,
+    i18n: {
+      changeLanguage: jest.fn(),
+    },
+  }),
+  Trans: ({ children }) => children,
 }));
 jest.mock('../Payment/PaymentIntegration.jsx', () => ({ userId }) => (
   <div data-testid="payment-integration">PaymentIntegration for {userId}</div>

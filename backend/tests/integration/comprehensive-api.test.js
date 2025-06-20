@@ -374,9 +374,12 @@ describe('NexVestXR API - Comprehensive Integration Tests', () => {
     describe('POST /api/property', () => {
       it('should create a new property', async () => {
         const propertyData = {
+          propertyId: `PROP_INT_${Date.now()}`,
+          tokenCode: `PROP_TOKEN_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
           name: 'Test Property Integration',
           location: 'Dubai Marina',
           totalValue: 5000000,
+          totalSupply: 1000000,
           propertyType: 'Residential',
           expectedROI: 8.5,
           documents: {
