@@ -1,172 +1,92 @@
 # Table of Contents
 
-## Overview
-* [Introduction](README.md)
-* [Platform Architecture](architecture.md)
-* [Technology Stack](technology-stack.md)
-
-## Market Implementations
-* [🇮🇳 Indian Market](indian-market.md)
+## Platform Overview
+* [🚀 Introduction](README.md)
+* [🌟 Enhanced Overview](enhanced-overview.md)
 * [🇦🇪 UAE Market](uae-market.md)
 * [🏢 Aldar Properties Integration](aldar-integration.md)
-* [Dual Token System](dual-token-system.md)
+* [📊 Visual Architecture Guide](visual-architecture-guide.md)
+* [🚀 Interactive Deployment Guide](interactive-deployment-guide.md)
 
-## User Guide
-* [Overview](user-guide/README.md)
-* [Account Registration](user-guide/registration.md)
-* [KYC Process](user-guide/kyc.md)
-* [Investment Process](user-guide/investment-process.md)
-* [Multi-Currency Features](user-guide/multi-currency.md)
-* [Arabic Interface](user-guide/arabic-interface.md)
-* [Portfolio Management](user-guide/portfolio.md)
-* [Trading](user-guide/trading.md)
-* [Mobile App](user-guide/mobile-app.md)
-
-## Developer Guide
-* [Overview](developer-guide/README.md)
-* [Development Setup](developer-guide/setup.md)
-* [Environment Configuration](developer-guide/environment.md)
-* [Currency Integration](developer-guide/currency-integration.md)
-* [Arabic Localization](developer-guide/arabic-localization.md)
-* [Testing Guide](developer-guide/testing.md)
-* [Contributing](developer-guide/contributing.md)
+## Architecture & Technical Design
+* [🏗️ System Architecture](architecture/README.md)
 
 ## API Documentation
-* [Overview](api/README.md)
-* [Authentication](api/authentication.md)
-* [Currency API](api/currency.md)
-* [Property API](api/property.md)
-* [Trading API](api/trading.md)
-* [User Management](api/user-management.md)
-* [Compliance API](api/compliance.md)
-* [WebSocket Events](api/websockets.md)
-* [Error Handling](api/error-handling.md)
+* [🔌 API Overview](api/README.md)
+* [🔐 Authentication](api/authentication.md)
+* [📈 Trading API](api/trading.md)
+* [🔗 WebSocket Events](api/websockets.md)
+* [❌ Error Handling](api/error-handling.md)
 
-## Platform Services
-* [Services Overview](platform-services/README.md)
-* [Authentication Service](platform-services/authentication.md)
-* [Payment Processing](platform-services/payment-processing.md)
-* [Dual Token Management](platform-services/dual-token-management.md)
-* [Property Management](platform-services/property-management.md)
-* [Trading & Exchange](platform-services/trading-exchange.md)
-* [Notification Services](platform-services/notifications.md)
-* [Oracle Services](platform-services/oracles.md)
-* [Compliance Services](platform-services/compliance.md)
-* [API Integration Services](platform-services/api-integration.md)
-* [Customer Support & Ticketing](platform-services/customer-support.md)
-
-## Architecture
-* [System Overview](architecture/README.md)
-* [Frontend Architecture](architecture/frontend.md)
-* [Backend Services](architecture/backend.md)
-* [Database Design](architecture/database.md)
-* [Microservices](architecture/microservices.md)
-* [Security Architecture](architecture/security.md)
-* [Scalability Design](architecture/scalability.md)
+## User Experience
+* [👥 User Guide](user-guide/README.md)
+* [👨‍💼 Admin Interface](user-guide/admin-interface.md)
 
 ## Frontend Development
-* [Overview](frontend/README.md)
-* [React Components](frontend/components.md)
-* [State Management](frontend/state-management.md)
-* [Currency Components](frontend/currency-components.md)
-* [Arabic RTL Support](frontend/rtl-support.md)
-* [Styling Guide](frontend/styling.md)
-* [Performance Optimization](frontend/performance.md)
+* [🎨 Frontend Overview](frontend/README.md)
 
 ## Mobile Development
-* [Overview](mobile/README.md)
-* [React Native Setup](mobile/setup.md)
-* [Navigation](mobile/navigation.md)
-* [Localization](mobile/localization.md)
-* [Native Modules](mobile/native-modules.md)
-* [Build & Deployment](mobile/build-deployment.md)
-* [Testing](mobile/testing.md)
+* [📱 Mobile Interfaces](mobile/interfaces.md)
 
 ## AI & Machine Learning
-* [Overview](ai/README.md)
-* [TensorFlow.js Integration](ai/tensorflow-integration.md)
-* [Location Heatmap Service](ai/location-heatmap.md)
-* [Property Scoring Service](ai/property-scoring.md)
-* [Computer Vision Analysis](ai/computer-vision.md)
-* [Training Data & Models](ai/training-models.md)
-* [Performance Optimization](ai/performance.md)
-* [Testing AI Services](ai/testing.md)
+* [🤖 AI Overview](ai/README.md)
+* [🧠 TensorFlow.js Integration](ai/tensorflow-integration.md)
+* [🎯 Computer Vision](ai/computer-vision.md)
+* [🧪 AI Testing](ai/testing.md)
 
 ## Blockchain & Smart Contracts
-* [Overview](blockchain/README.md)
-* [Smart Contract Architecture](blockchain/smart-contracts.md)
-* [XERA Token](blockchain/xera-token.md)
-* [PROPX Factory](blockchain/propx-factory.md)
-* [Staking System](blockchain/staking.md)
-* [Deployment Guide](blockchain/deployment.md)
-* [Security Audits](blockchain/security.md)
+* [⛓️ Blockchain Overview](blockchain/README.md)
+* [🔥 Flare Integration](blockchain/flare-integration.md)
+* [💎 XRPL Integration](blockchain/xrpl-integration.md)
+* [🔗 XUMM Integration](blockchain/xumm-integration.md)
 
-## Business Logic
-* [UAE Market Analysis](business/README.md)
-* [Investment Tiers](business/investment-tiers.md)
-* [Property Categories](business/property-categories.md)
-* [Developer Ecosystem](business/developers.md)
-* [Fee Structure](business/fees.md)
-* [Revenue Model](business/revenue.md)
-
-## Compliance & Regulatory
-* [Overview](compliance/README.md)
-* [UAE Regulations](compliance/uae-regulations.md)
-* [RERA Compliance](compliance/rera.md)
-* [DLD Integration](compliance/dld.md)
-* [KYC/AML Procedures](compliance/kyc-aml.md)
-* [International Compliance](compliance/international.md)
-* [Data Privacy](compliance/privacy.md)
+## Platform Services
+* [⚙️ Platform Services Overview](platform-services/README.md)
+* [🔐 Authentication Service](platform-services/authentication.md)
+* [💳 Payment Processing](platform-services/payment-processing.md)
+* [🪙 Dual Token Management](platform-services/dual-token-management.md)
+* [🏠 Property Management](platform-services/property-management.md)
+* [📈 Trading & Exchange](platform-services/trading-exchange.md)
+* [🔔 Notification Services](platform-services/notifications.md)
+* [🔮 Oracle Services](platform-services/oracles.md)
+* [✅ Compliance Services](platform-services/compliance.md)
+* [🔌 API Integration Services](platform-services/api-integration.md)
+* [🎧 Customer Support & Ticketing](platform-services/customer-support.md)
 
 ## Multi-Currency System
-* [Overview](currency/README.md)
-* [Supported Currencies](currency/supported-currencies.md)
-* [Exchange Rate Management](currency/exchange-rates.md)
-* [Currency Conversion](currency/conversion.md)
-* [Localization](currency/localization.md)
-* [GCC Integration](currency/gcc-integration.md)
+* [💱 Currency Overview](currency/README.md)
 
 ## Deployment & Operations
-* [Overview](deployment/README.md)
-* [CI/CD Pipeline](deployment/cicd.md)
-* [AWS Infrastructure](deployment/aws.md)
-* [AWS AI/ML Deployment](deployment/aws-ai-deployment.md)
-* [Environment Management](deployment/environments.md)
-* [Monitoring & Alerting](deployment/monitoring.md)
-* [Backup & Recovery](deployment/backup.md)
-* [Performance Tuning](deployment/performance.md)
+* [🚀 Deployment Overview](deployment/README.md)
+* [🤖 AWS AI/ML Deployment](deployment/aws-ai-deployment.md)
 
-## Security
-* [Security Overview](security/README.md)
-* [Enterprise Security Implementation](enterprise-security-implementation.md)
-* [Authentication & Authorization](security/auth.md)
-* [Data Encryption](security/encryption.md)
-* [API Security](security/api-security.md)
-* [Frontend Security](security/frontend-security.md)
-* [Smart Contract Security](security/smart-contract-security.md)
-* [Incident Response](security/incident-response.md)
+## Security & Compliance
+* [🛡️ Enterprise Security Implementation](enterprise-security-implementation.md)
 
-## Testing
-* [Testing Strategy](testing/README.md)
-* [Unit Testing](testing/unit-testing.md)
-* [Integration Testing](testing/integration-testing.md)
-* [E2E Testing](testing/e2e-testing.md)
-* [Mobile Testing](testing/mobile-testing.md)
-* [Performance Testing](testing/performance-testing.md)
-* [Security Testing](testing/security-testing.md)
+---
 
-## Troubleshooting
-* [Common Issues](troubleshooting/README.md)
-* [Currency Issues](troubleshooting/currency.md)
-* [Localization Issues](troubleshooting/localization.md)
-* [API Errors](troubleshooting/api-errors.md)
-* [Mobile App Issues](troubleshooting/mobile.md)
-* [Performance Issues](troubleshooting/performance.md)
+## Quick Links
 
-## Appendices
-* [Glossary](appendices/glossary.md)
-* [Currency Codes](appendices/currency-codes.md)
-* [Property Types](appendices/property-types.md)
-* [Regulatory References](appendices/regulations.md)
-* [External APIs](appendices/external-apis.md)
-* [Change Log](appendices/changelog.md)
+### 🎯 Getting Started
+- [Platform Overview](README.md)
+- [UAE Market Integration](uae-market.md)
+- [User Guide](user-guide/README.md)
+
+### 👨‍💻 For Developers
+- [System Architecture](architecture/README.md)
+- [API Documentation](api/README.md)
+- [Frontend Development](frontend/README.md)
+
+### 🏢 For Business
+- [Aldar Properties Integration](aldar-integration.md)
+- [Platform Services](platform-services/README.md)
+- [Deployment Guide](deployment/README.md)
+
+### 🤖 Advanced Features
+- [AI & Machine Learning](ai/README.md)
+- [Blockchain Integration](blockchain/README.md)
+- [Enterprise Security](enterprise-security-implementation.md)
+
+---
+
+*This documentation covers the NexVestXR V2 Dual Token Platform - a comprehensive real estate tokenization solution for the UAE market.*
