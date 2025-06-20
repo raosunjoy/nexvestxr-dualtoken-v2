@@ -8,16 +8,20 @@ jest.mock('react-native', () => require('./__mocks__/react-native'));
 // Mock AsyncStorage
 jest.mock('@react-native-async-storage/async-storage', () => mockAsyncStorage);
 
-// Mock TensorFlow.js
-jest.mock('@tensorflow/tfjs', () => require('./__mocks__/tensorflow').default);
+// Mock TensorFlow.js with virtual mocks
+jest.mock('@tensorflow/tfjs', () => ({
+  loadLayersModel: jest.fn(),
+  tensor: jest.fn(),
+  dispose: jest.fn(),
+}), { virtual: true });
 jest.mock('@tensorflow/tfjs-react-native', () => ({
   platform: jest.fn(),
   decodeJpeg: jest.fn(),
   bundleResourceIO: jest.fn(),
-}));
+}), { virtual: true });
 jest.mock('@tensorflow/tfjs-platform-react-native', () => ({
   Platform: jest.fn(),
-}));
+}), { virtual: true });
 
 // Mock react-native-maps
 jest.mock('react-native-maps', () => {

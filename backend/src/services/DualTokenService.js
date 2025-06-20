@@ -406,7 +406,7 @@ class DualTokenService {
             const tokenCount = await this.propxFactoryContract.propxTokenCount();
             const tokens = [];
 
-            for (let i = 1; i <= tokenCount.toNumber(); i++) {
+            for (let i = 1; i <= Number(tokenCount); i++) {
                 const tokenInfo = await this.propxFactoryContract.getPROPXTokenInfo(i);
                 
                 // Apply filters
@@ -474,7 +474,7 @@ class DualTokenService {
 
             // Get token price
             const pricePerToken = await tokenContract.pricePerToken();
-            const totalCost = pricePerToken.mul(tokenAmount);
+            const totalCost = BigInt(pricePerToken) * BigInt(tokenAmount);
 
             // Create transaction
             const tx = isInstitutional ? 

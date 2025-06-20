@@ -1,8 +1,8 @@
 module.exports = {
   preset: 'react-native',
-  setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
-  testEnvironment: 'jsdom',
-  moduleNameMapping: {
+  // setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
+  testEnvironment: 'node',
+  moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
     '^@services/(.*)$': '<rootDir>/src/services/$1',
     '^@components/(.*)$': '<rootDir>/src/components/$1',
@@ -34,11 +34,10 @@ module.exports = {
     'node_modules/(?!(react-native|@react-native|react-native-vector-icons|@react-navigation|@tensorflow)/)',
   ],
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],
-  setupFiles: [
-    '<rootDir>/__mocks__/react-native.js',
-    '<rootDir>/__mocks__/tensorflow.js',
-    'jest-canvas-mock',
-  ],
+  // setupFiles: [
+  //   '<rootDir>/__mocks__/react-native.js',
+  //   '<rootDir>/__mocks__/tensorflow.js',
+  // ],
   globals: {
     __DEV__: true,
   },
