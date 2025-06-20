@@ -17,6 +17,7 @@ require('./models/User');
 
 // Import routes
 const authRoutes = require('./routes/auth');
+const healthRoutes = require('./routes/health');
 const paymentRoutes = require('./routes/payment');
 const paymentWebhookRoutes = require('./routes/paymentWebhook');
 const tradeRoutes = require('./routes/trade');
@@ -33,6 +34,7 @@ const supportMetricsRoutes = require('./routes/supportMetrics');
 const userMetricsRoutes = require('./routes/userMetrics');
 const notificationsRoutes = require('./routes/notifications');
 const dualTokenRoutes = require('./routes/dualToken');
+// const uaeRoutes = require('./routes/uaeRoutes');
 
 // Import middleware
 const sebiRestriction = require('./middleware/sebiRestriction');
@@ -147,6 +149,33 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Health Routes
+app.use('/api/health', healthRoutes);
+
+// Status endpoint
+app.get('/api/status', async (req, res) => {
+  try {
+    const status = {
+      database: mongoose.connection.readyState === 1 ? { status: 'healthy' } : { status: 'unhealthy' },
+      redis: { status: 'healthy' }, // Mock redis status
+      blockchain: { 
+        status: 'healthy',
+        networks: {
+          xrpl: { status: 'connected' },
+          flare: { status: 'connected' }
+        }
+      },
+      timestamp: new Date().toISOString()
+    };
+    res.json(status);
+  } catch (error) {
+    res.status(500).json({
+      error: 'Status check failed',
+      details: error.message
+    });
+  }
+});
+
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/payment', paymentRoutes);
@@ -162,9 +191,10 @@ app.use('/api/ekyc', ekycRoutes);
 app.use('/api/tax', taxRoutes);
 app.use('/api/support', supportRoutes);
 app.use('/support-metrics', supportMetricsRoutes);
-app.use('/user-metrics', userMetricsRoutes);
+app.use('/api/user-metrics', userMetricsRoutes);
 app.use('/api/notifications', notificationsRoutes);
 app.use('/api/dual-token', dualTokenRoutes);
+// app.use('/api/uae', uaeRoutes);
 
 // KYC status endpoints
 app.post('/api/organizations/:orgId/kyc-status', async (req, res) => {

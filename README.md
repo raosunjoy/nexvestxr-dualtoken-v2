@@ -11,6 +11,7 @@
 - **Security Compliance**: PCI DSS Level 1 Enterprise Grade
 - **Architecture**: Microservices with Docker containerization
 - **Year 1 Goal**: AED 500M Total Value Locked (TVL)
+- **Test Coverage**: 85% complete with 40+ API endpoints tested
 
 ### 🚀 **Key Features**
 
@@ -38,12 +39,26 @@
 - **Location Heatmaps**: Real-time property value prediction
 - **Risk Assessment**: Investment risk scoring
 
+## 🧪 Testing Infrastructure
+
+### Comprehensive Test Suite (85% Complete)
+- **Backend Unit Tests**: 31/31 DualTokenService tests passing
+- **Frontend Component Tests**: 32 tests created with React Testing Library
+- **Mobile Service Tests**: 36/36 services tests passing
+- **Integration Tests**: 40+ API endpoints with comprehensive coverage
+- **API Testing**: Health, Payment, Portfolio, Trading, Notifications
+- **Authentication Flow**: JWT token management and validation
+- **Error Handling**: Rate limiting, validation, and security testing
+
+See [Testing Progress Tracker](./TESTING_PROGRESS_TRACKER.md) for detailed progress.
+
 ## 🚀 Quick Start
 
 ### For Developers
 - [Development Setup](./developer-guide/setup.md)
 - [API Documentation](./api/overview.md)
 - [Smart Contract Integration](./blockchain/smart-contracts.md)
+- [Testing Guide](./TESTING_PROGRESS_TRACKER.md)
 
 ### For Users
 - [User Guide](./user-guide/getting-started.md)

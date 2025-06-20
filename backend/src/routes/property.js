@@ -31,7 +31,18 @@ router.post('/', authenticateToken, async (req, res) => {
     });
 
     await property.save();
-    res.status(201).json({ success: true, property });
+    res.status(201).json({ 
+      success: true, 
+      data: {
+        propertyId: property.propertyId,
+        name: property.name,
+        location: property.location,
+        totalValue: property.totalValue,
+        propertyType: property.propertyType,
+        expectedROI: property.expectedROI,
+        status: 'ACTIVE'
+      }
+    });
   } catch (error) {
     logger.error('Property creation failed', { userId: req.user.id, error: error.message });
     res.status(500).json({ error: 'Property creation failed', details: error.message });
@@ -42,7 +53,7 @@ router.post('/', authenticateToken, async (req, res) => {
 router.get('/', authenticateToken, async (req, res) => {
   try {
     const properties = await Property.find({ developer: req.user.id });
-    res.json({ success: true, properties });
+    res.json({ success: true, data: properties });
   } catch (error) {
     logger.error('Property fetch failed', { userId: req.user.id, error: error.message });
     res.status(500).json({ error: 'Property fetch failed', details: error.message });
@@ -52,11 +63,11 @@ router.get('/', authenticateToken, async (req, res) => {
 // Get a single property
 router.get('/:id', authenticateToken, async (req, res) => {
   try {
-    const property = await Property.findById(req.params.id);
+    const property = await Property.findOne({ propertyId: req.params.id });
     if (!property) {
       return res.status(404).json({ error: 'Property not found' });
     }
-    res.json({ success: true, property });
+    res.json({ success: true, data: property });
   } catch (error) {
     logger.error('Property fetch failed', { userId: req.user.id, error: error.message });
     res.status(500).json({ error: 'Property fetch failed', details: error.message });

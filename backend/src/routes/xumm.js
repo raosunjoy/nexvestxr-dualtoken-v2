@@ -10,6 +10,105 @@ const logger = winston.createLogger({
 
 const router = express.Router();
 
+// Create XUMM payment payload
+router.post('/create-payload', authenticateToken, async (req, res) => {
+  try {
+    const { amount, destination, memo } = req.body;
+
+    if (!amount || !destination) {
+      return res.status(400).json({
+        success: false,
+        error: 'Amount and destination are required'
+      });
+    }
+
+    // Mock XUMM payload creation
+    const payload = {
+      uuid: `xumm_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      next: {
+        always: `https://app.nexvestxr.com/payment/result/${Date.now()}`
+      },
+      refs: {
+        qr_png: `https://xumm.app/sign/${Date.now()}`,
+        qr_uri: `https://xumm.app/sign/${Date.now()}`,
+        websocket_status: `wss://xumm.app/sign/${Date.now()}`
+      },
+      pushed: true
+    };
+
+    res.json({
+      success: true,
+      data: payload
+    });
+
+  } catch (error) {
+    logger.error('XUMM payload creation failed:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to create XUMM payload'
+    });
+  }
+});
+
+// Get payload status
+router.get('/payload/:uuid', authenticateToken, async (req, res) => {
+  try {
+    const { uuid } = req.params;
+
+    // Mock payload status
+    const status = {
+      meta: {
+        exists: true,
+        uuid,
+        multisign: false,
+        submit: true,
+        destination: 'rN7n7otQDd6FczFgLdSqDMUman85SVGD9c',
+        resolved_destination: 'rN7n7otQDd6FczFgLdSqDMUman85SVGD9c',
+        resolved: true,
+        signed: false,
+        cancelled: false,
+        expired: false,
+        pushed: true,
+        app_opened: false,
+        return_url_app: null,
+        return_url_web: null
+      },
+      application: {
+        name: 'NexVestXR',
+        description: 'Real Estate Investment Platform',
+        disabled: 0,
+        uuidv4: uuid,
+        icon_url: 'https://nexvestxr.com/logo.png',
+        issued_user_token: null
+      },
+      payload: {
+        tx_type: 'Payment',
+        tx_destination: 'rN7n7otQDd6FczFgLdSqDMUman85SVGD9c',
+        tx_destination_tag: null,
+        request_json: {
+          TransactionType: 'Payment',
+          Destination: 'rN7n7otQDd6FczFgLdSqDMUman85SVGD9c',
+          Amount: '100000000'
+        },
+        created_at: new Date().toISOString(),
+        expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+      }
+    };
+
+    res.json({
+      success: true,
+      data: status
+    });
+
+  } catch (error) {
+    logger.error('XUMM payload status fetch failed:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch payload status'
+    });
+  }
+});
+
 // Get XUMM credentials for initialization (public endpoint)
 router.get('/credentials', (req, res) => {
   try {

@@ -47,10 +47,24 @@ router.post('/register', async (req, res) => {
 
     await user.save();
 
+    // Generate JWT token
+    const token = jwt.sign(
+      { id: user._id, email: user.email },
+      process.env.JWT_SECRET || 'default-secret',
+      { expiresIn: '24h' }
+    );
+
     logger.info('User registered successfully', { userId: user._id, email });
     res.status(201).json({ 
-      message: 'User registered successfully', 
-      userId: user._id 
+      success: true,
+      data: {
+        token,
+        user: {
+          id: user._id,
+          username: user.username,
+          email: user.email
+        }
+      }
     });
 
   } catch (error) {
@@ -89,18 +103,98 @@ router.post('/login', async (req, res) => {
 
     logger.info('User logged in successfully', { userId: user._id, email });
     res.json({ 
-      message: 'Login successful', 
-      token,
-      user: {
-        id: user._id,
-        username: user.username,
-        email: user.email
+      success: true,
+      data: {
+        token,
+        user: {
+          id: user._id,
+          username: user.username,
+          email: user.email
+        }
       }
     });
 
   } catch (error) {
     logger.error('Login failed', { error: error.message });
     res.status(500).json({ error: 'Login failed', details: error.message });
+  }
+});
+
+// Get user profile
+router.get('/profile', authenticateToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('-password');
+    if (!user) {
+      return res.status(404).json({ 
+        success: false, 
+        error: 'User not found' 
+      });
+    }
+
+    res.json({
+      success: true,
+      data: user
+    });
+  } catch (error) {
+    logger.error('Profile fetch failed', { userId: req.user.id, error: error.message });
+    res.status(500).json({ 
+      success: false, 
+      error: 'Profile fetch failed', 
+      details: error.message 
+    });
+  }
+});
+
+// Update user profile
+router.put('/profile', authenticateToken, async (req, res) => {
+  try {
+    const updates = req.body;
+    delete updates.password; // Don't allow password updates through this route
+
+    const user = await User.findByIdAndUpdate(
+      req.user.id, 
+      updates, 
+      { new: true }
+    ).select('-password');
+
+    if (!user) {
+      return res.status(404).json({ 
+        success: false, 
+        error: 'User not found' 
+      });
+    }
+
+    res.json({
+      success: true,
+      data: user
+    });
+  } catch (error) {
+    logger.error('Profile update failed', { userId: req.user.id, error: error.message });
+    res.status(500).json({ 
+      success: false, 
+      error: 'Profile update failed', 
+      details: error.message 
+    });
+  }
+});
+
+// User logout
+router.post('/logout', authenticateToken, async (req, res) => {
+  try {
+    // In a production app, you might want to blacklist the token
+    // For now, we'll just return success
+    logger.info('User logged out', { userId: req.user.id });
+    res.json({
+      success: true,
+      message: 'Logged out successfully'
+    });
+  } catch (error) {
+    logger.error('Logout failed', { userId: req.user.id, error: error.message });
+    res.status(500).json({ 
+      success: false, 
+      error: 'Logout failed', 
+      details: error.message 
+    });
   }
 });
 
