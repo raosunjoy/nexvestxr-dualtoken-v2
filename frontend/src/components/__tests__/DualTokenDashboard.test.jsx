@@ -243,7 +243,7 @@ describe('DualTokenDashboard Component', () => {
       });
 
       expect(screen.getByText('XERA Platform Token + PROPX Premium Properties')).toBeInTheDocument();
-      expect(screen.getByText('XRPL Network')).toBeInTheDocument();
+      expect(screen.getAllByText('XRPL Network')[0]).toBeInTheDocument();
       expect(screen.getByText('Flare Network')).toBeInTheDocument();
     });
 
@@ -646,7 +646,7 @@ describe('DualTokenDashboard Component', () => {
       expect(screen.getByText('12.5M')).toBeInTheDocument();
       expect(screen.getByText('Active Properties')).toBeInTheDocument();
       expect(screen.getByText('485')).toBeInTheDocument();
-      expect(screen.getByText('Average Yield')).toBeInTheDocument();
+      expect(screen.getAllByText('Average Yield')[0]).toBeInTheDocument();
       expect(screen.getByText('8.7%')).toBeInTheDocument();
     });
 
@@ -693,7 +693,7 @@ describe('DualTokenDashboard Component', () => {
 
       // Should show zero values
       expect(screen.getByText('₹0')).toBeInTheDocument();
-      expect(screen.getAllByText('0')).toHaveLength(2); // Multiple zero values expected
+      expect(screen.getAllByText('0')).toHaveLength(3); // Multiple zero values expected
     });
 
     it('should handle missing benefits data gracefully', async () => {

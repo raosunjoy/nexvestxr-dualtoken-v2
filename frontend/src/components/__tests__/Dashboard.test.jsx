@@ -30,7 +30,7 @@ jest.mock('../Payment/TransactionHistory.jsx', () => ({ userId }) => (
 jest.mock('../Support/IntercomChat', () => ({ user }) => (
   <div data-testid="intercom-chat">IntercomChat for {user.name}</div>
 ));
-jest.mock('./AnalyticsDashboard', () => ({ userId }) => (
+jest.mock('../Analytics/AnalyticsDashboard', () => ({ userId }) => (
   <div data-testid="analytics-dashboard">AnalyticsDashboard for {userId}</div>
 ));
 jest.mock('../../hooks/useRTL', () => ({
