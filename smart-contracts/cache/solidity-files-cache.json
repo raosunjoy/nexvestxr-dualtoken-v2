@@ -1327,8 +1327,8 @@
       ]
     },
     "/Users/keerthirao/Documents/GitHub/projects/nexvestxr-v2-dual-token/smart-contracts/contracts/XERAToken.sol": {
-      "lastModificationDate": 1749409208773,
-      "contentHash": "de7923d2a8bfbfbf2441294c097f5fb9",
+      "lastModificationDate": 1750231775344,
+      "contentHash": "0c63b40067049ccda9da2c189fe21a27",
       "sourceName": "contracts/XERAToken.sol",
       "solcConfig": {
         "version": "0.8.19",
@@ -1358,7 +1358,7 @@
         "@openzeppelin/contracts/token/ERC20/ERC20.sol",
         "@openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol",
         "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol",
-        "@openzeppelin/contracts/security/ReentrancyGuard.sol",
+        "./security/ReentrancyGuard.sol",
         "@openzeppelin/contracts/security/Pausable.sol",
         "@openzeppelin/contracts/access/AccessControl.sol",
         "@openzeppelin/contracts/utils/math/SafeMath.sol"
@@ -1858,6 +1858,83 @@
       "artifacts": [
         "IUAEPROPX",
         "UAEPROPXFactory"
+      ]
+    },
+    "/Users/keerthirao/Documents/GitHub/projects/nexvestxr-v2-dual-token/smart-contracts/contracts/security/ReentrancyGuard.sol": {
+      "lastModificationDate": 1750183311225,
+      "contentHash": "db6b22c328c3071daab2cde1aa0793a7",
+      "sourceName": "contracts/security/ReentrancyGuard.sol",
+      "solcConfig": {
+        "version": "0.8.19",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.19"
+      ],
+      "artifacts": [
+        "ReentrancyGuard"
+      ]
+    },
+    "/Users/keerthirao/Documents/GitHub/projects/nexvestxr-v2-dual-token/smart-contracts/contracts/security/MultiOracleManager.sol": {
+      "lastModificationDate": 1750464650405,
+      "contentHash": "d0b061d05d24d45af98dbb21c74824a9",
+      "sourceName": "contracts/security/MultiOracleManager.sol",
+      "solcConfig": {
+        "version": "0.8.19",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "@openzeppelin/contracts/access/Ownable.sol",
+        "@openzeppelin/contracts/security/ReentrancyGuard.sol",
+        "@openzeppelin/contracts/security/Pausable.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.19"
+      ],
+      "artifacts": [
+        "AggregatorV3Interface",
+        "MultiOracleManager"
       ]
     }
   }
