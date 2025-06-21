@@ -221,9 +221,64 @@ describe("UAE Batch Operations", function () {
     });
 
     it("Should batch update DLD registration", async function () {
-      // First create and approve properties
-      await this.test.parent.tests[0].fn.call(this);
-      await this.test.parent.tests[1].fn.call(this);
+      // Use the same propertyIds from previous tests to avoid duplication
+      // Only create new properties if none exist
+      
+      // Use existing propertyIds from previous tests
+      if (propertyIds.length === 0) {
+        // If no properties exist, create them
+        const properties = [
+          {
+            name: "DLD Test Property 1",
+            location: "Dubai Marina",
+            propertyType: 0, // RESIDENTIAL
+            totalValue: ethers.utils.parseEther("5000000"),
+            tokenPrice: ethers.utils.parseEther("500"),
+            minimumInvestment: ethers.utils.parseEther("100000"),
+            duration: 365,
+            ipfsHash: "QmDLDTest1"
+          },
+          {
+            name: "DLD Test Property 2", 
+            location: "DIFC",
+            propertyType: 1, // COMMERCIAL
+            totalValue: ethers.utils.parseEther("10000000"),
+            tokenPrice: ethers.utils.parseEther("1000"),
+            minimumInvestment: ethers.utils.parseEther("200000"),
+            duration: 365,
+            ipfsHash: "QmDLDTest2"
+          },
+          {
+            name: "DLD Test Property 3",
+            location: "Downtown Dubai", 
+            propertyType: 2, // INDUSTRIAL
+            totalValue: ethers.utils.parseEther("8000000"),
+            tokenPrice: ethers.utils.parseEther("800"),
+            minimumInvestment: ethers.utils.parseEther("150000"),
+            duration: 365,
+            ipfsHash: "QmDLDTest3"
+          }
+        ];
+
+        for (const property of properties) {
+          const tx = await propxFactory.connect(developer).createPROPXToken(
+            property.name,
+            `Description for ${property.name}`,
+            `TOK${propertyIds.length + 1}`,
+            property.location,
+            property.propertyType,
+            property.totalValue.div(property.tokenPrice),
+            property.tokenPrice,
+            property.minimumInvestment,
+            property.duration,
+            property.ipfsHash
+          );
+          
+          const receipt = await tx.wait();
+          const event = receipt.events.find(e => e.event === 'PropertyListed');
+          propertyIds.push(event.args.tokenId);
+        }
+      }
 
       // Batch update DLD registration
       const dldRegistrations = [
